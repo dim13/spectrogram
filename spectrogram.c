@@ -192,7 +192,7 @@ init_factor(int *scala, int w)
 }
 
 #if 1
-void inline
+inline void
 drawpixel(SDL_Surface *s, int x, int y, SDL_Color *c)
 {
 	Uint32 *buf = (Uint32 *)s->pixels + y * (s->pitch >> 2) + x;
