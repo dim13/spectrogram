@@ -57,6 +57,8 @@ SDL_Rect	wf_left, wf_right;
 SDL_Rect	sp_left, sp_right;
 
 int	die = 0;
+int	flip_left = 0;
+int	flip_right = 0;
 
 void
 init_rect(int w, int h, int off, int s)
@@ -211,7 +213,7 @@ drawpixel(SDL_Surface *s, int x, int y, SDL_Color *c)
 int
 draw(double *left, double *right, int n, int *scala, int *fact, int p)
 {
-	int             x, y, l, r, i;
+	int             x, y, l, r, i, lx, rx;
 
 	if (SDL_MUSTLOCK(screen) && SDL_LockSurface(screen))
 		return -1;
@@ -238,8 +240,11 @@ draw(double *left, double *right, int n, int *scala, int *fact, int p)
 		if (r >= p)
 			r = p - 1;
 
-		drawpixel(screen, wf_left.x + x, wf_left.y, &pane[l]);
-		drawpixel(screen, wf_right.x + x, wf_right.y, &pane[r]);
+		lx = wf_left.x + (flip_left ? wf_left.w - x - 1 : x);
+		rx = wf_right.x + (flip_right ? wf_right.w - x - 1 : x);
+
+		drawpixel(screen, lx, wf_left.y, &pane[l]);
+		drawpixel(screen, rx, wf_right.y, &pane[r]);
 
 		/* *** */
 
@@ -247,10 +252,10 @@ draw(double *left, double *right, int n, int *scala, int *fact, int p)
 		r >>= 1;
 
 		for (y = 0; y < sp_left.h; y++) {
-			drawpixel(screen, sp_left.x + x,
+			drawpixel(screen, lx,
 				sp_left.y + sp_left.h - y - 1,
 				l > y ? &pan2[y] : &black);
-			drawpixel(screen, sp_right.x + x,
+			drawpixel(screen, rx,
 				sp_right.y + sp_right.h - y - 1,
 				r > y ? &pan2[y] : &black);
 		}
@@ -314,13 +319,19 @@ main(int argc, char **argv)
 	struct		timeval ta, te;
 	#endif
 
-	while ((c = getopt(argc, argv, "h:w:")) != -1)
+	while ((c = getopt(argc, argv, "h:w:lr")) != -1)
 		switch (c) {
 		case 'h':
 			height = atoi(optarg);
 			break;
 		case 'w':
 			width = atoi(optarg);
+			break;
+		case 'l':
+			flip_left ^= 1;
+			break;
+		case 'r':
+			flip_right ^= 1;
 			break;
 		default:
 			break;
@@ -413,8 +424,19 @@ main(int argc, char **argv)
 			die = 1;
 			break;
 		case SDL_KEYDOWN:
-			if (event.key.keysym.sym == SDLK_q)
+			switch (event.key.keysym.sym) {
+			case SDLK_q:
 				die = 1;
+				break;
+			case SDLK_l:
+				flip_left ^= 1;
+				break;
+			case SDLK_r:
+				flip_right ^= 1;
+				break;
+			default:
+				break;
+			}
 			break;
 		}
 		#if TIMING
