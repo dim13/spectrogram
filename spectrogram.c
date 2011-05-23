@@ -313,6 +313,7 @@ main(int argc, char **argv)
 	int		height = 0;
 	int		width = 0;
 	int		sdlargs;
+	int		pressed = 0;
 
 
 	#if TIMING
@@ -429,14 +430,20 @@ main(int argc, char **argv)
 				die = 1;
 				break;
 			case SDLK_l:
-				flip_left ^= 1;
+				if (!pressed)
+					flip_left ^= 1;
 				break;
 			case SDLK_r:
-				flip_right ^= 1;
+				if (!pressed)
+					flip_right ^= 1;
 				break;
 			default:
 				break;
 			}
+			pressed = 1;
+			break;
+		case SDL_KEYUP:
+			pressed = 0;
 			break;
 		}
 		#if TIMING
