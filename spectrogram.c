@@ -290,6 +290,16 @@ catch(int notused)
 	die = 1;
 }
 
+__dead void
+usage(void)
+{
+	extern char *__progname;
+
+	(void)fprintf(stderr, "usage: %s [-h <pixel>] [-w <pixel>] [-l] [-r]\n",
+		__progname);
+	exit(1);
+}
+
 int 
 main(int argc, char **argv)
 {
@@ -335,6 +345,7 @@ main(int argc, char **argv)
 			flip_right ^= 1;
 			break;
 		default:
+			usage();
 			break;
 		}
 
