@@ -441,10 +441,12 @@ main(int argc, char **argv)
 				die = 1;
 				break;
 			case SDLK_l:
+			case SDLK_1:
 				if (!pressed)
 					flip_left ^= 1;
 				break;
 			case SDLK_r:
+			case SDLK_2:
 				if (!pressed)
 					flip_right ^= 1;
 				break;
