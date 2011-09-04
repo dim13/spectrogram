@@ -30,7 +30,6 @@
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_thread.h>
-// #include <SDL/SDL_keysym.h>
 
 #include "fifo.h"
 #include "fft.h"
@@ -150,7 +149,6 @@ init_palette_big(int n)
 	for (i = 0; i < n; i++) {
 		hsv2rgb(&p[i].r, &p[i].g, &p[i].b, h, s,
 			k * logf(f * v + 1));
-		// hsv2rgb(&p[i].r, &p[i].g, &p[i].b, h, s, sqrtf(v));
 
 		h += hstep;
 		s += sstep;
@@ -245,8 +243,6 @@ draw(double *left, double *right, int n, int *scala, int *fact, int p)
 
 		drawpixel(screen, lx, wf_left.y, &pane[l]);
 		drawpixel(screen, rx, wf_right.y, &pane[r]);
-
-		/* *** */
 
 		l >>= 1;
 		r >>= 1;
@@ -389,7 +385,6 @@ main(int argc, char **argv)
 	sio_getpar(sio, &par);
 	
 	delta = par.round / 2;
-//	delta = 1024;	/* XXX */
 	n = 4 * delta;
 	warnx("delta: %d, n: %d", delta, n);
 
