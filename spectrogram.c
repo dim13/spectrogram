@@ -56,7 +56,7 @@ SDL_Rect	wf_left, wf_right;
 SDL_Rect	sp_left, sp_right;
 
 int	die = 0;
-int	flip_left = 0;
+int	flip_left = 1;
 int	flip_right = 0;
 
 void
@@ -444,6 +444,12 @@ main(int argc, char **argv)
 			case SDLK_2:
 				if (!pressed)
 					flip_right ^= 1;
+				break;
+			case SDLK_0:
+				if (!pressed) {
+					flip_left ^= 1;
+					flip_right ^= 1;
+				}
 				break;
 			default:
 				break;
