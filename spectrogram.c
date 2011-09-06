@@ -379,7 +379,8 @@ main(int argc, char **argv)
 	pane = init_palette_big(psize);
 	
 	sio = sio_open(NULL, SIO_REC, 0);
-	assert(sio);
+	if (!sio)
+		errx(1, "cannot connect to sound server, is it running?");
 
 	sio_initpar(&par);
 	sio_getpar(sio, &par);
