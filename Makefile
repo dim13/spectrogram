@@ -18,5 +18,6 @@ LDADD+=	-lsndio -lfftw3 -lm
 #LDADD+=	-liconv -lusbhid -lX11 -lxcb -lXau -lXdmcp
 DEBUG+=	-Wall
 #DEBUG+=-ggdb -g -pg
+NOMAN=
 
 .include <bsd.prog.mk>
