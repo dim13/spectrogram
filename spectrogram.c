@@ -28,8 +28,8 @@
 #include <math.h>
 #include <signal.h>
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_thread.h>
+#include <SDL.h>
+#include <SDL_thread.h>
 
 #include "fifo.h"
 #include "fft.h"
