@@ -316,8 +316,10 @@ main(int argc, char **argv)
 	int		*scala;
 	int		*factor;
 	int		psize, ssize;
-	int		height = 0;
-	int		width = 0;
+	int		width = 1024;
+	int		height = 768;
+	int		fullscreen = 0;
+	int		stretch = 0;
 	int		sdlargs;
 	int		pressed = 0;
 
@@ -326,7 +328,7 @@ main(int argc, char **argv)
 	struct		timeval ta, te;
 	#endif
 
-	while ((c = getopt(argc, argv, "h:w:lr")) != -1)
+	while ((c = getopt(argc, argv, "h:w:lrFf")) != -1)
 		switch (c) {
 		case 'h':
 			height = atoi(optarg);
@@ -340,6 +342,12 @@ main(int argc, char **argv)
 		case 'r':
 			flip_right ^= 1;
 			break;
+		case 'F':
+			stretch = 1;
+			/* FALLTHROUGH */
+		case 'f':
+			fullscreen = 1;
+			break;
 		default:
 			usage();
 			break;
@@ -351,18 +359,21 @@ main(int argc, char **argv)
 	signal(SIGINT, catch);
 	atexit(SDL_Quit);
 
-	vi = SDL_GetVideoInfo();
-	if (!vi)
-		return 1;
-	warnx("%dx%d", vi->current_w, vi->current_h);
-
 	sdlargs = SDL_HWSURFACE | SDL_HWPALETTE |  SDL_DOUBLEBUF;
-	if (!height && !width)
+	if (height <= 320 || width <= 200)
+		errx(1, "not supported resolution");
+	if (fullscreen) {
 		sdlargs |= SDL_FULLSCREEN;
-	if (!height)
-		height = vi->current_h - 1;
-	if (!width)
-		width = vi->current_w - 1;
+		vi = SDL_GetVideoInfo();
+		if (!vi)
+			return 1;
+		warnx("%dx%d", vi->current_w, vi->current_h);
+
+		if (stretch) {
+			height = vi->current_h - 1;
+			width = vi->current_w - 1;
+		}
+	}
 
 	screen = SDL_SetVideoMode(width, height, 32, sdlargs);
 	if (!screen)
@@ -370,10 +381,10 @@ main(int argc, char **argv)
 
 	SDL_ShowCursor(SDL_DISABLE);
 
-	psize = 2 * vi->current_h / 3;
+	psize = 2 * height / 3;
 	ssize = psize >> 2;
 
-	init_rect(vi->current_w, vi->current_h, 1, ssize);
+	init_rect(width, height, 1, ssize);
 
 	pan2 = init_palette_small(ssize);
 	pane = init_palette_big(psize);
