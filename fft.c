@@ -15,6 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -32,27 +33,42 @@ init_fft(int n)
 {
 	struct	fft *p;
 
-	p = malloc(sizeof(struct fft));
-	p->in = fftw_malloc(n * sizeof(double));
-	p->out = fftw_malloc(n * sizeof(double));
-	p->plan = fftw_plan_r2r_1d(n, p->in, p->out, FFTW_R2HC, FFTW_MEASURE);
-	p->n = n;
+	p = malloc(2 * sizeof(struct fft));
+
+	p[0].n = n;
+	p[0].in = fftw_malloc(n * sizeof(double));
+	p[0].out = fftw_malloc(n * sizeof(double));
+	p[0].plan = fftw_plan_r2r_1d(n, p[0].in, p[0].out,
+		FFTW_R2HC, FFTW_MEASURE);
+
+	p[1].n = n;
+	p[1].in = fftw_malloc(n * sizeof(double));
+	p[1].out = fftw_malloc(n * sizeof(double));
+	p[1].plan = fftw_plan_r2r_1d(n, p[1].in, p[1].out,
+		FFTW_R2HC, FFTW_MEASURE);
 
 	return p;
 }
 
 int
-dofft(struct fft *p, double *data)
+dofft(struct fft *p, int16_t *data, double *left, double *right, int n, double *wight)
 {
-	int	i, n;
+	int	i;
 
-	memset(p->out, 0, p->n * sizeof(double));
-	memcpy(p->in, data, p->n * sizeof(double));
-	fftw_execute(p->plan);
+	for (i = 0; i < n; i++) {
+		p[0].in[i] = wight[i] * data[2 * i + 0] / (double)INT16_MAX;
+		p[1].in[i] = wight[i] * data[2 * i + 1] / (double)INT16_MAX;
+	}
 
-	n = p->n / 2;
-	for (i = 1; i < n; i++)
-		data[i - 1] = sqrt(i * (p->out[i] * p->out[i] + p->out[p->n - i] * p->out[p->n - i]));
+	fftw_execute(p[0].plan);
+	fftw_execute(p[1].plan);
+
+	for (i = 1; i < n / 2; i++) {
+		left[i - 1] = sqrt(5 * i
+			* (pow(p[0].out[i], 2) + pow(p[0].out[n - i], 2)));
+		right[i - 1] =  sqrt(5 * i
+			* (pow(p[1].out[i], 2) + pow(p[1].out[n - i], 2)));
+	}
 
 	return 0;
 }

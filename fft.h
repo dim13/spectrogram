@@ -21,6 +21,6 @@
 struct fft;
 
 struct fft *init_fft(int);
-int dofft(struct fft *, double *);
+int dofft(struct fft *, int16_t *, double *, double *, int, double *);
 
 #endif

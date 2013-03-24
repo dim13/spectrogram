@@ -31,19 +31,11 @@
 #include <SDL.h>
 #include <SDL_thread.h>
 
-#include "fifo.h"
 #include "fft.h"
 #include "hsv2rgb.h"
 
 #define PSIZE	250
 #define SSIZE	(PSIZE >> 1)
-
-#define TIMING 0
-
-struct	buf {
-	int16_t	left;
-	int16_t right;
-};
 
 SDL_Surface	*screen;
 SDL_Color	*pane;
@@ -158,60 +150,18 @@ init_palette_big(int n)
 	return p;
 }
 
-int *
-init_scala(int n, int w)
-{
-	int	*s, i;
-	float	k;
-
-	s = malloc(w * sizeof(int));
-
-	k = n / logf(w);
-
-	for (i = 0; i < w; i++)
-		s[i] = n - k * logf(w - i);
-
-	return s;
-}
-
-int *
-init_factor(int *scala, int w)
-{
-	int	*s, k, i;
-
-	s = malloc(w * sizeof(int));
-	k = 0;
-	for (i = 0; i < w; i++) {
-		s[i] = scala[i] - k;
-		if (s[i] == 0)
-			s[i] = 1;
-		k = scala[i];
-	}
-
-	return s;
-}
-
-#if 1
-inline void
+void
 drawpixel(SDL_Surface *s, int x, int y, SDL_Color *c)
 {
 	Uint32 *buf = (Uint32 *)s->pixels + y * (s->pitch >> 2) + x;
 	Uint32 pixel = SDL_MapRGB(s->format, c->r, c->g, c->b);	
 	*buf = pixel;
 }
-#else
-#define	drawpixel(s, x, y, c) do {					\
-	Uint32 *buf, pixel;						\
-	buf = (Uint32 *)(s)->pixels + (y) * ((s)->pitch >> 2) + (x);	\
-	pixel = SDL_MapRGB((s)->format, (c)->r, (c)->g, (c)->b);	\
-	*buf = pixel;							\
-	} while (0)
-#endif
 
 int
-draw(double *left, double *right, int n, int *scala, int *fact, int p)
+draw(double *left, double *right, int p)
 {
-	int             x, y, l, r, i, lx, rx;
+	int             x, y, l, r, lx, rx;
 
 	if (SDL_MUSTLOCK(screen) && SDL_LockSurface(screen))
 		return -1;
@@ -219,22 +169,10 @@ draw(double *left, double *right, int n, int *scala, int *fact, int p)
 	SDL_BlitSurface(screen, &wf_from, screen, &wf_to);
 
 	for (x = 0; x < wf_left.w; x++) {
-		l = 0;
-		r = 0;
-
-		for (i = 0; i < fact[x]; i++) {
-			l += left[scala[x] - i] + 0.5;
-			r += right[scala[x] - i] + 0.5;
-		}
-
-		l /= fact[x];
-		r /= fact[x];
-
-		l >>= 1;
-		r >>= 1;
-
+		l = left[x] - 0.5;
 		if (l >= p)
 			l = p - 1;
+		r = right[x] - 0.5;
 		if (r >= p)
 			r = p - 1;
 
@@ -243,9 +181,6 @@ draw(double *left, double *right, int n, int *scala, int *fact, int p)
 
 		drawpixel(screen, lx, wf_left.y, &pane[l]);
 		drawpixel(screen, rx, wf_right.y, &pane[r]);
-
-		l >>= 1;
-		r >>= 1;
 
 		for (y = 0; y < sp_left.h; y++) {
 			drawpixel(screen, lx,
@@ -266,7 +201,7 @@ draw(double *left, double *right, int n, int *scala, int *fact, int p)
 }
 
 double *
-init_wights(int n)
+init_hamming(int n)
 {
 	double	*w;
 	int	i;
@@ -275,7 +210,7 @@ init_wights(int n)
 	assert(w);
 
 	for (i = 0; i < n; i++)
-		w[i] = (1 - cos((2 * M_PI * i) / (n - 1))) / 2;
+		w[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
 
 	return w;
 }
@@ -299,95 +234,27 @@ usage(void)
 int 
 main(int argc, char **argv)
 {
-	const SDL_VideoInfo	*vi;
 	SDL_Event       event;
 
-	struct		buf *buf;
+	int16_t		*buffer;
 	size_t		bufsz;
 
 	struct		sio_hdl	*sio;
 	struct		sio_par par;
-	struct	fifo	*ff;
 	struct	fft	*fft;
 
 	double		*left, *right;
-	int		c, i, n, k, r, delta;
-	double		*wights;
-	int		*scala;
-	int		*factor;
+	int		delta;
+	double		*hamming;
 	int		psize, ssize;
-	int		width = 1024;
-	int		height = 768;
-	int		fullscreen = 0;
-	int		stretch = 0;
-	int		sdlargs;
+	int		width, height;
 	int		pressed = 0;
-
-
-	#if TIMING
-	struct		timeval ta, te;
-	#endif
-
-	while ((c = getopt(argc, argv, "h:w:lrFf")) != -1)
-		switch (c) {
-		case 'h':
-			height = atoi(optarg);
-			break;
-		case 'w':
-			width = atoi(optarg);
-			break;
-		case 'l':
-			flip_left ^= 1;
-			break;
-		case 'r':
-			flip_right ^= 1;
-			break;
-		case 'F':
-			stretch = 1;
-			/* FALLTHROUGH */
-		case 'f':
-			fullscreen = 1;
-			break;
-		default:
-			usage();
-			break;
-		}
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return 1;
 
 	signal(SIGINT, catch);
 	atexit(SDL_Quit);
-
-	sdlargs = SDL_HWSURFACE | SDL_HWPALETTE |  SDL_DOUBLEBUF;
-	if (height <= 320 || width <= 200)
-		errx(1, "not supported resolution");
-	if (fullscreen) {
-		sdlargs |= SDL_FULLSCREEN;
-		vi = SDL_GetVideoInfo();
-		if (!vi)
-			return 1;
-		warnx("%dx%d", vi->current_w, vi->current_h);
-
-		if (stretch) {
-			height = vi->current_h - 1;
-			width = vi->current_w - 1;
-		}
-	}
-
-	screen = SDL_SetVideoMode(width, height, 32, sdlargs);
-	if (!screen)
-		return 1;
-
-	SDL_ShowCursor(SDL_DISABLE);
-
-	psize = 2 * height / 3;
-	ssize = psize >> 2;
-
-	init_rect(width, height, 1, ssize);
-
-	pan2 = init_palette_small(ssize);
-	pane = init_palette_big(psize);
 	
 	sio = sio_open(NULL, SIO_REC, 0);
 	if (!sio)
@@ -396,46 +263,50 @@ main(int argc, char **argv)
 	sio_initpar(&par);
 	sio_getpar(sio, &par);
 	
-	delta = par.round / 2;
-	n = 4 * delta;
-	warnx("delta: %d, n: %d", delta, n);
+	delta = par.round;
+	warnx("delta %d", delta);
 
-	bufsz = delta * sizeof(struct buf);
-	buf = malloc(bufsz);
-	assert(buf);
+	width = delta + 2;	/* XXX */
+	height = 3 * width / 4;
 
-	left = calloc(n, sizeof(double));
-	right = calloc(n, sizeof(double));
+	screen = SDL_SetVideoMode(width, height, 32,
+		SDL_HWSURFACE | SDL_HWPALETTE |  SDL_DOUBLEBUF);
+	if (!screen)
+		return 1;
+
+	bufsz = 2 * delta * sizeof(int16_t);
+	buffer = malloc(bufsz);
+	assert(buffer);
+
+	left = calloc(delta, sizeof(double));
+	right = calloc(delta, sizeof(double));
 	assert(left && right);
+
+	psize = 2 * height / 3;
+	ssize = psize >> 2;
+
+	init_rect(width, height, 1, ssize);
+
+	pan2 = init_palette_small(ssize);
+	pane = init_palette_big(psize);
+
+	fft = init_fft(delta);
+	hamming = init_hamming(delta);
 
 	sio_start(sio);
 
-	fft = init_fft(n);
-	wights = init_wights(n);
-	ff = init_fifo(10 * n);
-	scala = init_scala(n / 2, wf_left.w);
-	factor = init_factor(scala, wf_left.w);
-
-	#if TIMING
-	gettimeofday(&ta, NULL);
-	#endif
-
 	while (!die) {
-		k = sio_read(sio, buf, bufsz) / sizeof(struct buf);
-		for (i = 0; i < k; i++) {
-			left[i] = buf[i].left / (double)INT16_MAX;
-			right[i] = buf[i].right / (double)INT16_MAX;
-		}
-		r = wr_fifo(ff, left, right, k);
+		size_t done = 0;
 
-		if (r >= n) {
-			rd_fifo(ff, left, right, n, wights);
+		do {
+			done += sio_read(sio, buffer + done, bufsz - done);
+			if (done != bufsz)
+				warnx("re-read %zu", done);
+			assert(sio_eof(sio) == 0);
+		} while (done < bufsz);
 
-			dofft(fft, left);
-			dofft(fft, right);
-
-			draw(left, right, n / 2, scala, factor, psize);
-		}
+		dofft(fft, buffer, left, right, delta, hamming);
+		draw(left, right, psize);
 
 		SDL_PollEvent(&event);
 		switch (event.type) {
@@ -472,22 +343,14 @@ main(int argc, char **argv)
 			pressed = 0;
 			break;
 		}
-		#if TIMING
-		gettimeofday(&te, NULL);
-		fprintf(stderr, "%8d time elapsed: %7.6lf sec\r",
-			r, te.tv_sec - ta.tv_sec
-			+ (te.tv_usec - ta.tv_usec)/1000000.0);
-		memcpy(&ta, &te, sizeof(struct timeval));
-		#endif
 	}
-
 
 	sio_stop(sio);
 	sio_close(sio);
 
 	free(left);
 	free(right);
-	free(buf);
+	free(buffer);
 
 	return 0;
 }
