@@ -266,11 +266,11 @@ main(int argc, char **argv)
 	delta = par.round;
 	warnx("delta %d", delta);
 
-	width = delta + 2;	/* XXX */
+	width = delta + 4;	/* XXX */
 	height = 3 * width / 4;
 
 	screen = SDL_SetVideoMode(width, height, 32,
-		SDL_HWSURFACE | SDL_HWPALETTE |  SDL_DOUBLEBUF);
+		SDL_HWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF);
 	if (!screen)
 		return 1;
 
@@ -333,6 +333,11 @@ main(int argc, char **argv)
 					flip_left ^= 1;
 					flip_right ^= 1;
 				}
+				break;
+			case SDLK_f:
+				if (!pressed)
+					screen = SDL_SetVideoMode(0, 0, 0,
+						screen->flags ^ SDL_FULLSCREEN);
 				break;
 			default:
 				break;
