@@ -209,7 +209,7 @@ main(int argc, char **argv)
 	int		pressed = 0;
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		return 1;
+		errx(1, "SDL init failed");
 
 	signal(SIGINT, catch);
 	atexit(SDL_Quit);
@@ -228,7 +228,7 @@ main(int argc, char **argv)
 	screen = SDL_SetVideoMode(width, height, 32,
 		SDL_HWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF);
 	if (!screen)
-		return 1;
+		errx(1, "set video mode failed");
 
 	bufsz = 2 * delta * sizeof(int16_t);
 	buffer = malloc(bufsz);
@@ -292,6 +292,8 @@ main(int argc, char **argv)
 				if (!pressed)
 					screen = SDL_SetVideoMode(0, 0, 0,
 						screen->flags ^ SDL_FULLSCREEN);
+					if (!screen)
+						errx(1, "switch to full screen failed");
 				break;
 			default:
 				break;
