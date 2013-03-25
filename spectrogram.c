@@ -220,9 +220,7 @@ main(int argc, char **argv)
 
 	sio_initpar(&par);
 	sio_getpar(sio, &par);
-	
 	delta = par.round;
-	warnx("delta %d", delta);
 
 	width = delta + 4;	/* XXX */
 	height = 3 * width / 4;
@@ -258,8 +256,6 @@ main(int argc, char **argv)
 
 		do {
 			done += sio_read(sio, buffer + done, bufsz - done);
-			if (done != bufsz)
-				warnx("re-read %zu", done);
 			assert(sio_eof(sio) == 0);
 		} while (done < bufsz);
 
