@@ -38,8 +38,7 @@
 #define SSIZE	(PSIZE >> 1)
 
 SDL_Surface	*screen;
-SDL_Color	*pane;
-SDL_Color	*pan2;
+SDL_Color	*wf, sp;
 SDL_Color	black = { .r = 0, .g = 0, .b = 0 };
 SDL_Color	white = { .r = 255, .g = 255, .b = 255 };
 
@@ -138,16 +137,16 @@ draw(double *left, double *right, int p)
 		lx = wf_left.x + (flip_left ? wf_left.w - x - 1 : x);
 		rx = wf_right.x + (flip_right ? wf_right.w - x - 1 : x);
 
-		drawpixel(screen, lx, wf_left.y, &pane[l]);
-		drawpixel(screen, rx, wf_right.y, &pane[r]);
+		drawpixel(screen, lx, wf_left.y, &wf[l]);
+		drawpixel(screen, rx, wf_right.y, &wf[r]);
 
 		for (y = 0; y < sp_left.h; y++) {
 			drawpixel(screen, lx,
 				sp_left.y + sp_left.h - y - 1,
-				l > y ? &pan2[y] : &black);
+				l > y ? &sp[y] : &black);
 			drawpixel(screen, rx,
 				sp_right.y + sp_right.h - y - 1,
-				r > y ? &pan2[y] : &black);
+				r > y ? &sp[y] : &black);
 		}
 	}
 			
@@ -246,8 +245,8 @@ main(int argc, char **argv)
 
 	init_rect(width, height, 1, ssize);
 
-	pan2 = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
-	pane = init_palette(0.65, 0.60, 1.00, 0.00, 0.00, 1.00, psize, 1);
+	sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
+	wf = init_palette(0.65, 0.60, 1.00, 0.00, 0.00, 1.00, psize, 1);
 
 	fft = init_fft(delta);
 	hamming = init_hamming(delta);
