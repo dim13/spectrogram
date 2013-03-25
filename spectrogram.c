@@ -86,62 +86,21 @@ init_rect(int w, int h, int off, int s)
 }
 
 SDL_Color *
-init_palette_small(int n)
+init_palette(float h, float dh, float s, float ds, float v, float dv, int n, int lg)
 {
 	SDL_Color *p;
-	int	i;
-	float	h, s, v;
 	float	hstep, sstep, vstep;
-
+	int	i;
 
 	p = malloc(n * sizeof(SDL_Color));
 
-	h = 0.3;
-	hstep = -0.3 / n;
-
-	s = 0.5;
-	sstep = 0.5 / n;
-
-	v = 0.75;
-	vstep = 0.25 / n;
-
-
-	for (i = 0; i < n; i++) {
-		hsv2rgb(&p[i].r, &p[i].g, &p[i].b, h, s, v);
-		h += hstep;
-		s += sstep;
-		v += vstep;
-	}
-
-	return p;
-}
-
-SDL_Color *
-init_palette_big(int n)
-{
-	SDL_Color *p;
-	int	i;
-	float	h, s, v;
-	float	hstep, sstep, vstep;
-	float	k;
-	int	f = 100;
-
-	p = malloc(n * sizeof(SDL_Color));
-	k = 1.0 / logf(f + 1);
-
-	h = 0.65;
-	hstep = -0.4 / n;
-
-	s = 1.0;
-	sstep = -1.0 / n;
-
-	v = 0.0;
-	vstep = 1.0 / n;
+	hstep = (dh - h) / n;
+	sstep = (ds - s) / n;
+	vstep = (dv - v) / n;
 
 	for (i = 0; i < n; i++) {
 		hsv2rgb(&p[i].r, &p[i].g, &p[i].b, h, s,
-			k * logf(f * v + 1));
-
+			lg ? logf(100 * v + 1) / logf(101) : v);
 		h += hstep;
 		s += sstep;
 		v += vstep;
@@ -287,8 +246,8 @@ main(int argc, char **argv)
 
 	init_rect(width, height, 1, ssize);
 
-	pan2 = init_palette_small(ssize);
-	pane = init_palette_big(psize);
+	pan2 = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
+	pane = init_palette(0.65, 0.60, 1.00, 0.00, 0.00, 1.00, psize, 1);
 
 	fft = init_fft(delta);
 	hamming = init_hamming(delta);
