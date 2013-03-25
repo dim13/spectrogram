@@ -38,7 +38,7 @@
 #define SSIZE	(PSIZE >> 1)
 
 SDL_Surface	*screen;
-SDL_Color	*wf, sp;
+SDL_Color	*wf, *sp;
 SDL_Color	black = { .r = 0, .g = 0, .b = 0 };
 SDL_Color	white = { .r = 255, .g = 255, .b = 255 };
 
