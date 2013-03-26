@@ -249,7 +249,7 @@ main(int argc, char **argv)
 	struct	fft	*fft;
 
 	double		*left, *right;
-	int		delta;
+	int		delta, resolution;
 	double		*hamming;
 	int		psize, ssize;
 	int		width, height;
@@ -268,6 +268,7 @@ main(int argc, char **argv)
 	sio_initpar(&par);
 	sio_getpar(sio, &par);
 	delta = par.round;
+	resolution = par.rate / par.round / par.rchan;
 
 	width = delta + 4;	/* XXX */
 	height = 3 * width / 4;
@@ -307,7 +308,7 @@ main(int argc, char **argv)
 		} while (done < bufsz);
 
 		dofft(fft, buffer, left, right, delta, hamming);
-		draw(left, right, ssize, 24000 / delta);
+		draw(left, right, ssize, resolution);
 
 		SDL_PollEvent(&event);
 		switch (event.type) {
