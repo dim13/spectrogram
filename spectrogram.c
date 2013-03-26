@@ -166,11 +166,11 @@ draw(double *left, double *right, int p, int step)
 
 		if (discolight) {
 			av = pow(left[x] + right[x], 2.0);
-			if (x > 100 / step && x < 800 / step)
+			if (x >= 100 / step && x <= 800 / step)
 				lo += av;
-			if (x > 500 / step && x < 2000 / step)
+			if (x >= 500 / step && x <= 2000 / step)
 				mi += av;
-			if (x > 1500 / step && x < 5000 / step)
+			if (x >= 1500 / step && x <= 5000 / step)
 				hi += av;
 		}
 
