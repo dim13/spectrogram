@@ -75,7 +75,7 @@ init_rect(int w, int h, int ssz, int dlsz)
 	dl_hi.x = 2 * w / 3;
 	dl_hi.y = 0;
 	dl_hi.w = w / 3;
-	dl_hi.h = dlsz - 1;
+	dl_hi.h = dlsz;
 
 	/* Blit */
 	wf_from.x = 0;
