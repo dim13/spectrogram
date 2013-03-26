@@ -59,7 +59,7 @@ int	flip_right = 0;
 int	discolight = 0;
 
 void
-init_rect(int w, int h, int off, int ssz, int dlsz)
+init_rect(int w, int h, int ssz, int dlsz)
 {
 	/* Dicolight */
 	dl_lo.x = 0;
@@ -78,36 +78,36 @@ init_rect(int w, int h, int off, int ssz, int dlsz)
 	dl_hi.h = dlsz - 1;
 
 	/* Blit */
-	wf_from.x = off;
+	wf_from.x = 0;
 	wf_from.y = 1 + dlsz;
-	wf_from.w = w - 2 * off;
+	wf_from.w = w;
 	wf_from.h = h - ssz - dlsz - 1;
 
-	wf_to.x = off;
-	wf_to.y = 0 + dlsz;
-	wf_to.w = w - 2 * off;
+	wf_to.x = 0;
+	wf_to.y = dlsz;
+	wf_to.w = w;
 	wf_to.h = h - ssz - dlsz - 1;
 
 	/* Watterfall */
-	wf_left.x = off;
+	wf_left.x = 0;
 	wf_left.y = h - ssz - 1;
-	wf_left.w = w / 2 - 2 * off;
+	wf_left.w = w / 2 - 5;
 	wf_left.h = 1;
 
-	wf_right.x = w / 2 + off;
+	wf_right.x = w / 2;
 	wf_right.y = h - ssz - 1;
-	wf_right.w = w / 2 - 2 * off;
+	wf_right.w = w / 2 - 5;
 	wf_right.h = 1;
 
 	/* Spectrogram */
-	sp_left.x = off;
+	sp_left.x = 0;
 	sp_left.y = h - ssz;
-	sp_left.w = w / 2 - 2 * off;
+	sp_left.w = w / 2 - 5;
 	sp_left.h = ssz;
 
-	sp_right.x = w / 2 + off;
+	sp_right.x = w / 2;
 	sp_right.y = h - ssz;
-	sp_right.w = w / 2 - 2 * off;
+	sp_right.w = w / 2 - 5;
 	sp_right.h = ssz;
 }
 
@@ -283,7 +283,7 @@ main(int argc, char **argv)
 	delta = par.round;
 	resolution = par.rate / par.round / par.rchan;
 
-	width = delta + 4;	/* XXX */
+	width = delta + 10;	/* XXX */
 	height = 3 * width / 4;
 
 	screen = SDL_SetVideoMode(width, height, 32,
@@ -302,7 +302,7 @@ main(int argc, char **argv)
 	psize = 2 * height / 3;
 	ssize = psize >> 2;
 
-	init_rect(width, height, 1, ssize, !!discolight * ssize);
+	init_rect(width, height, ssize, !!discolight * ssize);
 
 	sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
 	wf = init_palette(0.65, 0.30, 1.00, 0.00, 0.00, 1.00, ssize, 1);
@@ -359,7 +359,7 @@ main(int argc, char **argv)
 			case SDLK_d:
 				if (!pressed)
 					discolight ^= 1;
-				init_rect(width, height, 1, ssize,
+				init_rect(width, height, ssize,
 					!!discolight * ssize);
 				break;
 			default:
