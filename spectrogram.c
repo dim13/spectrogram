@@ -42,46 +42,72 @@ SDL_Color	*wf, *sp;
 SDL_Color	black = { .r = 0, .g = 0, .b = 0 };
 SDL_Color	white = { .r = 255, .g = 255, .b = 255 };
 
-SDL_Rect	wf_from, wf_to;
-SDL_Rect	wf_left, wf_right;
-SDL_Rect	sp_left, sp_right;
+SDL_Rect	wf_from, wf_to;		/* waterfall blit */
+SDL_Rect	wf_left, wf_right;	/* waterfall */
+SDL_Rect	sp_left, sp_right;	/* spectrogram */
+SDL_Rect	dl_lo, dl_mi, dl_hi;	/* disco light */
+
+/* Disco Light Frequencies
+ * LOW	100-800 Hz
+ * MID	500-2000 Hz
+ * HI	1500-5000 Hz
+ */
 
 int	die = 0;
 int	flip_left = 1;
 int	flip_right = 0;
 
 void
-init_rect(int w, int h, int off, int s)
+init_rect(int w, int h, int off, int ssz, int dlsz)
 {
+	/* Dicolight */
+	dl_lo.x = 0;
+	dl_lo.y = 0;
+	dl_lo.w = w / 3;
+	dl_lo.h = dlsz - 1;
+
+	dl_mi.x = w / 3;
+	dl_mi.y = 0;
+	dl_mi.w = w / 3;
+	dl_mi.h = dlsz - 1;
+
+	dl_hi.x = 2 * w / 3;
+	dl_hi.y = 0;
+	dl_hi.w = w / 3;
+	dl_hi.h = dlsz - 1;
+
+	/* Blit */
 	wf_from.x = off;
-	wf_from.y = 1;
+	wf_from.y = 1 + dlsz;
 	wf_from.w = w - 2 * off;
-	wf_from.h = h - s - 1;
+	wf_from.h = h - ssz - dlsz - 1;
 
 	wf_to.x = off;
-	wf_to.y = 0;
+	wf_to.y = 0 + dlsz;
 	wf_to.w = w - 2 * off;
-	wf_to.h = h - s - 1;
+	wf_to.h = h - ssz - dlsz - 1;
 
+	/* Watterfall */
 	wf_left.x = off;
-	wf_left.y = h - s - 1;
+	wf_left.y = h - ssz - 1;
 	wf_left.w = w / 2 - 2 * off;
 	wf_left.h = 1;
 
 	wf_right.x = w / 2 + off;
-	wf_right.y = h - s - 1;
+	wf_right.y = h - ssz - 1;
 	wf_right.w = w / 2 - 2 * off;
 	wf_right.h = 1;
 
+	/* Spectrogram */
 	sp_left.x = off;
-	sp_left.y = h - s;
+	sp_left.y = h - ssz;
 	sp_left.w = w / 2 - 2 * off;
-	sp_left.h = s;
+	sp_left.h = ssz;
 
 	sp_right.x = w / 2 + off;
-	sp_right.y = h - s;
+	sp_right.y = h - ssz;
 	sp_right.w = w / 2 - 2 * off;
-	sp_right.h = s;
+	sp_right.h = ssz;
 }
 
 SDL_Color *
@@ -117,14 +143,17 @@ drawpixel(SDL_Surface *s, int x, int y, SDL_Color *c)
 }
 
 int
-draw(double *left, double *right, int p)
+draw(double *left, double *right, int p, int step)
 {
 	int             x, y, l, r, lx, rx;
+	int		lo, mi, hi;
 
 	if (SDL_MUSTLOCK(screen) && SDL_LockSurface(screen))
 		return -1;
 
 	SDL_BlitSurface(screen, &wf_from, screen, &wf_to);
+
+	lo = mi = hi = 0;
 
 	for (x = 0; x < wf_left.w; x++) {
 		l = left[x] - 0.5;
@@ -133,6 +162,13 @@ draw(double *left, double *right, int p)
 		r = right[x] - 0.5;
 		if (r >= p)
 			r = p - 1;
+
+		if (x > 100 / step && x < 800 / step)
+			lo += l + r;
+		if (x > 500 / step && x < 2000 / step)
+			mi += l + r;
+		if (x > 1500 / step && x < 5000 / step)
+			hi += l + r;
 
 		lx = wf_left.x + (flip_left ? wf_left.w - x - 1 : x);
 		rx = wf_right.x + (flip_right ? wf_right.w - x - 1 : x);
@@ -149,6 +185,17 @@ draw(double *left, double *right, int p)
 				r > y ? &sp[y] : &black);
 		}
 	}
+
+	/* XXX */
+	lo /= 700 / step;
+	mi /= 1500 / step;
+	hi /= 3500 / step;
+
+	//warnx("%3d %3d %3d", lo, mi, hi);
+
+	SDL_FillRect(screen, &dl_lo, SDL_MapRGB(screen->format, lo, 0, 0));
+	SDL_FillRect(screen, &dl_mi, SDL_MapRGB(screen->format, 0, mi, 0));
+	SDL_FillRect(screen, &dl_hi, SDL_MapRGB(screen->format, 0, hi / 2, hi));
 			
 	if (SDL_MUSTLOCK(screen))
 		SDL_UnlockSurface(screen);
@@ -241,7 +288,7 @@ main(int argc, char **argv)
 	psize = 2 * height / 3;
 	ssize = psize >> 2;
 
-	init_rect(width, height, 1, ssize);
+	init_rect(width, height, 1, ssize, 30);
 
 	sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
 	wf = init_palette(0.65, 0.30, 1.00, 0.00, 0.00, 1.00, ssize, 1);
@@ -260,7 +307,7 @@ main(int argc, char **argv)
 		} while (done < bufsz);
 
 		dofft(fft, buffer, left, right, delta, hamming);
-		draw(left, right, ssize);
+		draw(left, right, ssize, 24000 / delta);
 
 		SDL_PollEvent(&event);
 		switch (event.type) {
