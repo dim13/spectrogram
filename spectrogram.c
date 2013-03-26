@@ -65,12 +65,12 @@ init_rect(int w, int h, int off, int ssz, int dlsz)
 	dl_lo.x = 0;
 	dl_lo.y = 0;
 	dl_lo.w = w / 3;
-	dl_lo.h = dlsz - 1;
+	dl_lo.h = dlsz;
 
 	dl_mi.x = w / 3;
 	dl_mi.y = 0;
 	dl_mi.w = w / 3;
-	dl_mi.h = dlsz - 1;
+	dl_mi.h = dlsz;
 
 	dl_hi.x = 2 * w / 3;
 	dl_hi.y = 0;
