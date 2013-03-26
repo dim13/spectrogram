@@ -146,7 +146,7 @@ int
 draw(double *left, double *right, int p, int step)
 {
 	int             x, y, l, r, lx, rx;
-	int		lo, mi, hi;
+	double		lo, mi, hi, av;
 
 	if (SDL_MUSTLOCK(screen) && SDL_LockSurface(screen))
 		return -1;
@@ -163,12 +163,13 @@ draw(double *left, double *right, int p, int step)
 		if (r >= p)
 			r = p - 1;
 
+		av = pow(left[x] + right[x], 2.0);
 		if (x > 100 / step && x < 800 / step)
-			lo += l + r;
+			lo += av;
 		if (x > 500 / step && x < 2000 / step)
-			mi += l + r;
+			mi += av;
 		if (x > 1500 / step && x < 5000 / step)
-			hi += l + r;
+			hi += av;
 
 		lx = wf_left.x + (flip_left ? wf_left.w - x - 1 : x);
 		rx = wf_right.x + (flip_right ? wf_right.w - x - 1 : x);
@@ -187,11 +188,15 @@ draw(double *left, double *right, int p, int step)
 	}
 
 	/* XXX */
-	lo /= 700 / step;
-	mi /= 1500 / step;
-	hi /= 3500 / step;
-
-	//warnx("%3d %3d %3d", lo, mi, hi);
+	lo = sqrt(lo / (700 / step));
+	if (lo > p)
+		lo = p;
+	mi = sqrt(mi / (1500 / step));
+	if (mi > p)
+		mi = p;
+	hi = sqrt(hi / (3500 / step));
+	if (hi > p)
+		hi = p;
 
 	SDL_FillRect(screen, &dl_lo, SDL_MapRGB(screen->format, lo, 0, 0));
 	SDL_FillRect(screen, &dl_mi, SDL_MapRGB(screen->format, 0, mi, 0));
