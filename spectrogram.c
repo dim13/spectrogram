@@ -203,11 +203,11 @@ draw(double *left, double *right, int p, int step)
 			hi = p;
 
 		SDL_FillRect(screen, &dl_lo,
-			SDL_MapRGB(screen->format, lo, lo / 2, 0));
+			SDL_MapRGB(screen->format, lo, lo / 4, 0));
 		SDL_FillRect(screen, &dl_mi,
 			SDL_MapRGB(screen->format, mi / 2, mi, 0));
 		SDL_FillRect(screen, &dl_hi,
-			SDL_MapRGB(screen->format, 0, hi / 2, hi));
+			SDL_MapRGB(screen->format, hi / 4, hi / 2, hi));
 	}
 
 	if (SDL_MUSTLOCK(screen))
