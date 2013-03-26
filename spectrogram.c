@@ -302,7 +302,7 @@ main(int argc, char **argv)
 	psize = 2 * height / 3;
 	ssize = psize >> 2;
 
-	init_rect(width, height, 1, ssize, !!discolight * 30);
+	init_rect(width, height, 1, ssize, !!discolight * ssize);
 
 	sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
 	wf = init_palette(0.65, 0.30, 1.00, 0.00, 0.00, 1.00, ssize, 1);
@@ -360,7 +360,7 @@ main(int argc, char **argv)
 				if (!pressed)
 					discolight ^= 1;
 				init_rect(width, height, 1, ssize,
-					!!discolight * 30);
+					!!discolight * ssize);
 				break;
 			default:
 				break;
