@@ -56,6 +56,7 @@ SDL_Rect	dl_lo, dl_mi, dl_hi;	/* disco light */
 int	die = 0;
 int	flip_left = 1;
 int	flip_right = 0;
+int	discolight = 0;
 
 void
 init_rect(int w, int h, int off, int ssz, int dlsz)
@@ -163,13 +164,15 @@ draw(double *left, double *right, int p, int step)
 		if (r >= p)
 			r = p - 1;
 
-		av = pow(left[x] + right[x], 2.0);
-		if (x > 100 / step && x < 800 / step)
-			lo += av;
-		if (x > 500 / step && x < 2000 / step)
-			mi += av;
-		if (x > 1500 / step && x < 5000 / step)
-			hi += av;
+		if (discolight) {
+			av = pow(left[x] + right[x], 2.0);
+			if (x > 100 / step && x < 800 / step)
+				lo += av;
+			if (x > 500 / step && x < 2000 / step)
+				mi += av;
+			if (x > 1500 / step && x < 5000 / step)
+				hi += av;
+		}
 
 		lx = wf_left.x + (flip_left ? wf_left.w - x - 1 : x);
 		rx = wf_right.x + (flip_right ? wf_right.w - x - 1 : x);
@@ -188,20 +191,25 @@ draw(double *left, double *right, int p, int step)
 	}
 
 	/* XXX */
-	lo = sqrt(lo / (700 / step));
-	if (lo > p)
-		lo = p;
-	mi = sqrt(mi / (1500 / step));
-	if (mi > p)
-		mi = p;
-	hi = sqrt(hi / (3500 / step));
-	if (hi > p)
-		hi = p;
+	if (discolight) {
+		lo = sqrt(lo / (700 / step));
+		if (lo > p)
+			lo = p;
+		mi = sqrt(mi / (1500 / step));
+		if (mi > p)
+			mi = p;
+		hi = sqrt(hi / (3500 / step));
+		if (hi > p)
+			hi = p;
 
-	SDL_FillRect(screen, &dl_lo, SDL_MapRGB(screen->format, lo, 0, 0));
-	SDL_FillRect(screen, &dl_mi, SDL_MapRGB(screen->format, 0, mi, 0));
-	SDL_FillRect(screen, &dl_hi, SDL_MapRGB(screen->format, 0, hi / 2, hi));
-			
+		SDL_FillRect(screen, &dl_lo,
+			SDL_MapRGB(screen->format, lo, 0, 0));
+		SDL_FillRect(screen, &dl_mi,
+			SDL_MapRGB(screen->format, 0, mi, 0));
+		SDL_FillRect(screen, &dl_hi,
+			SDL_MapRGB(screen->format, 0, hi / 2, hi));
+	}
+
 	if (SDL_MUSTLOCK(screen))
 		SDL_UnlockSurface(screen);
 
@@ -294,7 +302,7 @@ main(int argc, char **argv)
 	psize = 2 * height / 3;
 	ssize = psize >> 2;
 
-	init_rect(width, height, 1, ssize, 30);
+	init_rect(width, height, 1, ssize, !!discolight * 30);
 
 	sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
 	wf = init_palette(0.65, 0.30, 1.00, 0.00, 0.00, 1.00, ssize, 1);
@@ -347,6 +355,12 @@ main(int argc, char **argv)
 						screen->flags ^ SDL_FULLSCREEN);
 					if (!screen)
 						errx(1, "switch to full screen failed");
+				break;
+			case SDLK_d:
+				if (!pressed)
+					discolight ^= 1;
+				init_rect(width, height, 1, ssize,
+					!!discolight * 30);
 				break;
 			default:
 				break;
