@@ -135,7 +135,7 @@ init_palette(float h, float dh, float s, float ds, float v, float dv, int n, int
 	return p;
 }
 
-void
+static inline void
 drawpixel(SDL_Surface *s, int x, int y, SDL_Color *c)
 {
 	Uint32 *buf = (Uint32 *)s->pixels + y * (s->pitch >> 2) + x;
@@ -149,12 +149,13 @@ draw(double *left, double *right, int p, int step)
 	int             x, y, l, r, lx, rx;
 	double		lo, mi, hi, av;
 
-	if (SDL_MUSTLOCK(screen) && SDL_LockSurface(screen))
-		return -1;
+	if (SDL_MUSTLOCK(screen))
+		SDL_LockSurface(screen);
 
 	SDL_BlitSurface(screen, &wf_from, screen, &wf_to);
 
-	lo = mi = hi = 0;
+	if (discolight)
+		lo = mi = hi = 0.0;
 
 	for (x = 0; x < wf_left.w; x++) {
 		l = left[x] - 0.5;
@@ -287,7 +288,7 @@ main(int argc, char **argv)
 	height = 3 * width / 4;
 
 	screen = SDL_SetVideoMode(width, height, 32,
-		SDL_HWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF);
+		SDL_HWSURFACE | SDL_DOUBLEBUF);
 	if (!screen)
 		errx(1, "set video mode failed");
 
