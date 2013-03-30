@@ -269,6 +269,8 @@ main(int argc, char **argv)
 	int		width, height;
 	int		pressed = 0;
 
+	setenv("SDL_VIDEO_ALLOW_SCREENSAVER", "1", 0);
+
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		errx(1, "SDL init failed");
 
