@@ -267,7 +267,6 @@ main(int argc, char **argv)
 	double		*hamming;
 	int		psize, ssize;
 	int		width, height;
-	int		pressed = 0;
 
 	setenv("SDL_VIDEO_ALLOW_SCREENSAVER", "1", 0);
 
@@ -313,6 +312,8 @@ main(int argc, char **argv)
 	fft = init_fft(delta);
 	hamming = init_hamming(delta);
 
+	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+
 	sio_start(sio);
 
 	while (!die) {
@@ -326,53 +327,44 @@ main(int argc, char **argv)
 		dofft(fft, buffer, left, right, delta, hamming);
 		draw(left, right, ssize, resolution);
 
-		SDL_PollEvent(&event);
-		switch (event.type) {
-		case SDL_QUIT:
-			die = 1;
-			break;
-		case SDL_KEYDOWN:
-			switch (event.key.keysym.sym) {
-			case SDLK_q:
-				die = 1;
-				break;
-			case SDLK_l:
-			case SDLK_1:
-				if (!pressed)
+		while (SDL_PollEvent(&event)) {
+			switch (event.type) {
+			case SDL_KEYDOWN:
+				switch (event.key.keysym.sym) {
+				case SDLK_q:
+					die = 1;
+					break;
+				case SDLK_l:
+				case SDLK_1:
 					flip_left ^= 1;
-				break;
-			case SDLK_r:
-			case SDLK_2:
-				if (!pressed)
+					break;
+				case SDLK_r:
+				case SDLK_2:
 					flip_right ^= 1;
-				break;
-			case SDLK_0:
-				if (!pressed) {
+					break;
+				case SDLK_0:
 					flip_left ^= 1;
 					flip_right ^= 1;
-				}
-				break;
-			case SDLK_f:
-				if (!pressed)
+					break;
+				case SDLK_f:
 					screen = SDL_SetVideoMode(0, 0, 0,
 						screen->flags ^ SDL_FULLSCREEN);
 					if (!screen)
 						errx(1, "switch to full screen failed");
-				break;
-			case SDLK_d:
-				if (!pressed)
+					break;
+				case SDLK_d:
 					discolight ^= 1;
-				init_rect(width, height, ssize,
-					!!discolight * ssize);
+					init_rect(width, height, ssize,
+						!!discolight * ssize);
+					break;
+				default:
+					break;
+				}
 				break;
-			default:
+			case SDL_QUIT:
+				die = 1;
 				break;
 			}
-			pressed = 1;
-			break;
-		case SDL_KEYUP:
-			pressed = 0;
-			break;
 		}
 	}
 
