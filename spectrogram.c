@@ -47,11 +47,14 @@ SDL_Rect	wf_left, wf_right;	/* waterfall */
 SDL_Rect	sp_left, sp_right;	/* spectrogram */
 SDL_Rect	dl_lo, dl_mi, dl_hi;	/* disco light */
 
-/* Disco Light Frequencies
- * LOW	50-800 Hz
- * MID	500-2000 Hz
- * HI	1500-5000 Hz
- */
+/* Disco Light Frequencies, Hz */
+
+#define	LOSTART	50
+#define	LOEND	350
+#define	MISTART	200
+#define	MIEND	2000
+#define	HISTART	1500
+#define HIEND	5000
 
 int	die = 0;
 int	flip_left = 1;
@@ -167,11 +170,11 @@ draw(double *left, double *right, int p, int step)
 
 		if (discolight) {
 			av = pow(left[x] + right[x], 2.0);
-			if (x >= 50 / step && x <= 800 / step)
+			if (x >= LOSTART / step && x <= LOEND / step)
 				lo += av;
-			if (x >= 500 / step && x <= 2000 / step)
+			if (x >= MISTART / step && x <= MIEND / step)
 				mi += av;
-			if (x >= 1500 / step && x <= 5000 / step)
+			if (x >= HISTART / step && x <= HIEND / step)
 				hi += av;
 		}
 
@@ -193,13 +196,13 @@ draw(double *left, double *right, int p, int step)
 
 	/* XXX */
 	if (discolight) {
-		lo = sqrt(lo / (750 / step));
+		lo = sqrt(lo / ((LOEND - LOSTART) / step));
 		if (lo > p)
 			lo = p;
-		mi = sqrt(mi / (1500 / step));
+		mi = sqrt(mi / ((MIEND - MISTART) / step));
 		if (mi > p)
 			mi = p;
-		hi = sqrt(hi / (3500 / step));
+		hi = sqrt(hi / ((HIEND - HISTART) / step));
 		if (hi > p)
 			hi = p;
 
