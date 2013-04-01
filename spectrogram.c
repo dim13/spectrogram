@@ -48,7 +48,7 @@ SDL_Rect	sp_left, sp_right;	/* spectrogram */
 SDL_Rect	dl_lo, dl_mi, dl_hi;	/* disco light */
 
 /* Disco Light Frequencies
- * LOW	100-800 Hz
+ * LOW	50-800 Hz
  * MID	500-2000 Hz
  * HI	1500-5000 Hz
  */
@@ -167,7 +167,7 @@ draw(double *left, double *right, int p, int step)
 
 		if (discolight) {
 			av = pow(left[x] + right[x], 2.0);
-			if (x >= 100 / step && x <= 800 / step)
+			if (x >= 50 / step && x <= 800 / step)
 				lo += av;
 			if (x >= 500 / step && x <= 2000 / step)
 				mi += av;
@@ -193,7 +193,7 @@ draw(double *left, double *right, int p, int step)
 
 	/* XXX */
 	if (discolight) {
-		lo = sqrt(lo / (700 / step));
+		lo = sqrt(lo / (750 / step));
 		if (lo > p)
 			lo = p;
 		mi = sqrt(mi / (1500 / step));
