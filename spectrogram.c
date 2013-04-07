@@ -310,7 +310,7 @@ main(int argc, char **argv)
 	init_rect(width, height, ssize, !!discolight * ssize);
 
 	sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
-	wf = init_palette(0.65, 0.30, 1.00, 0.00, 0.00, 1.00, ssize, 1);
+	wf = init_palette(0.65, 0.35, 1.00, 0.00, 0.00, 1.00, ssize, 1);
 
 	fft = init_fft(delta);
 	hamming = init_hamming(delta);
