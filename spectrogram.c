@@ -323,6 +323,7 @@ main(int argc, char **argv)
 
 	done = 0;
 	while (!die) {
+		assert(done == 0);
 		do {
 			done += sio_read(sio, buffer + done, bufsz - done);
 			assert(sio_eof(sio) == 0);
