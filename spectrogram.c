@@ -258,16 +258,18 @@ main(int argc, char **argv)
 {
 	SDL_Event       event;
 
-	int16_t		*buffer;
-	size_t		bufsz;
-
 	struct		sio_hdl	*sio;
 	struct		sio_par par;
-	struct	fft	*fft;
+	struct		fft *fft;
 
 	double		*left, *right;
-	int		delta, resolution;
 	double		*hamming;
+
+	int16_t		*buffer;
+	size_t		bufsz;
+	size_t		done;
+
+	int		delta, resolution;
 	int		psize, ssize;
 	int		width, height;
 
@@ -319,13 +321,13 @@ main(int argc, char **argv)
 
 	sio_start(sio);
 
+	done = 0;
 	while (!die) {
-		size_t done = 0;
-
 		do {
 			done += sio_read(sio, buffer + done, bufsz - done);
 			assert(sio_eof(sio) == 0);
 		} while (done < bufsz);
+		done -= bufsz;
 
 		dofft(fft, buffer, left, right, delta, hamming);
 		draw(left, right, ssize, resolution);
