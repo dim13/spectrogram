@@ -350,10 +350,7 @@ main(int argc, char **argv)
 					flip_right ^= 1;
 					break;
 				case SDLK_f:
-					screen = SDL_SetVideoMode(0, 0, 0,
-						screen->flags ^ SDL_FULLSCREEN);
-					if (!screen)
-						errx(1, "switch to full screen failed");
+					SDL_WM_ToggleFullScreen(screen);
 					break;
 				case SDLK_d:
 					discolight ^= 1;
