@@ -29,7 +29,7 @@
 #include <signal.h>
 
 #include <SDL.h>
-#include <SDL_thread.h>
+#include <SDL_framerate.h>
 
 #include "fft.h"
 #include "hsv2rgb.h"
@@ -257,6 +257,7 @@ int
 main(int argc, char **argv)
 {
 	SDL_Event       event;
+	FPSmanager	man;
 
 	struct		sio_hdl	*sio;
 	struct		sio_par par;
@@ -280,7 +281,7 @@ main(int argc, char **argv)
 
 	signal(SIGINT, catch);
 	atexit(SDL_Quit);
-	
+
 	sio = sio_open(NULL, SIO_REC, 0);
 	if (!sio)
 		errx(1, "cannot connect to sound server, is it running?");
@@ -289,6 +290,9 @@ main(int argc, char **argv)
 	sio_getpar(sio, &par);
 	delta = par.round;
 	resolution = par.rate / par.round / par.rchan;
+
+	SDL_initFramerate(&man);
+	SDL_setFramerate(&man, par.rate /par.round);
 
 	width = delta + 10;	/* XXX */
 	height = 3 * width / 4;
@@ -332,6 +336,8 @@ main(int argc, char **argv)
 
 		dofft(fft, buffer, left, right, delta, hamming);
 		draw(left, right, ssize, resolution);
+
+		SDL_framerateDelay(&man);
 
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
