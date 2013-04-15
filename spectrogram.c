@@ -270,7 +270,7 @@ main(int argc, char **argv)
 	size_t		bufsz;
 	size_t		done;
 
-	int		delta, resolution;
+	int		delta, resolution, fps;
 	int		psize, ssize;
 	int		width, height;
 
@@ -289,10 +289,11 @@ main(int argc, char **argv)
 	sio_initpar(&par);
 	sio_getpar(sio, &par);
 	delta = par.round;
-	resolution = par.rate / par.round / par.rchan;
+	resolution = (par.rate / par.round) / par.rchan;
+	fps = (par.rate / par.round) * par.rchan;
 
 	SDL_initFramerate(&man);
-	SDL_setFramerate(&man, par.rate / par.round);
+	SDL_setFramerate(&man, fps);
 
 	width = delta + 10;	/* XXX */
 	height = 3 * width / 4;
