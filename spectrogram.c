@@ -292,7 +292,7 @@ main(int argc, char **argv)
 	resolution = par.rate / par.round / par.rchan;
 
 	SDL_initFramerate(&man);
-	SDL_setFramerate(&man, par.rate /par.round);
+	SDL_setFramerate(&man, par.rate / par.round);
 
 	width = delta + 10;	/* XXX */
 	height = 3 * width / 4;
