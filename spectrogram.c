@@ -37,6 +37,7 @@
 #define PSIZE	250
 #define SSIZE	(PSIZE >> 1)
 
+extern		char *__progname;
 SDL_Surface	*screen;
 SDL_Color	*wf, *sp;
 SDL_Color	black = { .r = 0, .g = 0, .b = 0 };
@@ -243,16 +244,6 @@ catch(int notused)
 	die = 1;
 }
 
-__dead void
-usage(void)
-{
-	extern char *__progname;
-
-	(void)fprintf(stderr, "usage: %s [-h <pixel>] [-w <pixel>] [-l] [-r]\n",
-		__progname);
-	exit(1);
-}
-
 int 
 main(int argc, char **argv)
 {
@@ -292,6 +283,7 @@ main(int argc, char **argv)
 	resolution = (par.rate / par.round) / par.rchan;
 	fps = (par.rate / par.round) * par.rchan;
 
+	SDL_WM_SetCaption(__progname, NULL);
 	SDL_initFramerate(&man);
 	SDL_setFramerate(&man, fps);
 
@@ -361,6 +353,8 @@ main(int argc, char **argv)
 					break;
 				case SDLK_f:
 					SDL_WM_ToggleFullScreen(screen);
+					SDL_ShowCursor(!(screen->flags
+						& SDL_FULLSCREEN));
 					break;
 				case SDLK_d:
 					discolight ^= 1;
