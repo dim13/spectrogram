@@ -18,7 +18,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <err.h>
-#include <assert.h>
 #include <sndio.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -230,7 +229,8 @@ init_hamming(int n)
 	int	i;
 
 	w = calloc(n, sizeof(double));
-	assert(w);
+	if (!w)
+		errx(1, "malloc failed");
 
 	for (i = 0; i < n; i++)
 		w[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
@@ -278,7 +278,23 @@ main(int argc, char **argv)
 		errx(1, "cannot connect to sound server, is it running?");
 
 	sio_initpar(&par);
-	sio_getpar(sio, &par);
+
+	par.rchan = 2;
+	par.bits = 16;
+	par.le = SIO_LE_NATIVE;
+	par.sig = 1;
+
+	if (!sio_setpar(sio, &par))
+		errx(1, "SIO set params failed");
+	if (!sio_getpar(sio, &par))
+		errx(1, "SIO get params failed");
+
+	if (par.rchan != 2 ||
+	    par.bits != 16 ||
+	    par.le != SIO_LE_NATIVE ||
+	    par.sig != 1)
+		errx(1, "unsupported audio params");
+
 	delta = par.round;
 	resolution = (par.rate / par.round) / par.rchan;
 	fps = (par.rate / par.round) * par.rchan;
@@ -297,11 +313,13 @@ main(int argc, char **argv)
 
 	bufsz = 2 * delta * sizeof(int16_t);
 	buffer = malloc(bufsz);
-	assert(buffer);
+	if (!buffer)
+		errx(1, "malloc failed");
 
 	left = calloc(delta, sizeof(double));
 	right = calloc(delta, sizeof(double));
-	assert(left && right);
+	if (!left || !right)
+		errx(1, "malloc failed");
 
 	psize = 2 * height / 3;
 	ssize = psize >> 2;
@@ -320,10 +338,10 @@ main(int argc, char **argv)
 
 	done = 0;
 	while (!die) {
-		assert(done == 0);
 		do {
 			done += sio_read(sio, buffer + done, bufsz - done);
-			assert(sio_eof(sio) == 0);
+			if (sio_eof(sio))
+				errx(1, "SIO EOF");
 		} while (done < bufsz);
 		done -= bufsz;
 
