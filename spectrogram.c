@@ -244,6 +244,25 @@ catch(int notused)
 	die = 1;
 }
 
+__dead void
+usage(void)
+{
+	fprintf(stderr, "Usage: %s [-hsd]\n", __progname);
+	fprintf(stderr, "\th\tthis help\n");
+	fprintf(stderr, "\ts\tallow scrennsaver\n");
+	fprintf(stderr, "\td\tdon't fork\n");
+
+	fprintf(stderr, "Keys:\n");
+	fprintf(stderr, "\tq\tquit\n");
+	fprintf(stderr, "\t1,l\tflip left\n");
+	fprintf(stderr, "\t2,r\tflip right\n");
+	fprintf(stderr, "\t0\tflip both\n");
+	fprintf(stderr, "\tf\ttoggle fullscreen\n");
+	fprintf(stderr, "\td\ttoggle discolights\n");
+
+	exit(0);
+}
+
 int 
 main(int argc, char **argv)
 {
@@ -261,11 +280,30 @@ main(int argc, char **argv)
 	size_t		bufsz;
 	size_t		done;
 
+	int		ch, sflag = 1, dflag = 1;
 	int		delta, resolution, fps;
 	int		psize, ssize;
 	int		width, height;
 
-	setenv("SDL_VIDEO_ALLOW_SCREENSAVER", "1", 0);
+	while ((ch = getopt(argc, argv, "hsd")) != -1)
+		switch (ch) {
+		case 's':
+			sflag = 0;
+			break;
+		case 'd':
+			dflag = 0;
+			break;
+		case 'h':
+		default:
+			usage();
+			/* NOTREACHED */
+		}
+	argc -= optind;
+	argv += optind;
+		
+
+	if (sflag)
+		setenv("SDL_VIDEO_ALLOW_SCREENSAVER", "1", 0);
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		errx(1, "SDL init failed");
@@ -294,6 +332,9 @@ main(int argc, char **argv)
 	    par.le != SIO_LE_NATIVE ||
 	    par.sig != 1)
 		errx(1, "unsupported audio params");
+
+	if (dflag)
+		daemon(0, 0);
 
 	delta = par.round;
 	resolution = (par.rate / par.round) / par.rchan;
