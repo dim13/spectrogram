@@ -352,7 +352,7 @@ main(int argc, char **argv)
 	if (!screen)
 		errx(1, "set video mode failed");
 
-	bufsz = 2 * delta * sizeof(int16_t);
+	bufsz = par.rchan * delta * sizeof(int16_t);
 	buffer = malloc(bufsz);
 	if (!buffer)
 		errx(1, "malloc failed");
