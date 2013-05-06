@@ -35,6 +35,7 @@
 
 #define PSIZE	250
 #define SSIZE	(PSIZE >> 1)
+#define GAP	2
 
 extern		char *__progname;
 SDL_Surface	*screen;
@@ -94,23 +95,23 @@ init_rect(int w, int h, int ssz, int dlsz)
 	/* Watterfall */
 	wf_left.x = 0;
 	wf_left.y = h - ssz - 1;
-	wf_left.w = w / 2 - 5;
+	wf_left.w = w / 2 - GAP;
 	wf_left.h = 1;
 
-	wf_right.x = w / 2;
+	wf_right.x = w / 2 + GAP;
 	wf_right.y = h - ssz - 1;
-	wf_right.w = w / 2 - 5;
+	wf_right.w = w / 2 - GAP;
 	wf_right.h = 1;
 
 	/* Spectrogram */
 	sp_left.x = 0;
 	sp_left.y = h - ssz;
-	sp_left.w = w / 2 - 5;
+	sp_left.w = w / 2 - GAP;
 	sp_left.h = ssz;
 
-	sp_right.x = w / 2;
+	sp_right.x = w / 2 + GAP;
 	sp_right.y = h - ssz;
-	sp_right.w = w / 2 - 5;
+	sp_right.w = w / 2 - GAP;
 	sp_right.h = ssz;
 }
 
@@ -344,7 +345,7 @@ main(int argc, char **argv)
 	SDL_initFramerate(&man);
 	SDL_setFramerate(&man, fps);
 
-	width = delta + 10;	/* XXX */
+	width = delta + 2 * GAP;
 	height = 3 * width / 4;
 
 	screen = SDL_SetVideoMode(width, height, 32,
