@@ -249,9 +249,9 @@ __dead void
 usage(void)
 {
 	fprintf(stderr, "Usage: %s [-hsd]\n", __progname);
-	fprintf(stderr, "\th\tthis help\n");
-	fprintf(stderr, "\ts\tallow scrennsaver\n");
-	fprintf(stderr, "\td\tdon't fork\n");
+	fprintf(stderr, "\t-h\tthis help\n");
+	fprintf(stderr, "\t-s\tallow scrennsaver\n");
+	fprintf(stderr, "\t-d\tdon't fork\n");
 
 	fprintf(stderr, "Keys:\n");
 	fprintf(stderr, "\tq\tquit\n");
