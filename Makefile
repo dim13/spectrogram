@@ -2,7 +2,7 @@
 
 PROG=	spectrogram
 SRCS=	spectrogram.c fft.c hsv2rgb.c
-HEADERS=fifo.h fft.h hsv2rgb.h
+HEADERS=fft.h hsv2rgb.h
 LIBS=	sdl SDL_gfx fftw3
 PCCF!=	pkg-config --cflags ${LIBS}
 PCLA!=	pkg-config --libs ${LIBS}
