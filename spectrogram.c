@@ -243,7 +243,7 @@ main(int argc, char **argv)
 
 	double		*left, *right;
 	double		*hamming;
-	float		scala = 1.0;
+	float		scala = 2.0;
 
 	int16_t		*buffer;
 	size_t		bufsz;
