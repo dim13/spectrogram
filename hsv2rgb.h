@@ -18,6 +18,6 @@
 #ifndef __HSV2RGB_H
 #define __HSV2RGB_H
 
-int hsv2rgb(uint8_t *r, uint8_t *g, uint8_t *b, float h, float s, float v);
+void hsv2rgb(float *r, float *g, float *b, float h, float s, float v);
 
 #endif
