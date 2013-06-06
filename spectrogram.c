@@ -189,7 +189,7 @@ draw(double *left, double *right, int p, int step)
 			lx, sp_left.y + sp_left.height - l - 1);
 		XDrawLine(dsp, pix, gc,
 			rx, sp_right.y,
-			rx, sp_right.y + sp_right.height - l - 1);
+			rx, sp_right.y + sp_right.height - r - 1);
 	}
 
 	/* flip */
