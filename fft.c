@@ -51,7 +51,7 @@ init_fft(int n)
 }
 
 int
-dofft(struct fft *p, int16_t *data, double *left, double *right, int n, double *wight)
+dofft(struct fft *p, int16_t *data, double *left, double *right, int n, double *wight, float scala)
 {
 	int	i;
 
@@ -64,9 +64,9 @@ dofft(struct fft *p, int16_t *data, double *left, double *right, int n, double *
 	fftw_execute(p[1].plan);
 
 	for (i = 1; i < n / 2; i++) {
-		left[i - 1] = sqrt(5 * i
+		left[i - 1] = sqrt(scala * i
 			* (pow(p[0].out[i], 2) + pow(p[0].out[n - i], 2)));
-		right[i - 1] =  sqrt(5 * i
+		right[i - 1] =  sqrt(scala * i
 			* (pow(p[1].out[i], 2) + pow(p[1].out[n - i], 2)));
 	}
 

@@ -243,6 +243,7 @@ main(int argc, char **argv)
 
 	double		*left, *right;
 	double		*hamming;
+	float		scala = 1.0;
 
 	int16_t		*buffer;
 	size_t		bufsz;
@@ -358,7 +359,7 @@ main(int argc, char **argv)
 		} while (done < bufsz);
 		done -= bufsz;
 
-		dofft(fft, buffer, left, right, delta, hamming);
+		dofft(fft, buffer, left, right, delta, hamming, scala);
 		draw(left, right, ssize, resolution);
 
 		while (XPending(dsp)) {
@@ -368,7 +369,21 @@ main(int argc, char **argv)
 
 			switch (ev.type) {
 			case KeyPress:
-				die = XLookupKeysym(&ev.xkey, 0) == XK_q;
+				switch (XLookupKeysym(&ev.xkey, 0)) {
+				case XK_q:
+					die = 1;
+					break;
+				case XK_KP_Add:
+					scala *= 2;
+					warnx("inc scala: %f", scala);
+					break;
+				case XK_KP_Subtract:
+					scala /= 2;
+					warnx("dec scala: %f", scala);
+					break;
+				default:
+					break;
+				}
 				break;
 			case ClientMessage:
 				die = *ev.xclient.data.l == delwin;
