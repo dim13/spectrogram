@@ -53,8 +53,6 @@ XRectangle	wf_left, wf_right;	/* waterfall */
 XRectangle	sp_left, sp_right;	/* spectrogram */
 
 int	die = 0;
-int	flip_left = 1;
-int	flip_right = 0;
 
 void
 init_rect(int w, int h, int ssz)
@@ -143,7 +141,8 @@ createbg(void)
 		XSetForeground(dsp, gc, sp[y]);
 		XDrawLine(dsp, bg, gc,
 			sp_left.x, sp_left.y + sp_left.height - y - 1,
-			sp_left.x + sp_left.width - 1, sp_left.y + sp_left.height - y - 1);
+			sp_left.x + sp_left.width - 1,
+			sp_left.y + sp_left.height - y - 1);
 	}
 	XCopyArea(dsp, bg, bg, gc,
 		sp_left.x, sp_left.y, sp_left.width, sp_left.height,
@@ -173,8 +172,8 @@ draw(double *left, double *right, int p, int step)
 		if (r >= p)
 			r = p - 1;
 
-		lx = wf_left.x + (flip_left ? wf_left.width - x - 1 : x);
-		rx = wf_right.x + (flip_right ? wf_right.width - x - 1 : x);
+		lx = wf_left.x + wf_left.width - x - 1;
+		rx = wf_right.x + x;
 
 		/* waterfall */
 		XSetForeground(dsp, gc, wf[l]);
@@ -227,12 +226,6 @@ usage(void)
 	fprintf(stderr, "Usage: %s [-hsd]\n", __progname);
 	fprintf(stderr, "\t-h\tthis help\n");
 	fprintf(stderr, "\t-d\tdon't fork\n");
-
-	fprintf(stderr, "Keys:\n");
-	fprintf(stderr, "\tq\tquit\n");
-	fprintf(stderr, "\t1,l\tflip left\n");
-	fprintf(stderr, "\t2,r\tflip right\n");
-	fprintf(stderr, "\t0\tflip both\n");
 
 	exit(0);
 }
@@ -375,25 +368,7 @@ main(int argc, char **argv)
 
 			switch (ev.type) {
 			case KeyPress:
-				switch (XLookupKeysym(&ev.xkey, 0)) {
-				case XK_q:
-					die = 1;
-					break;
-				case XK_l:
-				case XK_1:
-					flip_left ^= 1;
-					break;
-				case XK_r:
-				case XK_2:
-					flip_right ^= 1;
-					break;
-				case XK_0:
-					flip_left ^= 1;
-					flip_right ^= 1;
-					break;
-				default:
-					break;
-				}
+				die = XLookupKeysym(&ev.xkey, 0) == XK_q;
 				break;
 			case ClientMessage:
 				die = *ev.xclient.data.l == delwin;
