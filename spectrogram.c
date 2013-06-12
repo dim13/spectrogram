@@ -165,10 +165,10 @@ draw(double *left, double *right, int p, int step)
 		sp_left.x, sp_left.y);
 
 	for (x = 0; x < wf_left.width; x++) {
-		l = floor(left[x]);
+		l = left[x];
 		if (l > p)
 			l = p;
-		r = floor(right[x]);
+		r = right[x];
 		if (r > p)
 			r = p;
 
