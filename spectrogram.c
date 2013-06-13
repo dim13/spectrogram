@@ -159,6 +159,7 @@ createbg(struct data *data)
 			sp_left.x + sp_left.width - 1,
 			sp_left.y + sp_left.height - y - 1);
 	}
+
 	XCopyArea(dsp, bg, bg, gc,
 		sp_left.x, sp_left.y, sp_left.width, sp_left.height,
 		sp_right.x, sp_right.y);
@@ -180,6 +181,7 @@ draw(struct data *data)
 	XCopyArea(dsp, bg, pix, gc,
 		sp_left.x, sp_left.y, width, sp_left.height,
 		sp_left.x, sp_left.y);
+
 	for (x = 0; x < wf_left.width; x++) {
 		l = LIMIT(data->left[x], data->maxval);
 		r = LIMIT(data->right[x], data->maxval);
