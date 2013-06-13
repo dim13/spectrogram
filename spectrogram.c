@@ -65,8 +65,6 @@ struct data {
 	int		maxval;
 	unsigned long	*wf;
 	unsigned long	*sp;
-	unsigned long	black;
-	unsigned long	white;
 };
 
 void
@@ -197,7 +195,7 @@ draw(struct data *data)
 		XDrawPoint(dsp, pix, gc, rx, wf_right.y);
 
 		/* spectrogram neg mask */
-		XSetForeground(dsp, gc, data->black);
+		XSetForeground(dsp, gc, data->wf[0]);
 		XDrawLine(dsp, pix, gc,
 			lx, sp_left.y,
 			lx, sp_left.y + sp_left.height - l - 1);
@@ -234,6 +232,8 @@ main(int argc, char **argv)
 
 	Atom		delwin;
 	int		scr;
+	unsigned long	black;
+	unsigned long	white;
 
 	struct		sio *sio;
 	struct		fft *fft;
@@ -262,8 +262,8 @@ main(int argc, char **argv)
 	if (!dsp)
 		errx(1, "Cannot connect to X11 server");
 	scr = DefaultScreen(dsp);
-	data.black = BlackPixel(dsp, scr);
-	data.white = WhitePixel(dsp, scr);
+	black = BlackPixel(dsp, scr);
+	white = WhitePixel(dsp, scr);
 	cmap = DefaultColormap(dsp, scr);
 
 	signal(SIGINT, catch);
@@ -280,7 +280,7 @@ main(int argc, char **argv)
 	height = 3 * width / 4;
 
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr), 0, 0,
-		width, height, 2, data.white, data.black);
+		width, height, 2, white, black);
 	XStoreName(dsp, win, __progname);
 	delwin = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);
 	XSetWMProtocols(dsp, win, &delwin, 1);
