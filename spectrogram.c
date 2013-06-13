@@ -21,7 +21,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <err.h>
-#include <sndio.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -30,12 +29,17 @@
 #include <math.h>
 #include <signal.h>
 
+#include "sio.h"
 #include "fft.h"
 #include "hsv2rgb.h"
 
 #define PSIZE	250
 #define SSIZE	(PSIZE >> 1)
 #define GAP	2
+
+#define	RCHAN	2
+#define	BITS	16
+#define	SIGNED	1
 
 extern		char *__progname;
 
@@ -46,13 +50,24 @@ GC		gc;
 Pixmap		pix, bg;
 int		width, height;
 
-unsigned long	*wf, *sp, black, white;
 
 XRectangle	wf_from, wf_to;		/* waterfall blit */
 XRectangle	wf_left, wf_right;	/* waterfall */
 XRectangle	sp_left, sp_right;	/* spectrogram */
 
 int	die = 0;
+
+struct data {
+	int16_t		*buffer;
+	size_t		bufsz;
+	double		*left;
+	double		*right;
+	int		maxval;
+	unsigned long	*wf;
+	unsigned long	*sp;
+	unsigned long	black;
+	unsigned long	white;
+};
 
 void
 init_rect(int w, int h, int ssz)
@@ -133,12 +148,12 @@ init_palette(float h, float dh, float s, float ds, float v, float dv, int n, int
 }
 
 void
-createbg(void)
+createbg(struct data *data)
 {
 	int y;
 
 	for (y = 0; y < sp_left.height; y++) {
-		XSetForeground(dsp, gc, sp[y]);
+		XSetForeground(dsp, gc, data->sp[y]);
 		XDrawLine(dsp, bg, gc,
 			sp_left.x, sp_left.y + sp_left.height - y - 1,
 			sp_left.x + sp_left.width - 1,
@@ -149,8 +164,10 @@ createbg(void)
 		sp_right.x, sp_right.y);
 }
 
+#define LIMIT(val, maxval)	((val) > (maxval) ? (maxval) : (val))
+
 int
-draw(double *left, double *right, int p, int step)
+draw(struct data *data)
 {
 	int             x, l, r, lx, rx;
 
@@ -163,23 +180,22 @@ draw(double *left, double *right, int p, int step)
 	XCopyArea(dsp, bg, pix, gc,
 		sp_left.x, sp_left.y, width, sp_left.height,
 		sp_left.x, sp_left.y);
-
 	for (x = 0; x < wf_left.width; x++) {
-		l = left[x] > p ? p : left[x];
-		r = right[x] > p ? p : right[x];
+		l = LIMIT(data->left[x], data->maxval);
+		r = LIMIT(data->right[x], data->maxval);
 
 		lx = wf_left.x + wf_left.width - x - 1;
 		rx = wf_right.x + x;
 
 		/* waterfall */
-		XSetForeground(dsp, gc, wf[l]);
+		XSetForeground(dsp, gc, data->wf[l]);
 		XDrawPoint(dsp, pix, gc, lx, wf_left.y);
 
-		XSetForeground(dsp, gc, wf[r]);
+		XSetForeground(dsp, gc, data->wf[r]);
 		XDrawPoint(dsp, pix, gc, rx, wf_right.y);
 
 		/* spectrogram neg mask */
-		XSetForeground(dsp, gc, black);
+		XSetForeground(dsp, gc, data->black);
 		XDrawLine(dsp, pix, gc,
 			lx, sp_left.y,
 			lx, sp_left.y + sp_left.height - l - 1);
@@ -192,22 +208,6 @@ draw(double *left, double *right, int p, int step)
 	XCopyArea(dsp, pix, win, gc, 0, 0, width, height, 0, 0);
 
 	return 0;
-}
-
-double *
-init_hamming(int n)
-{
-	double	*w;
-	int	i;
-
-	w = calloc(n, sizeof(double));
-	if (!w)
-		errx(1, "malloc failed");
-
-	for (i = 0; i < n; i++)
-		w[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
-
-	return w;
 }
 
 void
@@ -230,23 +230,17 @@ int
 main(int argc, char **argv)
 {
 
-	int		scr;
 	Atom		delwin;
+	int		scr;
 
-	struct		sio_hdl	*sio;
-	struct		sio_par par;
+	struct		sio *sio;
 	struct		fft *fft;
+	struct		data data;
 
-	double		*left, *right;
-	double		*hamming;
 	float		scala = 2.0;
 
-	int16_t		*buffer;
-	size_t		bufsz;
-	size_t		done;
-
 	int		ch, dflag = 1;
-	int		delta, resolution, fps;
+	int		delta;
 	int		psize, ssize;
 
 	while ((ch = getopt(argc, argv, "hd")) != -1)
@@ -266,48 +260,25 @@ main(int argc, char **argv)
 	if (!dsp)
 		errx(1, "Cannot connect to X11 server");
 	scr = DefaultScreen(dsp);
-	black = BlackPixel(dsp, scr);
-	white = WhitePixel(dsp, scr);
+	data.black = BlackPixel(dsp, scr);
+	data.white = WhitePixel(dsp, scr);
 	cmap = DefaultColormap(dsp, scr);
 
 	signal(SIGINT, catch);
 
-	sio = sio_open(NULL, SIO_REC, 0);
-	if (!sio)
-		errx(1, "cannot connect to sound server, is it running?");
-
-	sio_initpar(&par);
-
-	par.rchan = 2;
-	par.bits = 16;
-	par.le = SIO_LE_NATIVE;
-	par.sig = 1;
-
-	if (!sio_setpar(sio, &par))
-		errx(1, "SIO set params failed");
-	if (!sio_getpar(sio, &par))
-		errx(1, "SIO get params failed");
-
-	if (par.rchan != 2 ||
-	    par.bits != 16 ||
-	    par.le != SIO_LE_NATIVE ||
-	    par.sig != 1)
-		errx(1, "unsupported audio params");
+	sio = init_sio(RCHAN, BITS, SIGNED);
 
 #if 0	
 	if (dflag)
 		daemon(0, 0);
 #endif
 
-	delta = par.round;
-	resolution = (par.rate / par.round) / par.rchan;
-	fps = (par.rate / par.round) * par.rchan;
-
+	delta = get_round(sio);
 	width = delta + 2 * GAP;
 	height = 3 * width / 4;
 
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr), 0, 0,
-		width, height, 2, white, black);
+		width, height, 2, data.white, data.black);
 	XStoreName(dsp, win, __progname);
 	delwin = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);
 	XSetWMProtocols(dsp, win, &delwin, 1);
@@ -321,42 +292,33 @@ main(int argc, char **argv)
 	XSelectInput(dsp, win, ExposureMask|KeyPressMask);
 	XMapWindow(dsp, win);
 
-	bufsz = par.rchan * delta * sizeof(int16_t);
-	buffer = malloc(bufsz);
-	if (!buffer)
+	data.bufsz = RCHAN * delta * sizeof(int16_t); /* par.rchan */
+	data.buffer = malloc(data.bufsz);
+	if (!data.buffer)
 		errx(1, "malloc failed");
 
-	left = calloc(delta, sizeof(double));
-	right = calloc(delta, sizeof(double));
-	if (!left || !right)
+	data.left = calloc(delta, sizeof(double));
+	data.right = calloc(delta, sizeof(double));
+	if (!data.left || !data.right)
 		errx(1, "malloc failed");
 
 	psize = 2 * height / 3;
 	ssize = psize >> 2;
+	data.maxval = ssize;
 
 	init_rect(width, height, ssize);
 
-	sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
-	wf = init_palette(0.65, 0.35, 1.00, 0.00, 0.00, 1.00, ssize, 1);
+	data.sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
+	data.wf = init_palette(0.65, 0.35, 1.00, 0.00, 0.00, 1.00, ssize, 1);
 
-	createbg();
+	createbg(&data);
 
 	fft = init_fft(delta);
-	hamming = init_hamming(delta);
 
-	sio_start(sio);
-
-	done = 0;
 	while (!die) {
-		do {
-			done += sio_read(sio, buffer + done, bufsz - done);
-			if (sio_eof(sio))
-				errx(1, "SIO EOF");
-		} while (done < bufsz);
-		done -= bufsz;
-
-		dofft(fft, buffer, left, right, delta, hamming, scala);
-		draw(left, right, ssize, resolution);
+		read_sio(sio, data.buffer, data.bufsz);
+		dofft(fft, data.buffer, data.left, data.right, delta, scala);
+		draw(&data);
 
 		while (XPending(dsp)) {
 			XEvent ev;
@@ -390,12 +352,11 @@ main(int argc, char **argv)
 		}
 	}
 
-	sio_stop(sio);
-	sio_close(sio);
+	del_sio(sio);
 
-	free(left);
-	free(right);
-	free(buffer);
+	free(data.left);
+	free(data.right);
+	free(data.buffer);
 
 	XCloseDisplay(dsp);
 
