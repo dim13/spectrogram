@@ -163,7 +163,7 @@ createbg(struct data *data)
 		sp_right.x, sp_right.y);
 }
 
-#define LIMIT(val, maxval)	((val) > (maxval) ? (maxval) : (val))
+#define LIMIT(val, maxval)	((val) >= (maxval) ? ((maxval) - 1) : (val))
 
 int
 draw(struct data *data)
