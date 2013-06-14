@@ -355,6 +355,7 @@ main(int argc, char **argv)
 	}
 
 	del_sio(sio);
+	del_fft(fft);
 
 	free(data.left);
 	free(data.right);

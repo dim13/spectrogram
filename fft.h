@@ -22,5 +22,6 @@ struct fft;
 
 struct fft *init_fft(int);
 int dofft(struct fft *, int16_t *, double *, double *, int, float);
+void del_fft(struct fft *);
 
 #endif

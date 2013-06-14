@@ -92,3 +92,12 @@ dofft(struct fft *p, int16_t *data, double *left, double *right, int n, float sc
 
 	return 0;
 }
+
+void
+del_fft(struct fft *fft)
+{
+	fftw_free(fft->in);
+	fftw_free(fft->out);
+	free(fft->window);
+	free(fft);
+}
