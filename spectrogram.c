@@ -22,6 +22,7 @@
 #include <sys/time.h>
 #include <err.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -250,6 +251,22 @@ usage(void)
 	exit(0);
 }
 
+void
+msg(char *fmt, ...)
+{
+	char string[80];
+	size_t len;
+	va_list ap;
+
+	va_start(ap, fmt);
+
+	len = vsnprintf(string, sizeof(string), fmt, ap);
+	XSetForeground(dsp, gc, WhitePixel(dsp, DefaultScreen(dsp)));
+	XDrawImageString(dsp, pix, gc, 100, 100, string, len);
+
+	va_end(ap);
+}
+
 int 
 main(int argc, char **argv)
 {
@@ -361,11 +378,11 @@ main(int argc, char **argv)
 					break;
 				case XK_KP_Add:
 					scala *= 2;
-					warnx("inc scala: %f", scala);
+					msg("inc scala: %f", scala);
 					break;
 				case XK_KP_Subtract:
 					scala /= 2;
-					warnx("dec scala: %f", scala);
+					msg("dec scala: %f", scala);
 					break;
 				default:
 					break;
