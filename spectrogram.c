@@ -206,6 +206,7 @@ draw(struct data *data)
 			rx, sp_right.y,
 			rx, sp_right.y + sp_right.height - r - 1);
 
+		/* spectrogram shadow */
 		if (data->left_shadow[x] < l)
 			data->left_shadow[x] = l;
 		else if(data->left_shadow[x] > 0) {
