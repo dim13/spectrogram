@@ -15,6 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <err.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +27,24 @@ struct fft {
 	double	*in;
 	double	*out;
 	int	n;
+	double	*window;
 };
+
+double *
+hamming(int n)
+{
+	double	*w;
+	int	i;
+
+	w = calloc(n, sizeof(double));
+	if (!w)
+		errx(1, "malloc failed");
+
+	for (i = 0; i < n; i++)
+		w[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
+
+	return w;
+}
 
 struct fft *
 init_fft(int n)
@@ -47,28 +65,39 @@ init_fft(int n)
 	p[1].plan = fftw_plan_r2r_1d(n, p[1].in, p[1].out,
 		FFTW_R2HC, FFTW_MEASURE);
 
+	p->window = hamming(n);
+
 	return p;
 }
 
 int
-dofft(struct fft *p, int16_t *data, double *left, double *right, int n, double *wight)
+dofft(struct fft *p, int16_t *data, double *left, double *right, int n, float scala)
 {
 	int	i;
 
 	for (i = 0; i < n; i++) {
-		p[0].in[i] = wight[i] * data[2 * i + 0] / (double)INT16_MAX;
-		p[1].in[i] = wight[i] * data[2 * i + 1] / (double)INT16_MAX;
+		p[0].in[i] = p->window[i] * data[2 * i + 0] / (double)INT16_MAX;
+		p[1].in[i] = p->window[i] * data[2 * i + 1] / (double)INT16_MAX;
 	}
 
 	fftw_execute(p[0].plan);
 	fftw_execute(p[1].plan);
 
 	for (i = 1; i < n / 2; i++) {
-		left[i - 1] = sqrt(5 * i
+		left[i - 1] = sqrt(scala * i
 			* (pow(p[0].out[i], 2) + pow(p[0].out[n - i], 2)));
-		right[i - 1] =  sqrt(5 * i
+		right[i - 1] =  sqrt(scala * i
 			* (pow(p[1].out[i], 2) + pow(p[1].out[n - i], 2)));
 	}
 
 	return 0;
+}
+
+void
+del_fft(struct fft *fft)
+{
+	fftw_free(fft->in);
+	fftw_free(fft->out);
+	free(fft->window);
+	free(fft);
 }

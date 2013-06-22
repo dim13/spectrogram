@@ -1,6 +1,6 @@
 /* $Id$ */
 /*
- * Copyright (c) 2010 Dimitri Sokolyuk <demon@dim13.org>
+ * Copyright (c) 2013 Dimitri Sokolyuk <demon@dim13.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,9 +15,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __HSV2RGB_H
-#define __HSV2RGB_H
+#ifndef __SIO_H
+#define __SIO_H
 
-void hsv2rgb(float *r, float *g, float *b, float h, float s, float v);
+struct sio;
+
+struct sio *init_sio(int, int, int);
+unsigned int get_round(struct sio *);
+int read_sio(struct sio *, int16_t *, size_t);
+void del_sio(struct sio *);
 
 #endif

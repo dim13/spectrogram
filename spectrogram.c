@@ -15,10 +15,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
+
 #include <sys/types.h>
 #include <sys/time.h>
 #include <err.h>
-#include <sndio.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -27,9 +29,7 @@
 #include <math.h>
 #include <signal.h>
 
-#include <SDL.h>
-#include <SDL_framerate.h>
-
+#include "sio.h"
 #include "fft.h"
 #include "hsv2rgb.h"
 
@@ -37,100 +37,108 @@
 #define SSIZE	(PSIZE >> 1)
 #define GAP	2
 
+#define	RCHAN	2
+#define	BITS	16
+#define	SIGNED	1
+
 extern		char *__progname;
-SDL_Surface	*screen;
-SDL_Color	*wf, *sp;
-SDL_Color	black = { .r = 0, .g = 0, .b = 0 };
-SDL_Color	white = { .r = 255, .g = 255, .b = 255 };
 
-SDL_Rect	wf_from, wf_to;		/* waterfall blit */
-SDL_Rect	wf_left, wf_right;	/* waterfall */
-SDL_Rect	sp_left, sp_right;	/* spectrogram */
-SDL_Rect	dl_lo, dl_mi, dl_hi;	/* disco light */
+Display		*dsp;
+Window		win;
+Colormap	cmap;
+GC		gc;
+Pixmap		pix, bg;
+int		width, height;
 
-/* Disco Light Frequencies, Hz */
 
-#define	LOSTART	50
-#define	LOEND	350
-#define	MISTART	200
-#define	MIEND	2000
-#define	HISTART	1500
-#define HIEND	5000
+XRectangle	wf_from, wf_to;		/* waterfall blit */
+XRectangle	wf_left, wf_right;	/* waterfall */
+XRectangle	sp_left, sp_right;	/* spectrogram */
 
 int	die = 0;
-int	flip_left = 1;
-int	flip_right = 0;
-int	discolight = 0;
+
+struct data {
+	int16_t		*buffer;
+	size_t		bufsz;
+	double		*left;
+	double		*right;
+	int		*left_shadow;
+	int		*right_shadow;
+	int		maxval;
+	unsigned long	*wf;
+	unsigned long	*sp;
+};
 
 void
-init_rect(int w, int h, int ssz, int dlsz)
+init_rect(int w, int h, int ssz)
 {
-	/* Dicolight */
-	dl_lo.x = 0;
-	dl_lo.y = 0;
-	dl_lo.w = w / 3;
-	dl_lo.h = dlsz;
-
-	dl_mi.x = w / 3;
-	dl_mi.y = 0;
-	dl_mi.w = w / 3;
-	dl_mi.h = dlsz;
-
-	dl_hi.x = 2 * w / 3;
-	dl_hi.y = 0;
-	dl_hi.w = w / 3;
-	dl_hi.h = dlsz;
-
 	/* Blit */
 	wf_from.x = 0;
-	wf_from.y = 1 + dlsz;
-	wf_from.w = w;
-	wf_from.h = h - ssz - dlsz - 1;
+	wf_from.y = 1;
+	wf_from.width = w;
+	wf_from.height = h - ssz - 1;
 
 	wf_to.x = 0;
-	wf_to.y = dlsz;
-	wf_to.w = w;
-	wf_to.h = h - ssz - dlsz - 1;
+	wf_to.y = 0;
+	wf_to.width = w;
+	wf_to.height = h - ssz - 1;
 
 	/* Watterfall */
 	wf_left.x = 0;
 	wf_left.y = h - ssz - 1;
-	wf_left.w = w / 2 - GAP;
-	wf_left.h = 1;
+	wf_left.width = w / 2 - GAP;
+	wf_left.height = 1;
 
 	wf_right.x = w / 2 + GAP;
 	wf_right.y = h - ssz - 1;
-	wf_right.w = w / 2 - GAP;
-	wf_right.h = 1;
+	wf_right.width = w / 2 - GAP;
+	wf_right.height = 1;
 
 	/* Spectrogram */
 	sp_left.x = 0;
 	sp_left.y = h - ssz;
-	sp_left.w = w / 2 - GAP;
-	sp_left.h = ssz;
+	sp_left.width = w / 2 - GAP;
+	sp_left.height = ssz;
 
 	sp_right.x = w / 2 + GAP;
 	sp_right.y = h - ssz;
-	sp_right.w = w / 2 - GAP;
-	sp_right.h = ssz;
+	sp_right.width = w / 2 - GAP;
+	sp_right.height = ssz;
 }
 
-SDL_Color *
+unsigned long
+hsvcolor(float h, float s, float v)
+{
+	XColor c;
+	float r, g, b;
+
+	hsv2rgb(&r, &g, &b, h, s, v);
+
+	c.red = UINT16_MAX * r;
+	c.green = UINT16_MAX * g;
+	c.blue = UINT16_MAX * b;
+	c.flags = DoRed|DoGreen|DoBlue;
+
+	XAllocColor(dsp, cmap, &c);
+
+	return c.pixel;
+}
+
+unsigned long *
 init_palette(float h, float dh, float s, float ds, float v, float dv, int n, int lg)
 {
-	SDL_Color *p;
+	unsigned long *p;
 	float	hstep, sstep, vstep;
 	int	i;
 
-	p = malloc(n * sizeof(SDL_Color));
+	p = calloc(n, sizeof(unsigned long));
 
 	hstep = (dh - h) / n;
 	sstep = (ds - s) / n;
 	vstep = (dv - v) / n;
 
 	for (i = 0; i < n; i++) {
-		hsv2rgb(&p[i].r, &p[i].g, &p[i].b, h, s,
-			lg ? logf(100 * v + 1) / logf(101) : v);
+		p[i] = hsvcolor(h, s, lg ? logf(100 * v + 1) / logf(101) : v);
 		h += hstep;
 		s += sstep;
 		v += vstep;
@@ -139,104 +147,91 @@ init_palette(float h, float dh, float s, float ds, float v, float dv, int n, int
 	return p;
 }
 
-static inline void
-drawpixel(SDL_Surface *s, int x, int y, SDL_Color *c)
+void
+createbg(struct data *data)
 {
-	Uint32 *buf = (Uint32 *)s->pixels + y * (s->pitch >> 2) + x;
-	Uint32 pixel = SDL_MapRGB(s->format, c->r, c->g, c->b);	
-	*buf = pixel;
+	int y;
+
+	for (y = 0; y < sp_left.height; y++) {
+		XSetForeground(dsp, gc, data->sp[y]);
+		XDrawLine(dsp, bg, gc,
+			sp_left.x, sp_left.y + sp_left.height - y - 1,
+			sp_left.x + sp_left.width - 1,
+			sp_left.y + sp_left.height - y - 1);
+	}
+
+	XCopyArea(dsp, bg, bg, gc,
+		sp_left.x, sp_left.y, sp_left.width, sp_left.height,
+		sp_right.x, sp_right.y);
 }
+
+#define LIMIT(val, maxval)	((val) >= (maxval) ? ((maxval) - 1) : (val))
 
 int
-draw(double *left, double *right, int p, int step)
+draw(struct data *data)
 {
-	int             x, y, l, r, lx, rx;
-	double		lo, mi, hi, av;
+	int             x, l, r, lx, rx;
 
-	if (SDL_MUSTLOCK(screen))
-		SDL_LockSurface(screen);
+	/* blit waterfall */
+	XCopyArea(dsp, pix, pix, gc,
+		wf_from.x, wf_from.y, wf_from.width, wf_from.height,
+		wf_to.x, wf_to.y);
 
-	SDL_BlitSurface(screen, &wf_from, screen, &wf_to);
+	/* restore spectrogram bg */
+	XCopyArea(dsp, bg, pix, gc,
+		sp_left.x, sp_left.y, width, sp_left.height,
+		sp_left.x, sp_left.y);
 
-	if (discolight)
-		lo = mi = hi = 0.0;
+	for (x = 0; x < wf_left.width; x++) {
+		l = LIMIT(data->left[x], data->maxval);
+		r = LIMIT(data->right[x], data->maxval);
 
-	for (x = 0; x < wf_left.w; x++) {
-		l = left[x] - 0.5;
-		if (l >= p)
-			l = p - 1;
-		r = right[x] - 0.5;
-		if (r >= p)
-			r = p - 1;
+		lx = wf_left.x + wf_left.width - x - 1;
+		rx = wf_right.x + x;
 
-		if (discolight) {
-			av = pow(left[x] + right[x], 2.0);
-			if (x >= LOSTART / step && x <= LOEND / step)
-				lo += av;
-			if (x >= MISTART / step && x <= MIEND / step)
-				mi += av;
-			if (x >= HISTART / step && x <= HIEND / step)
-				hi += av;
+		/* waterfall */
+		XSetForeground(dsp, gc, data->wf[l]);
+		XDrawPoint(dsp, pix, gc, lx, wf_left.y);
+
+		XSetForeground(dsp, gc, data->wf[r]);
+		XDrawPoint(dsp, pix, gc, rx, wf_right.y);
+
+		/* spectrogram neg mask */
+		XSetForeground(dsp, gc, data->wf[0]);
+		XDrawLine(dsp, pix, gc,
+			lx, sp_left.y,
+			lx, sp_left.y + sp_left.height - l - 1);
+		XDrawLine(dsp, pix, gc,
+			rx, sp_right.y,
+			rx, sp_right.y + sp_right.height - r - 1);
+
+		if (data->left_shadow[x] < l)
+			data->left_shadow[x] = l;
+		else if(data->left_shadow[x] > 0) {
+			data->left_shadow[x]--;
+			XSetForeground(dsp, gc,
+				data->sp[data->left_shadow[x] - 1]);
+			XDrawPoint(dsp, pix, gc,
+				lx, sp_left.y + sp_left.height
+				- data->left_shadow[x] - 1);
 		}
 
-		lx = wf_left.x + (flip_left ? wf_left.w - x - 1 : x);
-		rx = wf_right.x + (flip_right ? wf_right.w - x - 1 : x);
-
-		drawpixel(screen, lx, wf_left.y, &wf[l]);
-		drawpixel(screen, rx, wf_right.y, &wf[r]);
-
-		for (y = 0; y < sp_left.h; y++) {
-			drawpixel(screen, lx,
-				sp_left.y + sp_left.h - y - 1,
-				l > y ? &sp[y] : &black);
-			drawpixel(screen, rx,
-				sp_right.y + sp_right.h - y - 1,
-				r > y ? &sp[y] : &black);
+		if (data->right_shadow[x] < r)
+			data->right_shadow[x] = r;
+		else if(data->right_shadow[x] > 0) {
+			data->right_shadow[x]--;
+			XSetForeground(dsp, gc,
+				data->sp[data->right_shadow[x] - 1]);
+			XDrawPoint(dsp, pix, gc,
+				rx, sp_right.y + sp_right.height
+				- data->right_shadow[x] - 1);
 		}
 	}
 
-	/* XXX */
-	if (discolight) {
-		lo = sqrt(lo / ((LOEND - LOSTART) / step));
-		if (lo > p)
-			lo = p;
-		mi = sqrt(mi / ((MIEND - MISTART) / step));
-		if (mi > p)
-			mi = p;
-		hi = sqrt(hi / ((HIEND - HISTART) / step));
-		if (hi > p)
-			hi = p;
-
-		SDL_FillRect(screen, &dl_lo,
-			SDL_MapRGB(screen->format, lo, lo / 4, 0));
-		SDL_FillRect(screen, &dl_mi,
-			SDL_MapRGB(screen->format, mi / 2, mi, 0));
-		SDL_FillRect(screen, &dl_hi,
-			SDL_MapRGB(screen->format, hi / 4, hi / 2, hi));
-	}
-
-	if (SDL_MUSTLOCK(screen))
-		SDL_UnlockSurface(screen);
-
-	SDL_Flip(screen);
+	/* flip */
+	XCopyArea(dsp, pix, win, gc, 0, 0, width, height, 0, 0);
 
 	return 0;
-}
-
-double *
-init_hamming(int n)
-{
-	double	*w;
-	int	i;
-
-	w = calloc(n, sizeof(double));
-	if (!w)
-		errx(1, "malloc failed");
-
-	for (i = 0; i < n; i++)
-		w[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
-
-	return w;
 }
 
 void
@@ -250,16 +245,7 @@ usage(void)
 {
 	fprintf(stderr, "Usage: %s [-hsd]\n", __progname);
 	fprintf(stderr, "\t-h\tthis help\n");
-	fprintf(stderr, "\t-s\tallow scrennsaver\n");
 	fprintf(stderr, "\t-d\tdon't fork\n");
-
-	fprintf(stderr, "Keys:\n");
-	fprintf(stderr, "\tq\tquit\n");
-	fprintf(stderr, "\t1,l\tflip left\n");
-	fprintf(stderr, "\t2,r\tflip right\n");
-	fprintf(stderr, "\t0\tflip both\n");
-	fprintf(stderr, "\tf\ttoggle fullscreen\n");
-	fprintf(stderr, "\td\ttoggle discolights\n");
 
 	exit(0);
 }
@@ -267,30 +253,24 @@ usage(void)
 int 
 main(int argc, char **argv)
 {
-	SDL_Event       event;
-	FPSmanager	man;
 
-	struct		sio_hdl	*sio;
-	struct		sio_par par;
+	Atom		delwin;
+	int		scr;
+	unsigned long	black;
+	unsigned long	white;
+
+	struct		sio *sio;
 	struct		fft *fft;
+	struct		data data;
 
-	double		*left, *right;
-	double		*hamming;
+	float		scala = 1.0;
 
-	int16_t		*buffer;
-	size_t		bufsz;
-	size_t		done;
-
-	int		ch, sflag = 1, dflag = 1;
-	int		delta, resolution, fps;
+	int		ch, dflag = 1;
+	int		delta;
 	int		psize, ssize;
-	int		width, height;
 
-	while ((ch = getopt(argc, argv, "hsd")) != -1)
+	while ((ch = getopt(argc, argv, "hd")) != -1)
 		switch (ch) {
-		case 's':
-			sflag = 0;
-			break;
 		case 'd':
 			dflag = 0;
 			break;
@@ -302,142 +282,114 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 		
-
-	if (sflag)
-		setenv("SDL_VIDEO_ALLOW_SCREENSAVER", "1", 0);
-
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		errx(1, "SDL init failed");
+	dsp = XOpenDisplay(getenv("DISPLAY"));
+	if (!dsp)
+		errx(1, "Cannot connect to X11 server");
+	scr = DefaultScreen(dsp);
+	black = BlackPixel(dsp, scr);
+	white = WhitePixel(dsp, scr);
+	cmap = DefaultColormap(dsp, scr);
 
 	signal(SIGINT, catch);
-	atexit(SDL_Quit);
 
-	sio = sio_open(NULL, SIO_REC, 0);
-	if (!sio)
-		errx(1, "cannot connect to sound server, is it running?");
+	sio = init_sio(RCHAN, BITS, SIGNED);
 
-	sio_initpar(&par);
-
-	par.rchan = 2;
-	par.bits = 16;
-	par.le = SIO_LE_NATIVE;
-	par.sig = 1;
-
-	if (!sio_setpar(sio, &par))
-		errx(1, "SIO set params failed");
-	if (!sio_getpar(sio, &par))
-		errx(1, "SIO get params failed");
-
-	if (par.rchan != 2 ||
-	    par.bits != 16 ||
-	    par.le != SIO_LE_NATIVE ||
-	    par.sig != 1)
-		errx(1, "unsupported audio params");
-
+#if 0	
 	if (dflag)
 		daemon(0, 0);
+#endif
 
-	delta = par.round;
-	resolution = (par.rate / par.round) / par.rchan;
-	fps = (par.rate / par.round) * par.rchan;
-
-	SDL_WM_SetCaption(__progname, NULL);
-	SDL_initFramerate(&man);
-	SDL_setFramerate(&man, fps);
-
+	delta = get_round(sio);
 	width = delta + 2 * GAP;
 	height = 3 * width / 4;
 
-	screen = SDL_SetVideoMode(width, height, 32,
-		SDL_HWSURFACE | SDL_DOUBLEBUF);
-	if (!screen)
-		errx(1, "set video mode failed");
+	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr), 0, 0,
+		width, height, 2, white, black);
+	XStoreName(dsp, win, __progname);
+	delwin = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);
+	XSetWMProtocols(dsp, win, &delwin, 1);
 
-	bufsz = par.rchan * delta * sizeof(int16_t);
-	buffer = malloc(bufsz);
-	if (!buffer)
+	gc = XCreateGC(dsp, win, 0, NULL);	
+	XSetGraphicsExposures(dsp, gc, False);
+	
+	pix = XCreatePixmap(dsp, win, width, height, DisplayPlanes(dsp, scr));
+	bg = XCreatePixmap(dsp, win, width, height, DisplayPlanes(dsp, scr));
+
+	XSelectInput(dsp, win, ExposureMask|KeyPressMask);
+	XMapWindow(dsp, win);
+
+	data.bufsz = RCHAN * delta * sizeof(int16_t); /* par.rchan */
+	data.buffer = malloc(data.bufsz);
+	if (!data.buffer)
 		errx(1, "malloc failed");
 
-	left = calloc(delta, sizeof(double));
-	right = calloc(delta, sizeof(double));
-	if (!left || !right)
+	data.left = calloc(delta, sizeof(double));
+	data.right = calloc(delta, sizeof(double));
+	data.left_shadow = calloc(delta, sizeof(int));
+	data.right_shadow = calloc(delta, sizeof(int));
+	if (!data.left || !data.right)
 		errx(1, "malloc failed");
 
 	psize = 2 * height / 3;
 	ssize = psize >> 2;
+	data.maxval = ssize;
 
-	init_rect(width, height, ssize, !!discolight * ssize);
+	init_rect(width, height, ssize);
 
-	sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
-	wf = init_palette(0.65, 0.35, 1.00, 0.00, 0.00, 1.00, ssize, 1);
+	data.sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
+	data.wf = init_palette(0.65, 0.35, 1.00, 0.00, 0.00, 1.00, ssize, 1);
+
+	createbg(&data);
 
 	fft = init_fft(delta);
-	hamming = init_hamming(delta);
 
-	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-
-	sio_start(sio);
-
-	done = 0;
 	while (!die) {
-		do {
-			done += sio_read(sio, buffer + done, bufsz - done);
-			if (sio_eof(sio))
-				errx(1, "SIO EOF");
-		} while (done < bufsz);
-		done -= bufsz;
+		read_sio(sio, data.buffer, data.bufsz);
+		dofft(fft, data.buffer, data.left, data.right, delta, scala);
+		draw(&data);
 
-		dofft(fft, buffer, left, right, delta, hamming);
-		draw(left, right, ssize, resolution);
+		while (XPending(dsp)) {
+			XEvent ev;
 
-		SDL_framerateDelay(&man);
+			XNextEvent(dsp, &ev);
 
-		while (SDL_PollEvent(&event)) {
-			switch (event.type) {
-			case SDL_KEYDOWN:
-				switch (event.key.keysym.sym) {
-				case SDLK_q:
+			switch (ev.type) {
+			case KeyPress:
+				switch (XLookupKeysym(&ev.xkey, 0)) {
+				case XK_q:
 					die = 1;
 					break;
-				case SDLK_l:
-				case SDLK_1:
-					flip_left ^= 1;
+				case XK_KP_Add:
+					scala *= 2;
+					warnx("inc scala: %f", scala);
 					break;
-				case SDLK_r:
-				case SDLK_2:
-					flip_right ^= 1;
-					break;
-				case SDLK_0:
-					flip_left ^= 1;
-					flip_right ^= 1;
-					break;
-				case SDLK_f:
-					SDL_WM_ToggleFullScreen(screen);
-					SDL_ShowCursor(!(screen->flags
-						& SDL_FULLSCREEN));
-					break;
-				case SDLK_d:
-					discolight ^= 1;
-					init_rect(width, height, ssize,
-						!!discolight * ssize);
+				case XK_KP_Subtract:
+					scala /= 2;
+					warnx("dec scala: %f", scala);
 					break;
 				default:
 					break;
 				}
 				break;
-			case SDL_QUIT:
-				die = 1;
+			case ClientMessage:
+				die = *ev.xclient.data.l == delwin;
+				break;
+			default:
 				break;
 			}
 		}
 	}
 
-	sio_stop(sio);
-	sio_close(sio);
+	del_sio(sio);
+	del_fft(fft);
 
-	free(left);
-	free(right);
-	free(buffer);
+	free(data.left_shadow);
+	free(data.right_shadow);
+	free(data.left);
+	free(data.right);
+	free(data.buffer);
+
+	XCloseDisplay(dsp);
 
 	return 0;
 }
