@@ -63,7 +63,9 @@ struct data {
 	double		*left;
 	double		*right;
 	int		*left_shadow;
+	int		*left_shadow_max;
 	int		*right_shadow;
+	int		*right_shadow_max;
 	int		maxval;
 	unsigned long	*wf;
 	unsigned long	*sp;
@@ -205,23 +207,25 @@ draw(struct data *data)
 			rx, sp_right.y,
 			rx, sp_right.y + sp_right.height - r - 1);
 
-		if (data->left_shadow[x] < l)
+		if (data->left_shadow[x] < l) {
 			data->left_shadow[x] = l;
-		else if(data->left_shadow[x] > 0) {
+			data->left_shadow_max[x] = l;
+		} else if(data->left_shadow[x] > 0) {
 			data->left_shadow[x]--;
 			XSetForeground(dsp, gc,
-				data->sp[data->left_shadow[x] - 1]);
+				data->sp[data->left_shadow_max[x] - 1]);
 			XDrawPoint(dsp, pix, gc,
 				lx, sp_left.y + sp_left.height
 				- data->left_shadow[x] - 1);
 		}
 
-		if (data->right_shadow[x] < r)
+		if (data->right_shadow[x] < r) {
 			data->right_shadow[x] = r;
-		else if(data->right_shadow[x] > 0) {
+			data->right_shadow_max[x] = r;
+		} else if(data->right_shadow[x] > 0) {
 			data->right_shadow[x]--;
 			XSetForeground(dsp, gc,
-				data->sp[data->right_shadow[x] - 1]);
+				data->sp[data->right_shadow_max[x] - 1]);
 			XDrawPoint(dsp, pix, gc,
 				rx, sp_right.y + sp_right.height
 				- data->right_shadow[x] - 1);
@@ -326,7 +330,9 @@ main(int argc, char **argv)
 	data.left = calloc(delta, sizeof(double));
 	data.right = calloc(delta, sizeof(double));
 	data.left_shadow = calloc(delta, sizeof(int));
+	data.left_shadow_max = calloc(delta, sizeof(int));
 	data.right_shadow = calloc(delta, sizeof(int));
+	data.right_shadow_max = calloc(delta, sizeof(int));
 	if (!data.left || !data.right)
 		errx(1, "malloc failed");
 
@@ -384,7 +390,9 @@ main(int argc, char **argv)
 	del_fft(fft);
 
 	free(data.left_shadow);
+	free(data.left_shadow_max);
 	free(data.right_shadow);
+	free(data.right_shadow_max);
 	free(data.left);
 	free(data.right);
 	free(data.buffer);
