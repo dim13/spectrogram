@@ -205,11 +205,12 @@ draw(struct data *data)
 			rx, sp_right.y,
 			rx, sp_right.y + sp_right.height - r - 1);
 
-		XSetForeground(dsp, gc, data->wf[data->maxval - 1]);
 		if (data->left_shadow[x] < l)
 			data->left_shadow[x] = l;
 		else if(data->left_shadow[x] > 0) {
 			data->left_shadow[x]--;
+			XSetForeground(dsp, gc,
+				data->sp[data->left_shadow[x] - 1]);
 			XDrawPoint(dsp, pix, gc,
 				lx, sp_left.y + sp_left.height
 				- data->left_shadow[x] - 1);
@@ -219,6 +220,8 @@ draw(struct data *data)
 			data->right_shadow[x] = r;
 		else if(data->right_shadow[x] > 0) {
 			data->right_shadow[x]--;
+			XSetForeground(dsp, gc,
+				data->sp[data->right_shadow[x] - 1]);
 			XDrawPoint(dsp, pix, gc,
 				rx, sp_right.y + sp_right.height
 				- data->right_shadow[x] - 1);
