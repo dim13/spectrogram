@@ -22,6 +22,8 @@
 struct sio {
 	struct	sio_hdl *sio;
 	struct	sio_par par;
+	int16_t	*buffer;
+	size_t	bufsz;
 };
 
 struct sio *
@@ -56,6 +58,12 @@ init_sio(int rchan, int bits, int sig)
 	    sio->par.sig != sig)
 		errx(1, "unsupported audio params");
 
+	sio->bufsz = sio->par.rchan * sio->par.round * sizeof(int16_t);
+	sio->buffer = malloc(sio->bufsz);
+
+	if (!sio->buffer)
+		errx(1, "malloc failed");
+
 	sio_start(sio->sio);
 
 	return sio;
@@ -67,10 +75,12 @@ get_round(struct sio *sio)
 	return sio->par.round;
 }
 
-int
-read_sio(struct sio *sio, int16_t *buffer, size_t sz)
+int16_t *
+read_sio(struct sio *sio)
 {
 	int done = 0;
+	int16_t *buffer = sio->buffer;
+	size_t sz = sio->bufsz;
 
 	do {
 		done += sio_read(sio->sio, buffer, sz);
@@ -80,7 +90,7 @@ read_sio(struct sio *sio, int16_t *buffer, size_t sz)
 		sz -= done;
 	} while (sz);
 
-	return done;
+	return sio->buffer;
 }
 
 void
@@ -88,5 +98,6 @@ del_sio(struct sio *sio)
 {
 	sio_stop(sio->sio);
 	sio_close(sio->sio);
+	free(sio->buffer);
 	free(sio);
 }

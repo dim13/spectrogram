@@ -60,7 +60,6 @@ int	die = 0;
 
 struct data {
 	int16_t		*buffer;
-	size_t		bufsz;
 	double		*left;
 	double		*right;
 	int		*left_shadow;
@@ -332,11 +331,6 @@ main(int argc, char **argv)
 	XSelectInput(dsp, win, ExposureMask|KeyPressMask);
 	XMapWindow(dsp, win);
 
-	data.bufsz = RCHAN * delta * sizeof(int16_t); /* par.rchan */
-	data.buffer = malloc(data.bufsz);
-	if (!data.buffer)
-		errx(1, "malloc failed");
-
 	data.left = calloc(delta, sizeof(double));
 	data.right = calloc(delta, sizeof(double));
 	data.left_shadow = calloc(delta, sizeof(int));
@@ -358,7 +352,7 @@ main(int argc, char **argv)
 	fft = init_fft(delta);
 
 	while (!die) {
-		read_sio(sio, data.buffer, data.bufsz);
+		data.buffer = read_sio(sio);
 		dofft(fft, data.buffer, data.left, 0);
 		dofft(fft, data.buffer, data.right, 1);
 		draw(&data);
