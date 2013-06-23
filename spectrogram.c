@@ -312,10 +312,8 @@ main(int argc, char **argv)
 
 	sio = init_sio(RCHAN, BITS, SIGNED);
 
-#if 0	
 	if (dflag)
 		daemon(0, 0);
-#endif
 
 	delta = get_round(sio);
 	width = delta + 2 * GAP;
