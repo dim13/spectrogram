@@ -59,7 +59,6 @@ XRectangle	sp_left, sp_right;	/* spectrogram */
 int	die = 0;
 
 struct data {
-	int16_t		*buffer;
 	double		*left;
 	double		*right;
 	int		*left_shadow;
@@ -279,6 +278,7 @@ main(int argc, char **argv)
 	struct		sio *sio;
 	struct		fft *fft;
 	struct		data data;
+	int16_t		*buffer;
 
 	int		ch, dflag = 1;
 	int		delta;
@@ -352,9 +352,9 @@ main(int argc, char **argv)
 	fft = init_fft(delta);
 
 	while (!die) {
-		data.buffer = read_sio(sio);
-		dofft(fft, data.buffer, data.left, 0);
-		dofft(fft, data.buffer, data.right, 1);
+		buffer = read_sio(sio);
+		dofft(fft, buffer, data.left, 0);
+		dofft(fft, buffer, data.right, 1);
 		draw(&data);
 
 		while (XPending(dsp)) {
@@ -388,7 +388,6 @@ main(int argc, char **argv)
 	free(data.right_shadow);
 	free(data.left);
 	free(data.right);
-	free(data.buffer);
 
 	XCloseDisplay(dsp);
 
