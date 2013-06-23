@@ -278,7 +278,7 @@ main(int argc, char **argv)
 
 	int		ch, dflag = 1;
 	int		delta;
-	int		psize, ssize;
+	int		ssize;
 
 	while ((ch = getopt(argc, argv, "hd")) != -1)
 		switch (ch) {
@@ -334,8 +334,7 @@ main(int argc, char **argv)
 	if (!data.left || !data.right)
 		errx(1, "malloc failed");
 
-	psize = 2 * height / 3;
-	ssize = psize >> 2;
+	ssize = height >> 2;
 	data.maxval = ssize;
 
 	init_rect(width, height, ssize);
