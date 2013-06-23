@@ -51,18 +51,12 @@ init_fft(int n)
 {
 	struct	fft *p;
 
-	p = malloc(2 * sizeof(struct fft));
+	p = malloc(sizeof(struct fft));
 
-	p[0].n = n;
-	p[0].in = fftw_malloc(n * sizeof(double));
-	p[0].out = fftw_malloc(n * sizeof(double));
-	p[0].plan = fftw_plan_r2r_1d(n, p[0].in, p[0].out,
-		FFTW_R2HC, FFTW_MEASURE);
-
-	p[1].n = n;
-	p[1].in = fftw_malloc(n * sizeof(double));
-	p[1].out = fftw_malloc(n * sizeof(double));
-	p[1].plan = fftw_plan_r2r_1d(n, p[1].in, p[1].out,
+	p->n = n;
+	p->in = fftw_malloc(n * sizeof(double));
+	p->out = fftw_malloc(n * sizeof(double));
+	p->plan = fftw_plan_r2r_1d(n, p->in, p->out,
 		FFTW_R2HC, FFTW_MEASURE);
 
 	p->window = hamming(n);
@@ -71,33 +65,28 @@ init_fft(int n)
 }
 
 int
-dofft(struct fft *p, int16_t *data, double *left, double *right, int n, float scala)
+dofft(struct fft *p, int16_t *data, double *out, int odd)
 {
 	int	i;
 
-	for (i = 0; i < n; i++) {
-		p[0].in[i] = p->window[i] * data[2 * i + 0] / (double)INT16_MAX;
-		p[1].in[i] = p->window[i] * data[2 * i + 1] / (double)INT16_MAX;
-	}
+	for (i = 0; i < p->n; i++)
+		p->in[i] = p->window[i] * data[2 * i + odd]
+			/ (double)INT16_MAX;
 
-	fftw_execute(p[0].plan);
-	fftw_execute(p[1].plan);
+	fftw_execute(p->plan);
 
-	for (i = 1; i < n / 2; i++) {
-		left[i - 1] = sqrt(scala * i
-			* (pow(p[0].out[i], 2) + pow(p[0].out[n - i], 2)));
-		right[i - 1] =  sqrt(scala * i
-			* (pow(p[1].out[i], 2) + pow(p[1].out[n - i], 2)));
-	}
+	for (i = 1; i < p->n / 2; i++)
+		out[i - 1] = sqrt(i * (pow(p->out[i], 2)
+			+ pow(p->out[p->n - i], 2)));
 
 	return 0;
 }
 
 void
-del_fft(struct fft *fft)
+del_fft(struct fft *p)
 {
-	fftw_free(fft->in);
-	fftw_free(fft->out);
-	free(fft->window);
-	free(fft);
+	fftw_free(p->in);
+	fftw_free(p->out);
+	free(p->window);
+	free(p);
 }

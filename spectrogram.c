@@ -281,8 +281,6 @@ main(int argc, char **argv)
 	struct		fft *fft;
 	struct		data data;
 
-	float		scala = 1.0;
-
 	int		ch, dflag = 1;
 	int		delta;
 	int		psize, ssize;
@@ -361,7 +359,8 @@ main(int argc, char **argv)
 
 	while (!die) {
 		read_sio(sio, data.buffer, data.bufsz);
-		dofft(fft, data.buffer, data.left, data.right, delta, scala);
+		dofft(fft, data.buffer, data.left, 0);
+		dofft(fft, data.buffer, data.right, 1);
 		draw(&data);
 
 		while (XPending(dsp)) {
@@ -374,14 +373,6 @@ main(int argc, char **argv)
 				switch (XLookupKeysym(&ev.xkey, 0)) {
 				case XK_q:
 					die = 1;
-					break;
-				case XK_KP_Add:
-					scala *= 2;
-					msg("inc scala: %f", scala);
-					break;
-				case XK_KP_Subtract:
-					scala /= 2;
-					msg("dec scala: %f", scala);
 					break;
 				default:
 					break;

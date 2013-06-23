@@ -8,7 +8,7 @@ PCCF!=	pkg-config --cflags ${LIBS}
 PCLA!=	pkg-config --libs ${LIBS}
 CFLAGS+=${PCCF}
 LDADD+=	${PCLA} -lsndio
-DEBUG+=	-Wall
+DEBUG+=	-Wall -ggdb
 NOMAN=
 
 .include <bsd.prog.mk>
