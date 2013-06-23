@@ -38,10 +38,6 @@
 #define SSIZE	(PSIZE >> 1)
 #define GAP	2
 
-#define	RCHAN	2
-#define	BITS	16
-#define	SIGNED	1
-
 extern		char *__progname;
 
 Display		*dsp;
@@ -307,7 +303,7 @@ main(int argc, char **argv)
 
 	signal(SIGINT, catch);
 
-	sio = init_sio(RCHAN, BITS, SIGNED);
+	sio = init_sio(2, 16, 1);
 
 	if (dflag)
 		daemon(0, 0);
