@@ -278,7 +278,6 @@ main(int argc, char **argv)
 
 	int		ch, dflag = 1;
 	int		delta;
-	int		ssize;
 
 	while ((ch = getopt(argc, argv, "hd")) != -1)
 		switch (ch) {
@@ -334,13 +333,10 @@ main(int argc, char **argv)
 	if (!data.left || !data.right)
 		errx(1, "malloc failed");
 
-	ssize = height >> 2;
-	data.maxval = ssize;
-
-	init_rect(width, height, ssize);
-
-	data.sp = init_palette(0.30, 0.00, 0.50, 1.00, 0.75, 1.00, ssize, 0);
-	data.wf = init_palette(0.65, 0.35, 1.00, 0.00, 0.00, 1.00, ssize, 1);
+	data.maxval = height >> 2;
+	init_rect(width, height, data.maxval);
+	data.sp = init_palette(0.3, 0.0, 0.5, 1.0, 0.75, 1.0, data.maxval, 0);
+	data.wf = init_palette(0.65, 0.35, 1.0, 0.0, 0.0, 1.0, data.maxval, 1);
 
 	createbg(&data);
 
