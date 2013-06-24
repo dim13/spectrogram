@@ -34,78 +34,39 @@
 #include "fft.h"
 #include "hsv2rgb.h"
 
-#define PSIZE	250
-#define SSIZE	(PSIZE >> 1)
-#define GAP	2
-
 extern		char *__progname;
 
-Display		*dsp;
-Window		win;
-Colormap	cmap;
-GC		gc;
-Pixmap		pix, bg;
-int		width, height;
+struct	panel {
+	Pixmap	pix;		/* main pixmap */
+	Pixmap	bg;		/* spectrogram bg */
+	Pixmap	mask;		/* spectrogram mask */
 
+	GC	pgc;
+	GC	mgc;
 
-XRectangle	wf_from, wf_to;		/* waterfall blit */
-XRectangle	wf_left, wf_right;	/* waterfall */
-XRectangle	sp_left, sp_right;	/* spectrogram */
+	XRectangle p;		/* panel */
+	XRectangle w;		/* waterfall */
+	XRectangle s;		/* spectrogram */
 
-int	die = 0;
+	int	mirror;
+	double	*data;
+	int	*shadow;
+	int	maxval;
 
-struct data {
-	double		*left;
-	double		*right;
-	int		*left_shadow;
-	int		*right_shadow;
-	int		maxval;
-	unsigned long	*wf;
-	unsigned long	*sp;
+	unsigned long *palette;
 };
 
-void
-init_rect(int w, int h, int ssz)
-{
-	/* Blit */
-	wf_from.x = 0;
-	wf_from.y = 1;
-	wf_from.width = w;
-	wf_from.height = h - ssz - 1;
+Display		*dsp;
 
-	wf_to.x = 0;
-	wf_to.y = 0;
-	wf_to.width = w;
-	wf_to.height = h - ssz - 1;
-
-	/* Watterfall */
-	wf_left.x = 0;
-	wf_left.y = h - ssz - 1;
-	wf_left.width = w / 2 - GAP;
-	wf_left.height = 1;
-
-	wf_right.x = w / 2 + GAP;
-	wf_right.y = h - ssz - 1;
-	wf_right.width = w / 2 - GAP;
-	wf_right.height = 1;
-
-	/* Spectrogram */
-	sp_left.x = 0;
-	sp_left.y = h - ssz;
-	sp_left.width = w / 2 - GAP;
-	sp_left.height = ssz;
-
-	sp_right.x = w / 2 + GAP;
-	sp_right.y = h - ssz;
-	sp_right.width = w / 2 - GAP;
-	sp_right.height = ssz;
-}
+int	die = 0;
 
 unsigned long
 hsvcolor(float h, float s, float v)
 {
-	XColor c;
 	float r, g, b;
+	int scr = DefaultScreen(dsp);
+	Colormap cmap = DefaultColormap(dsp, scr);
+	XColor c;
 
 	hsv2rgb(&r, &g, &b, h, s, v);
 
@@ -143,94 +104,6 @@ init_palette(float h, float dh, float s, float ds, float v, float dv, int n, int
 }
 
 void
-createbg(struct data *data)
-{
-	int y;
-
-	for (y = 0; y < sp_left.height; y++) {
-		XSetForeground(dsp, gc, data->sp[y]);
-		XDrawLine(dsp, bg, gc,
-			sp_left.x, sp_left.y + sp_left.height - y - 1,
-			sp_left.x + sp_left.width - 1,
-			sp_left.y + sp_left.height - y - 1);
-	}
-
-	XCopyArea(dsp, bg, bg, gc,
-		sp_left.x, sp_left.y, sp_left.width, sp_left.height,
-		sp_right.x, sp_right.y);
-}
-
-#define LIMIT(val, maxval)	((val) >= (maxval) ? ((maxval) - 1) : (val))
-
-int
-draw(struct data *data)
-{
-	int             x, l, r, lx, rx;
-
-	/* blit waterfall */
-	XCopyArea(dsp, pix, pix, gc,
-		wf_from.x, wf_from.y, wf_from.width, wf_from.height,
-		wf_to.x, wf_to.y);
-
-	/* restore spectrogram bg */
-	XCopyArea(dsp, bg, pix, gc,
-		sp_left.x, sp_left.y, width, sp_left.height,
-		sp_left.x, sp_left.y);
-
-	for (x = 0; x < wf_left.width; x++) {
-		l = LIMIT(data->left[x], data->maxval);
-		r = LIMIT(data->right[x], data->maxval);
-
-		lx = wf_left.x + wf_left.width - x - 1;
-		rx = wf_right.x + x;
-
-		/* waterfall */
-		XSetForeground(dsp, gc, data->wf[l]);
-		XDrawPoint(dsp, pix, gc, lx, wf_left.y);
-
-		XSetForeground(dsp, gc, data->wf[r]);
-		XDrawPoint(dsp, pix, gc, rx, wf_right.y);
-
-		/* spectrogram neg mask */
-		XSetForeground(dsp, gc, data->wf[0]);
-		XDrawLine(dsp, pix, gc,
-			lx, sp_left.y,
-			lx, sp_left.y + sp_left.height - l - 1);
-		XDrawLine(dsp, pix, gc,
-			rx, sp_right.y,
-			rx, sp_right.y + sp_right.height - r - 1);
-
-		/* spectrogram shadow */
-		if (data->left_shadow[x] < l)
-			data->left_shadow[x] = l;
-		else if(data->left_shadow[x] > 0) {
-			data->left_shadow[x]--;
-			XSetForeground(dsp, gc,
-				data->sp[data->left_shadow[x] - 1]);
-			XDrawPoint(dsp, pix, gc,
-				lx, sp_left.y + sp_left.height
-				- data->left_shadow[x] - 1);
-		}
-
-		if (data->right_shadow[x] < r)
-			data->right_shadow[x] = r;
-		else if(data->right_shadow[x] > 0) {
-			data->right_shadow[x]--;
-			XSetForeground(dsp, gc,
-				data->sp[data->right_shadow[x] - 1]);
-			XDrawPoint(dsp, pix, gc,
-				rx, sp_right.y + sp_right.height
-				- data->right_shadow[x] - 1);
-		}
-	}
-
-	/* flip */
-	XCopyArea(dsp, pix, win, gc, 0, 0, width, height, 0, 0);
-
-	return 0;
-}
-
-void
 catch(int notused)
 {
 	die = 1;
@@ -247,37 +120,143 @@ usage(void)
 }
 
 void
-msg(char *fmt, ...)
+init_bg(Pixmap pix, GC gc, int w, int h, unsigned long *pal)
 {
-	char string[80];
-	size_t len;
-	va_list ap;
+	int i;
 
-	va_start(ap, fmt);
+	for (i = 0; i < h; i++) {
+		XSetForeground(dsp, gc, pal[i]);
+		XDrawLine(dsp, pix, gc, 0, h - i - 1, w - 1, h - i - 1);
+	}
+}
 
-	len = vsnprintf(string, sizeof(string), fmt, ap);
-	XSetForeground(dsp, gc, WhitePixel(dsp, DefaultScreen(dsp)));
-	XDrawImageString(dsp, pix, gc, 100, 100, string, len);
+void
+draw_panel(struct panel *p)
+{
+	int i, v, x;
 
-	va_end(ap);
+	/* blit waterfall */
+	XCopyArea(dsp, p->pix, p->pix, p->pgc,
+		0, 1, p->w.width, p->w.height - 1, 0, 0);
+
+	/* clear spectrogram */
+	XSetForeground(dsp, p->pgc, p->palette[0]);
+	XFillRectangle(dsp, p->pix, p->pgc,
+		p->s.x, p->s.y, p->s.width, p->s.height);
+
+	/* clear mask */
+	XSetForeground(dsp, p->mgc, 0);
+	XFillRectangle(dsp, p->mask, p->mgc,
+		0, 0, p->s.width, p->s.height);
+
+	for (i = 0; i < p->p.width; i++) {
+		/* limit maxval */
+		v = p->data[i] >= p->maxval ? p->maxval - 1 : p->data[i];
+		x = p->mirror ? p->p.width - i - 1 : i;
+
+		/* draw waterfall */
+		XSetForeground(dsp, p->pgc, p->palette[v]);
+		XDrawPoint(dsp, p->pix, p->pgc,
+			x, p->w.height - 1);
+
+		/* draw spectrogram */
+		XSetForeground(dsp, p->mgc, 1);
+		XDrawLine(dsp, p->mask, p->mgc,
+			x, p->s.height - v,
+			x, p->s.height);
+
+		/* draw schadow */
+		if (p->shadow[i] < v)
+			p->shadow[i] = v;
+		else if (--p->shadow[i] > 0)
+			XDrawPoint(dsp, p->mask, p->mgc,
+				x, p->s.height - p->shadow[i]);
+	}
+
+	/* apply mask */
+	XSetClipOrigin(dsp, p->pgc, p->s.x, p->s.y);
+	XSetClipMask(dsp, p->pgc, p->mask);
+	XCopyArea(dsp, p->bg, p->pix, p->pgc, 0, 0, p->s.width, p->s.height,
+		p->s.x, p->s.y);
+	XSetClipMask(dsp, p->pgc, None);
+}
+
+struct panel *
+init_panel(Window win, int w, int h, int mirror)
+{
+	struct panel *p;
+	int scr = DefaultScreen(dsp);
+	int planes = DisplayPlanes(dsp, scr);
+	unsigned long *sp, *wf;
+
+	p = malloc(sizeof(struct panel));
+	if (!p)
+		errx(1, "malloc failed");
+
+	p->mirror = mirror;
+
+	/* whole panel */
+	p->p.x = 0;
+	p->p.y = 0;
+	p->p.width = w;
+	p->p.height = h;
+
+	/* waterfall */
+	p->w.x = 0;
+	p->w.y = 0;
+	p->w.width = w;
+	p->w.height = h * 0.75;
+
+	/* spectrogram */
+	p->s.x = 0;
+	p->s.y = p->w.height;
+	p->s.width = w;
+	p->s.height = h * 0.25;
+
+	p->data = calloc(w, sizeof(double));
+	p->shadow = calloc(w, sizeof(int));
+	p->maxval = p->s.height;
+
+	sp = init_palette(0.3, 0.0, 0.5, 1.0, 0.75, 1.0, p->maxval, 0);
+	wf = init_palette(0.65, 0.35, 1.0, 0.0, 0.0, 1.0, p->maxval, 1);
+
+	p->palette = wf;
+
+	if (!p->data || !p->shadow)
+		errx(1, "malloc failed");
+
+	p->pix = XCreatePixmap(dsp, win, w, h, planes);
+	p->bg = XCreatePixmap(dsp, p->pix, p->s.width, p->s.height, planes);
+	p->mask = XCreatePixmap(dsp, p->pix, p->s.width, p->s.height, 1);
+
+	p->pgc = XCreateGC(dsp, p->pix, 0, NULL);	
+	p->mgc = XCreateGC(dsp, p->mask, 0, NULL);	
+
+	init_bg(p->bg, p->pgc, p->s.width, p->s.height, sp);
+
+	free(sp);
+	
+	return p;
 }
 
 int 
 main(int argc, char **argv)
 {
 
+	Window		win;
 	Atom		delwin;
 	int		scr;
-	unsigned long	black;
-	unsigned long	white;
+
+	struct		panel *left, *right;
 
 	struct		sio *sio;
 	struct		fft *fft;
-	struct		data data;
 	int16_t		*buffer;
 
 	int		ch, dflag = 1;
 	int		delta;
+	int		width, height;
+	unsigned long	black, white;
 
 	while ((ch = getopt(argc, argv, "hd")) != -1)
 		switch (ch) {
@@ -291,16 +270,12 @@ main(int argc, char **argv)
 		}
 	argc -= optind;
 	argv += optind;
+
+	signal(SIGINT, catch);
 		
 	dsp = XOpenDisplay(getenv("DISPLAY"));
 	if (!dsp)
 		errx(1, "Cannot connect to X11 server");
-	scr = DefaultScreen(dsp);
-	black = BlackPixel(dsp, scr);
-	white = WhitePixel(dsp, scr);
-	cmap = DefaultColormap(dsp, scr);
-
-	signal(SIGINT, catch);
 
 	sio = init_sio(2, 16, 1);
 
@@ -308,45 +283,41 @@ main(int argc, char **argv)
 		daemon(0, 0);
 
 	delta = get_round(sio);
-	width = delta + 2 * GAP;
+	width = delta + 4;
 	height = 0.75 * width;
-	data.maxval = 0.25 * height;
+
+	scr = DefaultScreen(dsp);
+	white = WhitePixel(dsp, scr);
+	black = BlackPixel(dsp, scr);
 
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr), 0, 0,
 		width, height, 2, white, black);
+		
 	XStoreName(dsp, win, __progname);
+	XSelectInput(dsp, win, KeyPressMask);
+
 	delwin = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);
 	XSetWMProtocols(dsp, win, &delwin, 1);
-
-	gc = XCreateGC(dsp, win, 0, NULL);	
-	XSetGraphicsExposures(dsp, gc, False);
-	
-	pix = XCreatePixmap(dsp, win, width, height, DisplayPlanes(dsp, scr));
-	bg = XCreatePixmap(dsp, win, width, height, DisplayPlanes(dsp, scr));
-
-	XSelectInput(dsp, win, ExposureMask|KeyPressMask);
 	XMapWindow(dsp, win);
 
-	data.left = calloc(delta, sizeof(double));
-	data.right = calloc(delta, sizeof(double));
-	data.left_shadow = calloc(delta, sizeof(int));
-	data.right_shadow = calloc(delta, sizeof(int));
-	if (!data.left || !data.right)
-		errx(1, "malloc failed");
-
-	init_rect(width, height, data.maxval);
-	data.sp = init_palette(0.3, 0.0, 0.5, 1.0, 0.75, 1.0, data.maxval, 0);
-	data.wf = init_palette(0.65, 0.35, 1.0, 0.0, 0.0, 1.0, data.maxval, 1);
-
-	createbg(&data);
+	left = init_panel(win, delta / 2, height, 1);
+	right = init_panel(win, delta / 2, height, 0);
 
 	fft = init_fft(delta);
 
 	while (!die) {
 		buffer = read_sio(sio);
-		dofft(fft, buffer, data.left, 0);
-		dofft(fft, buffer, data.right, 1);
-		draw(&data);
+
+		dofft(fft, buffer, left->data, 0);
+		dofft(fft, buffer, right->data, 1);
+		draw_panel(left);
+		draw_panel(right);
+
+		/* flip */
+		XCopyArea(dsp, left->pix, win, left->pgc, 0, 0,
+			left->p.width, left->p.height, 0, 0);
+		XCopyArea(dsp, right->pix, win, right->pgc, 0, 0,
+			right->p.width, right->p.height, right->p.width + 4, 0);
 
 		while (XPending(dsp)) {
 			XEvent ev;
@@ -374,11 +345,6 @@ main(int argc, char **argv)
 
 	del_sio(sio);
 	del_fft(fft);
-
-	free(data.left_shadow);
-	free(data.right_shadow);
-	free(data.left);
-	free(data.right);
 
 	XCloseDisplay(dsp);
 
