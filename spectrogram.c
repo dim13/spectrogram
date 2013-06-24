@@ -137,7 +137,7 @@ draw_panel(struct panel *p)
 
 	/* blit waterfall */
 	XCopyArea(dsp, p->pix, p->pix, p->pgc,
-		0, 1, p->w.width, p->w.height - 1, 0, 0);
+		0, 1, p->w.width, p->w.height, 0, 0);
 
 	/* clear spectrogram */
 	XSetForeground(dsp, p->pgc, p->palette[0]);
@@ -157,7 +157,7 @@ draw_panel(struct panel *p)
 		/* draw waterfall */
 		XSetForeground(dsp, p->pgc, p->palette[v]);
 		XDrawPoint(dsp, p->pix, p->pgc,
-			x, p->w.height - 1);
+			x, p->w.height);
 
 		/* draw spectrogram */
 		XSetForeground(dsp, p->mgc, 1);
