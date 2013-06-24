@@ -309,7 +309,8 @@ main(int argc, char **argv)
 
 	delta = get_round(sio);
 	width = delta + 2 * GAP;
-	height = 3 * width / 4;
+	height = 0.75 * width;
+	data.maxval = 0.25 * height;
 
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr), 0, 0,
 		width, height, 2, white, black);
@@ -333,7 +334,6 @@ main(int argc, char **argv)
 	if (!data.left || !data.right)
 		errx(1, "malloc failed");
 
-	data.maxval = height >> 2;
 	init_rect(width, height, data.maxval);
 	data.sp = init_palette(0.3, 0.0, 0.5, 1.0, 0.75, 1.0, data.maxval, 0);
 	data.wf = init_palette(0.65, 0.35, 1.0, 0.0, 0.0, 1.0, data.maxval, 1);
