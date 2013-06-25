@@ -286,7 +286,7 @@ main(int argc, char **argv)
 
 	signal(SIGINT, catch);
 		
-	dsp = XOpenDisplay(getenv("DISPLAY"));
+	dsp = XOpenDisplay(NULL);
 	if (!dsp)
 		errx(1, "Cannot connect to X11 server");
 
