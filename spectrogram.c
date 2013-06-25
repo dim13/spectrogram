@@ -240,7 +240,7 @@ init_panel(Window win, int w, int h, int mirror)
 	p->maxval = p->s.height;
 
 	bgpalette = init_palette(0.3, 0.0, 0.5, 1.0, 0.75, 1.0, p->maxval, 0);
-	shpalette = init_palette(0.3, 0.0, 0.5, 1.0, 0.1, 0.15, p->maxval, 0);
+	shpalette = init_palette(0.3, 0.0, 0.5, 1.0, 0.05, 0.1, p->maxval, 0);
 	p->palette = init_palette(0.65, 0.35, 1.0, 0.0, 0.0, 1.0, p->maxval, 1);
 
 	if (!p->data || !p->shadow)
