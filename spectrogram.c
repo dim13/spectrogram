@@ -89,6 +89,8 @@ init_palette(Display *d, float h, float dh, float s, float ds, float v, float dv
 	int	i;
 
 	p = calloc(n, sizeof(unsigned long));
+	if (!p)
+		errx(1, "malloc failed");
 
 	hstep = (dh - h) / n;
 	sstep = (ds - s) / n;
