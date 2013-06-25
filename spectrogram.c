@@ -42,9 +42,12 @@ struct	panel {
 	Pixmap	pix;		/* main pixmap */
 	Pixmap	bg;		/* spectrogram bg */
 	Pixmap	mask;		/* spectrogram mask */
+	Pixmap	sbg;		/* shadow bg */
+	Pixmap	smask;		/* shadow mask */
 
 	GC	pgc;
 	GC	mgc;
+	GC	sgc;
 
 	XRectangle p;		/* panel */
 	XRectangle w;		/* waterfall */
@@ -151,6 +154,11 @@ draw_panel(struct panel *p)
 	XFillRectangle(dsp, p->mask, p->mgc,
 		0, 0, p->s.width, p->s.height);
 
+	/* clear shadow mask */
+	XSetForeground(dsp, p->sgc, 0);
+	XFillRectangle(dsp, p->smask, p->sgc,
+		0, 0, p->s.width, p->s.height);
+
 	for (i = 0; i < p->p.width; i++) {
 		/* limit maxval */
 		v = p->data[i] >= p->maxval ? p->maxval - 1 : p->data[i];
@@ -170,16 +178,28 @@ draw_panel(struct panel *p)
 		/* draw schadow */
 		if (p->shadow[i] < v)
 			p->shadow[i] = v;
-		else if (--p->shadow[i] > 0)
-			XDrawPoint(dsp, p->mask, p->mgc,
-				x, p->s.height - p->shadow[i]);
+		else if (p->shadow[i] > 0) {
+			XSetForeground(dsp, p->sgc, 1);
+			XDrawLine(dsp, p->smask, p->sgc,
+				x, p->s.height - p->shadow[i]--,
+				x, p->s.height);
+		}
 	}
 
 	/* apply mask */
 	XSetClipOrigin(dsp, p->pgc, p->s.x, p->s.y);
+
+	/* shadow */
+	XSetClipMask(dsp, p->pgc, p->smask);
+	XCopyArea(dsp, p->sbg, p->pix, p->pgc, 0, 0, p->s.width, p->s.height,
+		p->s.x, p->s.y);
+
+	/* spectrogram */
 	XSetClipMask(dsp, p->pgc, p->mask);
 	XCopyArea(dsp, p->bg, p->pix, p->pgc, 0, 0, p->s.width, p->s.height,
 		p->s.x, p->s.y);
+
+	/* reset mask */
 	XSetClipMask(dsp, p->pgc, None);
 }
 
@@ -189,7 +209,7 @@ init_panel(Window win, int w, int h, int mirror)
 	struct panel *p;
 	int scr = DefaultScreen(dsp);
 	int planes = DisplayPlanes(dsp, scr);
-	unsigned long *bgpalette;
+	unsigned long *bgpalette, *shpalette;
 
 	p = malloc(sizeof(struct panel));
 	if (!p)
@@ -220,6 +240,7 @@ init_panel(Window win, int w, int h, int mirror)
 	p->maxval = p->s.height;
 
 	bgpalette = init_palette(0.3, 0.0, 0.5, 1.0, 0.75, 1.0, p->maxval, 0);
+	shpalette = init_palette(0.3, 0.0, 0.5, 1.0, 0.1, 0.15, p->maxval, 0);
 	p->palette = init_palette(0.65, 0.35, 1.0, 0.0, 0.0, 1.0, p->maxval, 1);
 
 	if (!p->data || !p->shadow)
@@ -229,12 +250,18 @@ init_panel(Window win, int w, int h, int mirror)
 	p->bg = XCreatePixmap(dsp, p->pix, p->s.width, p->s.height, planes);
 	p->mask = XCreatePixmap(dsp, p->pix, p->s.width, p->s.height, 1);
 
+	p->sbg = XCreatePixmap(dsp, p->pix, p->s.width, p->s.height, planes);
+	p->smask = XCreatePixmap(dsp, p->pix, p->s.width, p->s.height, 1);
+
 	p->pgc = XCreateGC(dsp, p->pix, 0, NULL);	
 	p->mgc = XCreateGC(dsp, p->mask, 0, NULL);	
+	p->sgc = XCreateGC(dsp, p->smask, 0, NULL);	
 
 	init_bg(p->bg, p->pgc, p->s.width, p->s.height, bgpalette);
+	init_bg(p->sbg, p->pgc, p->s.width, p->s.height, shpalette);
 
 	free(bgpalette);
+	free(shpalette);
 	
 	return p;
 }
