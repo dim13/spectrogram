@@ -35,7 +35,7 @@ init_sio(int rchan, int bits, int sig)
 	if (!sio)
 		errx(1, "malloc failed");
 
-	sio->sio = sio_open(NULL, SIO_REC, 0);
+	sio->sio = sio_open(SIO_DEVANY, SIO_REC, 0);
 
 	if (!sio->sio)
 		errx(1, "cannot connect to sound server, is it running?");
