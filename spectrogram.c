@@ -34,6 +34,12 @@
 #include "fft.h"
 #include "hsv2rgb.h"
 
+#if defined(__linux__)
+#ifndef __dead
+#define __dead	__attribute__((noreturn))
+#endif
+#endif
+
 #define	GAP	4
 extern	char *__progname;
 int	die = 0;
@@ -262,6 +268,11 @@ init_panel(Display *d, Window win, int w, int h, int mirror)
 	init_bg(d, p->bg, p->pgc, p->s.width, p->s.height, bgpalette);
 	init_bg(d, p->sbg, p->pgc, p->s.width, p->s.height, shpalette);
 
+	/* clear all */
+	XSetForeground(d, p->pgc, p->palette[0]);
+	XFillRectangle(d, p->pix, p->pgc,
+		p->p.x, p->p.y, p->p.width, p->p.height);
+
 	free(bgpalette);
 	free(shpalette);
 	
@@ -334,6 +345,7 @@ main(int argc, char **argv)
 
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr), 0, 0,
 		width, height, 2, white, black);
+	XClearWindow(dsp, win);
 		
 	XStoreName(dsp, win, __progname);
 	XSelectInput(dsp, win, KeyPressMask);
