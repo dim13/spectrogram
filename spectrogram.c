@@ -34,6 +34,8 @@
 #include "fft.h"
 #include "hsv2rgb.h"
 
+#define	GAP	4
+
 extern		char *__progname;
 
 struct	panel {
@@ -239,6 +241,20 @@ init_panel(Window win, int w, int h, int mirror)
 	return p;
 }
 
+void
+del_panel(struct panel *p)
+{
+	XFreePixmap(dsp, p->pix);
+	XFreePixmap(dsp, p->bg);
+	XFreePixmap(dsp, p->mask);
+	XFreeGC(dsp, p->pgc);
+	XFreeGC(dsp, p->mgc);
+	free(p->data);
+	free(p->shadow);
+	free(p->palette);
+	free(p);
+}
+
 int 
 main(int argc, char **argv)
 {
@@ -248,7 +264,6 @@ main(int argc, char **argv)
 	int		scr;
 
 	struct		panel *left, *right;
-
 	struct		sio *sio;
 	struct		fft *fft;
 	int16_t		*buffer;
@@ -283,7 +298,7 @@ main(int argc, char **argv)
 		daemon(0, 0);
 
 	delta = get_round(sio);
-	width = delta + 4;
+	width = delta + GAP;
 	height = 0.75 * width;
 
 	scr = DefaultScreen(dsp);
@@ -298,12 +313,12 @@ main(int argc, char **argv)
 
 	delwin = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);
 	XSetWMProtocols(dsp, win, &delwin, 1);
-	XMapWindow(dsp, win);
 
 	left = init_panel(win, delta / 2, height, 1);
 	right = init_panel(win, delta / 2, height, 0);
-
 	fft = init_fft(delta);
+
+	XMapWindow(dsp, win);
 
 	while (!die) {
 		buffer = read_sio(sio);
@@ -315,9 +330,11 @@ main(int argc, char **argv)
 
 		/* flip */
 		XCopyArea(dsp, left->pix, win, left->pgc, 0, 0,
-			left->p.width, left->p.height, 0, 0);
+			left->p.width, left->p.height,
+			0, 0);
 		XCopyArea(dsp, right->pix, win, right->pgc, 0, 0,
-			right->p.width, right->p.height, right->p.width + 4, 0);
+			right->p.width, right->p.height,
+			right->p.width + GAP, 0);
 
 		while (XPending(dsp)) {
 			XEvent ev;
@@ -345,6 +362,8 @@ main(int argc, char **argv)
 
 	del_sio(sio);
 	del_fft(fft);
+	del_panel(left);
+	del_panel(right);
 
 	XCloseDisplay(dsp);
 
