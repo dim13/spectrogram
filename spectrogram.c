@@ -35,8 +35,8 @@
 #include "hsv2rgb.h"
 
 #define	GAP	4
-
-extern		char *__progname;
+extern	char *__progname;
+int	die = 0;
 
 struct	panel {
 	Pixmap	pix;		/* main pixmap */
@@ -61,16 +61,12 @@ struct	panel {
 	unsigned long *palette;
 };
 
-Display		*dsp;
-
-int	die = 0;
-
 unsigned long
-hsvcolor(float h, float s, float v)
+hsvcolor(Display *d, float h, float s, float v)
 {
 	float r, g, b;
-	int scr = DefaultScreen(dsp);
-	Colormap cmap = DefaultColormap(dsp, scr);
+	int scr = DefaultScreen(d);
+	Colormap cmap = DefaultColormap(d, scr);
 	XColor c;
 
 	hsv2rgb(&r, &g, &b, h, s, v);
@@ -80,16 +76,16 @@ hsvcolor(float h, float s, float v)
 	c.blue = UINT16_MAX * b;
 	c.flags = DoRed|DoGreen|DoBlue;
 
-	XAllocColor(dsp, cmap, &c);
+	XAllocColor(d, cmap, &c);
 
 	return c.pixel;
 }
 
 unsigned long *
-init_palette(float h, float dh, float s, float ds, float v, float dv, int n, int lg)
+init_palette(Display *d, float h, float dh, float s, float ds, float v, float dv, int n, int lg)
 {
 	unsigned long *p;
-	float	hstep, sstep, vstep;
+	float	hstep, sstep, vstep, vv;
 	int	i;
 
 	p = calloc(n, sizeof(unsigned long));
@@ -99,7 +95,8 @@ init_palette(float h, float dh, float s, float ds, float v, float dv, int n, int
 	vstep = (dv - v) / n;
 
 	for (i = 0; i < n; i++) {
-		p[i] = hsvcolor(h, s, lg ? logf(100 * v + 1) / logf(101) : v);
+		vv = lg ? logf(100 * v + 1) / logf(101) : v;
+		p[i] = hsvcolor(d, h, s, vv);
 		h += hstep;
 		s += sstep;
 		v += vstep;
@@ -125,38 +122,38 @@ usage(void)
 }
 
 void
-init_bg(Pixmap pix, GC gc, int w, int h, unsigned long *pal)
+init_bg(Display *d, Pixmap pix, GC gc, int w, int h, unsigned long *pal)
 {
 	int i;
 
 	for (i = 0; i < h; i++) {
-		XSetForeground(dsp, gc, pal[i]);
-		XDrawLine(dsp, pix, gc, 0, h - i - 1, w - 1, h - i - 1);
+		XSetForeground(d, gc, pal[i]);
+		XDrawLine(d, pix, gc, 0, h - i - 1, w - 1, h - i - 1);
 	}
 }
 
 void
-draw_panel(struct panel *p)
+draw_panel(Display *d, struct panel *p)
 {
 	int i, v, x;
 
 	/* blit waterfall */
-	XCopyArea(dsp, p->pix, p->pix, p->pgc,
+	XCopyArea(d, p->pix, p->pix, p->pgc,
 		0, 1, p->w.width, p->w.height, 0, 0);
 
 	/* clear spectrogram */
-	XSetForeground(dsp, p->pgc, p->palette[0]);
-	XFillRectangle(dsp, p->pix, p->pgc,
+	XSetForeground(d, p->pgc, p->palette[0]);
+	XFillRectangle(d, p->pix, p->pgc,
 		p->s.x, p->s.y, p->s.width, p->s.height);
 
 	/* clear mask */
-	XSetForeground(dsp, p->mgc, 0);
-	XFillRectangle(dsp, p->mask, p->mgc,
+	XSetForeground(d, p->mgc, 0);
+	XFillRectangle(d, p->mask, p->mgc,
 		0, 0, p->s.width, p->s.height);
 
 	/* clear shadow mask */
-	XSetForeground(dsp, p->sgc, 0);
-	XFillRectangle(dsp, p->smask, p->sgc,
+	XSetForeground(d, p->sgc, 0);
+	XFillRectangle(d, p->smask, p->sgc,
 		0, 0, p->s.width, p->s.height);
 
 	for (i = 0; i < p->p.width; i++) {
@@ -165,13 +162,13 @@ draw_panel(struct panel *p)
 		x = p->mirror ? p->p.width - i - 1 : i;
 
 		/* draw waterfall */
-		XSetForeground(dsp, p->pgc, p->palette[v]);
-		XDrawPoint(dsp, p->pix, p->pgc,
+		XSetForeground(d, p->pgc, p->palette[v]);
+		XDrawPoint(d, p->pix, p->pgc,
 			x, p->w.height);
 
 		/* draw spectrogram */
-		XSetForeground(dsp, p->mgc, 1);
-		XDrawLine(dsp, p->mask, p->mgc,
+		XSetForeground(d, p->mgc, 1);
+		XDrawLine(d, p->mask, p->mgc,
 			x, p->s.height - v,
 			x, p->s.height);
 
@@ -179,36 +176,36 @@ draw_panel(struct panel *p)
 		if (p->shadow[i] < v)
 			p->shadow[i] = v;
 		else if (p->shadow[i] > 0) {
-			XSetForeground(dsp, p->sgc, 1);
-			XDrawLine(dsp, p->smask, p->sgc,
+			XSetForeground(d, p->sgc, 1);
+			XDrawLine(d, p->smask, p->sgc,
 				x, p->s.height - p->shadow[i]--,
 				x, p->s.height);
 		}
 	}
 
 	/* apply mask */
-	XSetClipOrigin(dsp, p->pgc, p->s.x, p->s.y);
+	XSetClipOrigin(d, p->pgc, p->s.x, p->s.y);
 
 	/* shadow */
-	XSetClipMask(dsp, p->pgc, p->smask);
-	XCopyArea(dsp, p->sbg, p->pix, p->pgc, 0, 0, p->s.width, p->s.height,
+	XSetClipMask(d, p->pgc, p->smask);
+	XCopyArea(d, p->sbg, p->pix, p->pgc, 0, 0, p->s.width, p->s.height,
 		p->s.x, p->s.y);
 
 	/* spectrogram */
-	XSetClipMask(dsp, p->pgc, p->mask);
-	XCopyArea(dsp, p->bg, p->pix, p->pgc, 0, 0, p->s.width, p->s.height,
+	XSetClipMask(d, p->pgc, p->mask);
+	XCopyArea(d, p->bg, p->pix, p->pgc, 0, 0, p->s.width, p->s.height,
 		p->s.x, p->s.y);
 
 	/* reset mask */
-	XSetClipMask(dsp, p->pgc, None);
+	XSetClipMask(d, p->pgc, None);
 }
 
 struct panel *
-init_panel(Window win, int w, int h, int mirror)
+init_panel(Display *d, Window win, int w, int h, int mirror)
 {
 	struct panel *p;
-	int scr = DefaultScreen(dsp);
-	int planes = DisplayPlanes(dsp, scr);
+	int scr = DefaultScreen(d);
+	int planes = DisplayPlanes(d, scr);
 	unsigned long *bgpalette, *shpalette;
 
 	p = malloc(sizeof(struct panel));
@@ -239,26 +236,29 @@ init_panel(Window win, int w, int h, int mirror)
 	p->shadow = calloc(w, sizeof(int));
 	p->maxval = p->s.height;
 
-	bgpalette = init_palette(0.3, 0.0, 0.5, 1.0, 0.75, 1.0, p->maxval, 0);
-	shpalette = init_palette(0.3, 0.0, 0.5, 1.0, 0.1, 0.15, p->maxval, 0);
-	p->palette = init_palette(0.65, 0.35, 1.0, 0.0, 0.0, 1.0, p->maxval, 1);
-
 	if (!p->data || !p->shadow)
 		errx(1, "malloc failed");
 
-	p->pix = XCreatePixmap(dsp, win, w, h, planes);
-	p->bg = XCreatePixmap(dsp, p->pix, p->s.width, p->s.height, planes);
-	p->mask = XCreatePixmap(dsp, p->pix, p->s.width, p->s.height, 1);
+	p->pix = XCreatePixmap(d, win, w, h, planes);
+	p->bg = XCreatePixmap(d, p->pix, p->s.width, p->s.height, planes);
+	p->mask = XCreatePixmap(d, p->pix, p->s.width, p->s.height, 1);
 
-	p->sbg = XCreatePixmap(dsp, p->pix, p->s.width, p->s.height, planes);
-	p->smask = XCreatePixmap(dsp, p->pix, p->s.width, p->s.height, 1);
+	p->sbg = XCreatePixmap(d, p->pix, p->s.width, p->s.height, planes);
+	p->smask = XCreatePixmap(d, p->pix, p->s.width, p->s.height, 1);
 
-	p->pgc = XCreateGC(dsp, p->pix, 0, NULL);	
-	p->mgc = XCreateGC(dsp, p->mask, 0, NULL);	
-	p->sgc = XCreateGC(dsp, p->smask, 0, NULL);	
+	p->pgc = XCreateGC(d, p->pix, 0, NULL);	
+	p->mgc = XCreateGC(d, p->mask, 0, NULL);	
+	p->sgc = XCreateGC(d, p->smask, 0, NULL);	
 
-	init_bg(p->bg, p->pgc, p->s.width, p->s.height, bgpalette);
-	init_bg(p->sbg, p->pgc, p->s.width, p->s.height, shpalette);
+	p->palette = init_palette(d, 0.65, 0.35, 1.0, 0.0, 0.0, 1.0,
+		p->maxval, 1);
+	bgpalette = init_palette(d, 0.3, 0.0, 0.5, 1.0, 0.75, 1.0,
+		p->maxval, 0);
+	shpalette = init_palette(d, 0.3, 0.0, 0.5, 1.0, 0.1, 0.15,
+		p->maxval, 0);
+
+	init_bg(d, p->bg, p->pgc, p->s.width, p->s.height, bgpalette);
+	init_bg(d, p->sbg, p->pgc, p->s.width, p->s.height, shpalette);
 
 	free(bgpalette);
 	free(shpalette);
@@ -267,13 +267,13 @@ init_panel(Window win, int w, int h, int mirror)
 }
 
 void
-del_panel(struct panel *p)
+del_panel(Display *d, struct panel *p)
 {
-	XFreePixmap(dsp, p->pix);
-	XFreePixmap(dsp, p->bg);
-	XFreePixmap(dsp, p->mask);
-	XFreeGC(dsp, p->pgc);
-	XFreeGC(dsp, p->mgc);
+	XFreePixmap(d, p->pix);
+	XFreePixmap(d, p->bg);
+	XFreePixmap(d, p->mask);
+	XFreeGC(d, p->pgc);
+	XFreeGC(d, p->mgc);
 	free(p->data);
 	free(p->shadow);
 	free(p->palette);
@@ -283,7 +283,7 @@ del_panel(struct panel *p)
 int 
 main(int argc, char **argv)
 {
-
+	Display		*dsp;
 	Window		win;
 	Atom		delwin;
 	int		scr;
@@ -339,8 +339,8 @@ main(int argc, char **argv)
 	delwin = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);
 	XSetWMProtocols(dsp, win, &delwin, 1);
 
-	left = init_panel(win, delta / 2, height, 1);
-	right = init_panel(win, delta / 2, height, 0);
+	left = init_panel(dsp, win, delta / 2, height, 1);
+	right = init_panel(dsp, win, delta / 2, height, 0);
 	fft = init_fft(delta);
 
 	XMapWindow(dsp, win);
@@ -350,8 +350,8 @@ main(int argc, char **argv)
 
 		dofft(fft, buffer, left->data, 0);
 		dofft(fft, buffer, right->data, 1);
-		draw_panel(left);
-		draw_panel(right);
+		draw_panel(dsp, left);
+		draw_panel(dsp, right);
 
 		/* flip */
 		XCopyArea(dsp, left->pix, win, left->pgc, 0, 0,
@@ -387,9 +387,8 @@ main(int argc, char **argv)
 
 	del_sio(sio);
 	del_fft(fft);
-	del_panel(left);
-	del_panel(right);
-
+	del_panel(dsp, left);
+	del_panel(dsp, right);
 	XCloseDisplay(dsp);
 
 	return 0;
