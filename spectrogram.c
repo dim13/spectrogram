@@ -211,7 +211,7 @@ init_panel(Window win, int w, int h, int mirror)
 
 	/* spectrogram */
 	p->s.x = 0;
-	p->s.y = p->w.height;
+	p->s.y = p->w.height + 1;
 	p->s.width = w;
 	p->s.height = h * 0.25;
 
