@@ -189,7 +189,7 @@ init_panel(Window win, int w, int h, int mirror)
 	struct panel *p;
 	int scr = DefaultScreen(dsp);
 	int planes = DisplayPlanes(dsp, scr);
-	unsigned long *sp, *wf;
+	unsigned long *bgpalette;
 
 	p = malloc(sizeof(struct panel));
 	if (!p)
@@ -219,10 +219,8 @@ init_panel(Window win, int w, int h, int mirror)
 	p->shadow = calloc(w, sizeof(int));
 	p->maxval = p->s.height;
 
-	sp = init_palette(0.3, 0.0, 0.5, 1.0, 0.75, 1.0, p->maxval, 0);
-	wf = init_palette(0.65, 0.35, 1.0, 0.0, 0.0, 1.0, p->maxval, 1);
-
-	p->palette = wf;
+	bgpalette = init_palette(0.3, 0.0, 0.5, 1.0, 0.75, 1.0, p->maxval, 0);
+	p->palette = init_palette(0.65, 0.35, 1.0, 0.0, 0.0, 1.0, p->maxval, 1);
 
 	if (!p->data || !p->shadow)
 		errx(1, "malloc failed");
@@ -234,9 +232,9 @@ init_panel(Window win, int w, int h, int mirror)
 	p->pgc = XCreateGC(dsp, p->pix, 0, NULL);	
 	p->mgc = XCreateGC(dsp, p->mask, 0, NULL);	
 
-	init_bg(p->bg, p->pgc, p->s.width, p->s.height, sp);
+	init_bg(p->bg, p->pgc, p->s.width, p->s.height, bgpalette);
 
-	free(sp);
+	free(bgpalette);
 	
 	return p;
 }
