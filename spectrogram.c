@@ -34,12 +34,6 @@
 #include "fft.h"
 #include "hsv2rgb.h"
 
-#if defined(__linux__)
-#ifndef __dead
-#define __dead	__attribute__((noreturn))
-#endif
-#endif
-
 #define	GAP	4
 extern	char *__progname;
 int	die = 0;
@@ -61,7 +55,6 @@ struct	panel {
 
 	int	mirror;
 	double	*data;
-	int	*shadow;
 	int	maxval;
 
 	unsigned long *palette;
@@ -159,10 +152,10 @@ draw_panel(Display *d, struct panel *p)
 	XFillRectangle(d, p->mask, p->mgc,
 		0, 0, p->s.width, p->s.height);
 
-	/* clear shadow mask */
-	XSetForeground(d, p->sgc, 0);
-	XFillRectangle(d, p->smask, p->sgc,
-		0, 0, p->s.width, p->s.height);
+	/* blit shadow mask */
+	XCopyArea(d, p->smask, p->smask, p->sgc,
+		0, 0, p->s.width, p->s.height - 1,
+		0, 1);
 
 	for (i = 0; i < p->p.width; i++) {
 		/* limit maxval */
@@ -179,17 +172,13 @@ draw_panel(Display *d, struct panel *p)
 		XDrawLine(d, p->mask, p->mgc,
 			x, p->s.height - v,
 			x, p->s.height);
-
-		/* draw schadow */
-		if (p->shadow[i] < v)
-			p->shadow[i] = v;
-		else if (p->shadow[i] > 0) {
-			XSetForeground(d, p->sgc, 1);
-			XDrawLine(d, p->smask, p->sgc,
-				x, p->s.height - p->shadow[i]--,
-				x, p->s.height);
-		}
 	}
+
+	/* copy mask to shadow mask */
+	XSetClipMask(d, p->sgc, p->mask);
+	XCopyArea(d, p->mask, p->smask, p->sgc,
+		0, 0, p->s.width, p->s.height, 0, 0);
+	XSetClipMask(d, p->sgc, None);
 
 	/* apply mask */
 	XSetClipOrigin(d, p->pgc, p->s.x, p->s.y);
@@ -241,10 +230,9 @@ init_panel(Display *d, Window win, int w, int h, int mirror)
 	p->s.height = h * 0.25;
 
 	p->data = calloc(w, sizeof(double));
-	p->shadow = calloc(w, sizeof(int));
 	p->maxval = p->s.height;
 
-	if (!p->data || !p->shadow)
+	if (!p->data)
 		errx(1, "malloc failed");
 
 	p->pix = XCreatePixmap(d, win, w, h, planes);
@@ -270,8 +258,15 @@ init_panel(Display *d, Window win, int w, int h, int mirror)
 
 	/* clear all */
 	XSetForeground(d, p->pgc, p->palette[0]);
+	XSetBackground(d, p->pgc, p->palette[0]);
 	XFillRectangle(d, p->pix, p->pgc,
 		p->p.x, p->p.y, p->p.width, p->p.height);
+
+	/* clear shadow mask */
+	XSetForeground(d, p->sgc, 0);
+	XSetBackground(d, p->sgc, 0);
+	XFillRectangle(d, p->smask, p->sgc,
+		0, 0, p->s.width, p->s.height);
 
 	free(bgpalette);
 	free(shpalette);
@@ -288,7 +283,6 @@ del_panel(Display *d, struct panel *p)
 	XFreeGC(d, p->pgc);
 	XFreeGC(d, p->mgc);
 	free(p->data);
-	free(p->shadow);
 	free(p->palette);
 	free(p);
 }
