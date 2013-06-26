@@ -16,6 +16,7 @@
  */
 
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <X11/keysym.h>
 
 #include <sys/types.h>
@@ -292,6 +293,8 @@ main(int argc, char **argv)
 	Display		*dsp;
 	Window		win;
 	Atom		delwin;
+	Atom		shints;
+	XSizeHints	*hints;
 	int		scr;
 
 	struct		panel *left, *right;
@@ -345,6 +348,14 @@ main(int argc, char **argv)
 
 	delwin = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);
 	XSetWMProtocols(dsp, win, &delwin, 1);
+
+	shints = XInternAtom(dsp, "WM_NORMAL_HINTS", 0);
+	hints = XAllocSizeHints();
+	hints->flags = PMinSize;
+	hints->min_width = width;
+	hints->min_height = height;
+	XSetWMSizeHints(dsp, win, hints, shints);
+	XFree(hints);
 
 	left = init_panel(dsp, win, delta / 2, height, 1);
 	right = init_panel(dsp, win, delta / 2, height, 0);
