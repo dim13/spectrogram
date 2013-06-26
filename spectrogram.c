@@ -154,8 +154,7 @@ draw_panel(Display *d, struct panel *p)
 
 	/* blit shadow mask */
 	XCopyArea(d, p->smask, p->smask, p->sgc,
-		0, 0, p->s.width, p->s.height - 1,
-		0, 1);
+		0, 0, p->s.width, p->s.height - 1, 0, 1);
 
 	for (i = 0; i < p->p.width; i++) {
 		/* limit maxval */
@@ -185,13 +184,13 @@ draw_panel(Display *d, struct panel *p)
 
 	/* shadow */
 	XSetClipMask(d, p->pgc, p->smask);
-	XCopyArea(d, p->sbg, p->pix, p->pgc, 0, 0, p->s.width, p->s.height,
-		p->s.x, p->s.y);
+	XCopyArea(d, p->sbg, p->pix, p->pgc,
+		0, 0, p->s.width, p->s.height, p->s.x, p->s.y);
 
 	/* spectrogram */
 	XSetClipMask(d, p->pgc, p->mask);
-	XCopyArea(d, p->bg, p->pix, p->pgc, 0, 0, p->s.width, p->s.height,
-		p->s.x, p->s.y);
+	XCopyArea(d, p->bg, p->pix, p->pgc,
+		0, 0, p->s.width, p->s.height, p->s.x, p->s.y);
 
 	/* reset mask */
 	XSetClipMask(d, p->pgc, None);
@@ -337,8 +336,8 @@ main(int argc, char **argv)
 	white = WhitePixel(dsp, scr);
 	black = BlackPixel(dsp, scr);
 
-	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr), 0, 0,
-		width, height, 2, white, black);
+	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr),
+		0, 0, width, height, 1, white, black);
 	XClearWindow(dsp, win);
 		
 	XStoreName(dsp, win, __progname);
