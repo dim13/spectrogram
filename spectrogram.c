@@ -40,6 +40,8 @@ extern	char *__progname;
 int	die = 0;
 
 struct	panel {
+	Window	win;
+
 	Pixmap	pix;		/* main pixmap */
 	Pixmap	bg;		/* spectrogram bg */
 	Pixmap	mask;		/* spectrogram mask */
@@ -195,20 +197,27 @@ draw_panel(Display *d, struct panel *p)
 
 	/* reset mask */
 	XSetClipMask(d, p->pgc, None);
+
+	/* flip */
+	XCopyArea(d, p->pix, p->win, p->pgc, 0, 0,
+		p->p.width, p->p.height, 0, 0);
 }
 
 struct panel *
-init_panel(Display *d, Window win, int w, int h, int mirror)
+init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 {
 	struct panel *p;
 	int scr = DefaultScreen(d);
 	int planes = DisplayPlanes(d, scr);
+	unsigned long white = WhitePixel(d, scr);
+	unsigned long black = BlackPixel(d, scr);
 	unsigned long *bgpalette, *shpalette;
 
 	p = malloc(sizeof(struct panel));
 	if (!p)
 		errx(1, "malloc failed");
 
+	p->win = XCreateSimpleWindow(d, win, x, y, w, h, 0, white, black);
 	p->mirror = mirror;
 
 	/* whole panel */
@@ -235,7 +244,7 @@ init_panel(Display *d, Window win, int w, int h, int mirror)
 	if (!p->data)
 		errx(1, "malloc failed");
 
-	p->pix = XCreatePixmap(d, win, w, h, planes);
+	p->pix = XCreatePixmap(d, p->win, w, h, planes);
 	p->bg = XCreatePixmap(d, p->pix, p->s.width, p->s.height, planes);
 	p->mask = XCreatePixmap(d, p->pix, p->s.width, p->s.height, 1);
 
@@ -270,6 +279,8 @@ init_panel(Display *d, Window win, int w, int h, int mirror)
 
 	free(bgpalette);
 	free(shpalette);
+
+	XMapWindow(d, p->win);
 	
 	return p;
 }
@@ -340,7 +351,7 @@ main(int argc, char **argv)
 	black = BlackPixel(dsp, scr);
 
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr),
-		0, 0, width, height, 1, white, black);
+		0, 0, width, height, 0, white, black);
 	XClearWindow(dsp, win);
 		
 	XStoreName(dsp, win, __progname);
@@ -357,8 +368,8 @@ main(int argc, char **argv)
 	XSetWMSizeHints(dsp, win, hints, shints);
 	XFree(hints);
 
-	left = init_panel(dsp, win, delta / 2, height, 1);
-	right = init_panel(dsp, win, delta / 2, height, 0);
+	left = init_panel(dsp, win, 0, 0, delta / 2, height, 1);
+	right = init_panel(dsp, win, delta / 2 + GAP, 0, delta / 2, height, 0);
 	fft = init_fft(delta);
 
 	XMapWindow(dsp, win);
@@ -370,14 +381,6 @@ main(int argc, char **argv)
 		dofft(fft, buffer, right->data, 1);
 		draw_panel(dsp, left);
 		draw_panel(dsp, right);
-
-		/* flip */
-		XCopyArea(dsp, left->pix, win, left->pgc, 0, 0,
-			left->p.width, left->p.height,
-			0, 0);
-		XCopyArea(dsp, right->pix, win, right->pgc, 0, 0,
-			right->p.width, right->p.height,
-			right->p.width + GAP, 0);
 
 		while (XPending(dsp)) {
 			XEvent ev;
