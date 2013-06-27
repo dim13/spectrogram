@@ -143,8 +143,8 @@ draw_panel(Display *d, struct panel *p)
 
 	/* blit waterfall */
 	XCopyArea(d, p->pix, p->pix, p->pgc,
-		p->w.x, p->w.y, p->w.width, p->w.height - 1,
-		p->w.x, p->w.y + 1);
+		p->w.x, p->w.y + 1, p->w.width, p->w.height - 2,
+		p->w.x, p->w.y + 2);
 
 	/* clear spectrogram */
 	XSetForeground(d, p->pgc, p->palette[0]);
@@ -168,7 +168,7 @@ draw_panel(Display *d, struct panel *p)
 		/* draw waterfall */
 		XSetForeground(d, p->pgc, p->palette[v]);
 		XDrawPoint(d, p->pix, p->pgc,
-			x, p->w.y);
+			x, p->w.y + 1);
 
 		/* draw spectrogram */
 		XSetForeground(d, p->mgc, 1);
@@ -213,6 +213,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	unsigned long white = WhitePixel(d, scr);
 	unsigned long black = BlackPixel(d, scr);
 	unsigned long *bgpalette, *shpalette;
+	unsigned long gray;
 
 	p = malloc(sizeof(struct panel));
 	if (!p)
@@ -271,6 +272,11 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	XSetBackground(d, p->pgc, p->palette[0]);
 	XFillRectangle(d, p->pix, p->pgc,
 		p->p.x, p->p.y, p->p.width, p->p.height);
+
+	gray = hsvcolor(d, 0.0, 0.0, 0.1);
+	XSetForeground(d, p->pgc, gray);
+	XDrawLine(d, p->pix, p->pgc, p->w.x, p->w.y,
+		p->w.x + p->w.width, p->w.y);
 
 	/* clear shadow mask */
 	XSetForeground(d, p->sgc, 0);
