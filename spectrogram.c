@@ -304,7 +304,7 @@ main(int argc, char **argv)
 	Display		*dsp;
 	Window		win;
 	Atom		delwin;
-	Atom		shints;
+	Atom		nhints;
 	XSizeHints	*hints;
 	int		scr;
 
@@ -352,26 +352,28 @@ main(int argc, char **argv)
 
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr),
 		0, 0, width, height, 0, white, black);
-	XClearWindow(dsp, win);
 		
 	XStoreName(dsp, win, __progname);
 	XSelectInput(dsp, win, KeyPressMask);
 
+	/* catch delete window */
 	delwin = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);
 	XSetWMProtocols(dsp, win, &delwin, 1);
 
-	shints = XInternAtom(dsp, "WM_NORMAL_HINTS", 0);
+	/* set minimal size */
+	nhints = XInternAtom(dsp, "WM_NORMAL_HINTS", 0);
 	hints = XAllocSizeHints();
 	hints->flags = PMinSize;
 	hints->min_width = width;
 	hints->min_height = height;
-	XSetWMSizeHints(dsp, win, hints, shints);
+	XSetWMSizeHints(dsp, win, hints, nhints);
 	XFree(hints);
 
 	left = init_panel(dsp, win, 0, 0, delta / 2, height, 1);
 	right = init_panel(dsp, win, delta / 2 + GAP, 0, delta / 2, height, 0);
 	fft = init_fft(delta);
 
+	XClearWindow(dsp, win);
 	XMapWindow(dsp, win);
 
 	while (!die) {
@@ -410,6 +412,8 @@ main(int argc, char **argv)
 	del_fft(fft);
 	del_panel(dsp, left);
 	del_panel(dsp, right);
+	XDestroySubwindows(dsp, win);
+	XDestroyWindow(dsp, win);
 	XCloseDisplay(dsp);
 
 	return 0;
