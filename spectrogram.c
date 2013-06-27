@@ -143,7 +143,8 @@ draw_panel(Display *d, struct panel *p)
 
 	/* blit waterfall */
 	XCopyArea(d, p->pix, p->pix, p->pgc,
-		0, 1, p->w.width, p->w.height, 0, 0);
+		p->w.x, p->w.y, p->w.width, p->w.height - 1,
+		p->w.x, p->w.y + 1);
 
 	/* clear spectrogram */
 	XSetForeground(d, p->pgc, p->palette[0]);
@@ -167,7 +168,7 @@ draw_panel(Display *d, struct panel *p)
 		/* draw waterfall */
 		XSetForeground(d, p->pgc, p->palette[v]);
 		XDrawPoint(d, p->pix, p->pgc,
-			x, p->w.height);
+			x, p->w.y);
 
 		/* draw spectrogram */
 		XSetForeground(d, p->mgc, 1);
@@ -226,17 +227,17 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	p->p.width = w;
 	p->p.height = h;
 
-	/* waterfall */
-	p->w.x = 0;
-	p->w.y = 0;
-	p->w.width = w;
-	p->w.height = h * 0.75;
-
 	/* spectrogram */
 	p->s.x = 0;
-	p->s.y = p->w.height + 1;
+	p->s.y = 0;
 	p->s.width = w;
 	p->s.height = h * 0.25;
+
+	/* waterfall */
+	p->w.x = 0;
+	p->w.y = p->s.height;
+	p->w.width = w;
+	p->w.height = h * 0.75;
 
 	p->data = calloc(w, sizeof(double));
 	p->maxval = p->s.height;
