@@ -47,25 +47,24 @@ struct pixmap {
 };
 
 struct	panel {
-	Window	win;
-	XRectangle p;		/* panel */
+	Window	win;		/* container */
 
-	Window	wf;
-	XRectangle w;		/* waterfall */
+	Window	wf;		/* waterfall */
+	XRectangle w;
 	struct	pixmap wfbuf;
 
-	Window	sp;
-	XRectangle s;		/* spectrogram */
+	Window	sp;		/* spectrogram */
+	XRectangle s;
 	struct	pixmap spbuf;
 	struct	pixmap spbg;
 	struct	pixmap spmask;
 	struct	pixmap shbg;
 	struct	pixmap shmask;
 
-	unsigned long *palette;
 	int	mirror;
 	int	maxval;
 	double	*data;
+	unsigned long *palette;
 };
 
 unsigned long
@@ -164,10 +163,10 @@ draw_panel(Display *d, struct panel *p)
 	XFillRectangle(d, p->spmask.pix, p->spmask.gc,
 		0, 0, p->s.width, p->s.height);
 
-	for (i = 0; i < p->p.width; i++) {
+	for (i = 0; i < p->s.width; i++) {
 		/* limit maxval */
 		v = p->data[i] >= p->maxval ? p->maxval - 1 : p->data[i];
-		x = p->mirror ? p->p.width - i - 1 : i;
+		x = p->mirror ? p->s.width - i - 1 : i;
 
 		/* draw waterfall */
 		XSetForeground(d, p->wfbuf.gc, p->palette[v]);
@@ -233,11 +232,6 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 		errx(1, "malloc failed");
 
 	/* main panel window */
-	p->p.x = x;
-	p->p.y = y;
-	p->p.width = w;
-	p->p.height = h;
-
 	p->win = XCreateSimpleWindow(d, win, x, y, w, h, 0, white, gray);
 
 	/* sperctrogram window and its bitmasks */
@@ -283,7 +277,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	/* clear waterfall */
 	XSetForeground(d, p->wfbuf.gc, p->palette[0]);
 	XFillRectangle(d, p->wfbuf.pix, p->wfbuf.gc,
-		0, 0, p->p.width, p->p.height);
+		0, 0, p->w.width, p->w.height);
 
 	/* clear shadow mask */
 	XSetForeground(d, p->shmask.gc, 0);
