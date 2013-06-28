@@ -35,32 +35,37 @@
 #include "fft.h"
 #include "hsv2rgb.h"
 
-#define	GAP	4
+#define	HGAP	4
+#define	VGAP	1
+
 extern	char *__progname;
 int	die = 0;
 
+struct pixmap {
+	Pixmap	pix;
+	GC	gc;
+};
+
 struct	panel {
 	Window	win;
-
-	Pixmap	pix;		/* main pixmap */
-	Pixmap	bg;		/* spectrogram bg */
-	Pixmap	mask;		/* spectrogram mask */
-	Pixmap	sbg;		/* shadow bg */
-	Pixmap	smask;		/* shadow mask */
-
-	GC	pgc;
-	GC	mgc;
-	GC	sgc;
-
 	XRectangle p;		/* panel */
-	XRectangle w;		/* waterfall */
-	XRectangle s;		/* spectrogram */
 
-	int	mirror;
-	double	*data;
-	int	maxval;
+	Window	wf;
+	XRectangle w;		/* waterfall */
+	struct	pixmap wfbuf;
+
+	Window	sp;
+	XRectangle s;		/* spectrogram */
+	struct	pixmap spbuf;
+	struct	pixmap spbg;
+	struct	pixmap spmask;
+	struct	pixmap shbg;
+	struct	pixmap shmask;
 
 	unsigned long *palette;
+	int	mirror;
+	int	maxval;
+	double	*data;
 };
 
 unsigned long
@@ -142,23 +147,22 @@ draw_panel(Display *d, struct panel *p)
 	int i, v, x;
 
 	/* blit waterfall */
-	XCopyArea(d, p->pix, p->pix, p->pgc,
-		p->w.x, p->w.y + 1, p->w.width, p->w.height - 2,
-		p->w.x, p->w.y + 2);
-
-	/* clear spectrogram */
-	XSetForeground(d, p->pgc, p->palette[0]);
-	XFillRectangle(d, p->pix, p->pgc,
-		p->s.x, p->s.y, p->s.width, p->s.height);
-
-	/* clear mask */
-	XSetForeground(d, p->mgc, 0);
-	XFillRectangle(d, p->mask, p->mgc,
-		0, 0, p->s.width, p->s.height);
+	XCopyArea(d, p->wfbuf.pix, p->wfbuf.pix, p->wfbuf.gc,
+		0, 0, p->w.width, p->w.height - 1, 0, 1);
 
 	/* blit shadow mask */
-	XCopyArea(d, p->smask, p->smask, p->sgc,
+	XCopyArea(d, p->shmask.pix, p->shmask.pix, p->shmask.gc,
 		0, 0, p->s.width, p->s.height - 1, 0, 1);
+
+	/* clear spectrogram */
+	XSetForeground(d, p->spbuf.gc, p->palette[0]);
+	XFillRectangle(d, p->spbuf.pix, p->spbuf.gc,
+		0, 0, p->s.width, p->s.height);
+
+	/* clear mask */
+	XSetForeground(d, p->spmask.gc, 0);
+	XFillRectangle(d, p->spmask.pix, p->spmask.gc,
+		0, 0, p->s.width, p->s.height);
 
 	for (i = 0; i < p->p.width; i++) {
 		/* limit maxval */
@@ -166,42 +170,41 @@ draw_panel(Display *d, struct panel *p)
 		x = p->mirror ? p->p.width - i - 1 : i;
 
 		/* draw waterfall */
-		XSetForeground(d, p->pgc, p->palette[v]);
-		XDrawPoint(d, p->pix, p->pgc,
-			x, p->w.y + 1);
+		XSetForeground(d, p->wfbuf.gc, p->palette[v]);
+		XDrawPoint(d, p->wfbuf.pix, p->wfbuf.gc, x, 0);
 
 		/* draw spectrogram */
-		XSetForeground(d, p->mgc, 1);
-		XDrawLine(d, p->mask, p->mgc,
+		XSetForeground(d, p->spmask.gc, 1);
+		XDrawLine(d, p->spmask.pix, p->spmask.gc,
 			x, p->s.height - v,
 			x, p->s.height);
 	}
 
 	/* copy mask to shadow mask */
-	XSetClipMask(d, p->sgc, p->mask);
-	XCopyArea(d, p->mask, p->smask, p->sgc,
+	XSetClipMask(d, p->shmask.gc, p->spmask.pix);
+	XCopyArea(d, p->spmask.pix, p->shmask.pix, p->shmask.gc,
 		0, 0, p->s.width, p->s.height, 0, 0);
-	XSetClipMask(d, p->sgc, None);
-
-	/* apply mask */
-	XSetClipOrigin(d, p->pgc, p->s.x, p->s.y);
+	XSetClipMask(d, p->shmask.gc, None);
 
 	/* shadow */
-	XSetClipMask(d, p->pgc, p->smask);
-	XCopyArea(d, p->sbg, p->pix, p->pgc,
-		0, 0, p->s.width, p->s.height, p->s.x, p->s.y);
+	XSetClipMask(d, p->spbuf.gc, p->shmask.pix);
+	XCopyArea(d, p->shbg.pix, p->spbuf.pix, p->spbuf.gc,
+		0, 0, p->s.width, p->s.height, 0, 0);
 
 	/* spectrogram */
-	XSetClipMask(d, p->pgc, p->mask);
-	XCopyArea(d, p->bg, p->pix, p->pgc,
-		0, 0, p->s.width, p->s.height, p->s.x, p->s.y);
+	XSetClipMask(d, p->spbuf.gc, p->spmask.pix);
+	XCopyArea(d, p->spbg.pix, p->spbuf.pix, p->spbuf.gc,
+		0, 0, p->s.width, p->s.height, 0, 0);
 
-	/* reset mask */
-	XSetClipMask(d, p->pgc, None);
+	/* flip spectrogram */
+	XSetClipMask(d, p->spbuf.gc, None);
+	XCopyArea(d, p->spbuf.pix, p->sp, p->spbuf.gc, 0, 0,
+		p->w.width, p->w.height, 0, 0);
 
-	/* flip */
-	XCopyArea(d, p->pix, p->win, p->pgc, 0, 0,
-		p->p.width, p->p.height, 0, 0);
+	/* flip waterfall */
+	XCopyArea(d, p->wfbuf.pix, p->wf, p->wfbuf.gc, 0, 0,
+		p->w.width, p->w.height, 0, 0);
+
 }
 
 struct panel *
@@ -211,82 +214,87 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	int scr = DefaultScreen(d);
 	int planes = DisplayPlanes(d, scr);
 	unsigned long white = WhitePixel(d, scr);
-	unsigned long black = BlackPixel(d, scr);
-	unsigned long *bgpalette, *shpalette;
-	unsigned long gray;
+	unsigned long gray = hsvcolor(d, 0.0, 0.0, 0.1);
+	unsigned long *palette;
 
 	p = malloc(sizeof(struct panel));
 	if (!p)
 		errx(1, "malloc failed");
 
-	p->win = XCreateSimpleWindow(d, win, x, y, w, h, 0, white, black);
-	p->mirror = mirror;
+	p->data = calloc(w, sizeof(double));
+	if (!p->data)
+		errx(1, "malloc failed");
 
-	/* whole panel */
-	p->p.x = 0;
-	p->p.y = 0;
+	/* main panel window */
+	p->p.x = x;
+	p->p.y = y;
 	p->p.width = w;
 	p->p.height = h;
 
-	/* spectrogram */
+	p->win = XCreateSimpleWindow(d, win, x, y, w, h, 0, white, gray);
+
+	/* sperctrogram window and its bitmasks */
 	p->s.x = 0;
 	p->s.y = 0;
 	p->s.width = w;
 	p->s.height = h * 0.25;
 
-	/* waterfall */
+	p->sp = XCreateSimpleWindow(d, p->win, p->s.x, p->s.y,
+		p->s.width, p->s.height, 0, white, white);
+
+	p->spbuf.pix = XCreatePixmap(d, p->sp, p->s.width, p->s.height, planes);
+	p->spbuf.gc = XCreateGC(d, p->spbuf.pix, 0, NULL);	
+
+	p->spbg.pix = XCreatePixmap(d, p->sp, p->s.width, p->s.height, planes);
+	p->spbg.gc = XCreateGC(d, p->spbg.pix, 0, NULL);	
+
+	p->spmask.pix = XCreatePixmap(d, p->sp, p->s.width, p->s.height, 1);
+	p->spmask.gc = XCreateGC(d, p->spmask.pix, 0, NULL);	
+
+	p->shbg.pix = XCreatePixmap(d, p->sp, p->s.width, p->s.height, planes);
+	p->shbg.gc = XCreateGC(d, p->shbg.pix, 0, NULL);	
+
+	p->shmask.pix = XCreatePixmap(d, p->sp, p->s.width, p->s.height, 1);
+	p->shmask.gc = XCreateGC(d, p->shmask.pix, 0, NULL);	
+
+	/* waterfall window and double buffer */
 	p->w.x = 0;
-	p->w.y = p->s.height;
+	p->w.y = p->s.height + VGAP;
 	p->w.width = w;
-	p->w.height = h * 0.75;
+	p->w.height = h * 0.75 - VGAP;
 
-	p->data = calloc(w, sizeof(double));
+	p->wf = XCreateSimpleWindow(d, p->win, p->w.x, p->w.y,
+		p->w.width, p->w.height, 0, white, white);
+
+	p->wfbuf.pix = XCreatePixmap(d, p->wf, p->w.width, p->w.height, planes);
+	p->wfbuf.gc = XCreateGC(d, p->wfbuf.pix, 0, NULL);	
+
+	/* palettes */
 	p->maxval = p->s.height;
+	p->mirror = mirror;
 
-	if (!p->data)
-		errx(1, "malloc failed");
+	palette = init_palette(d, 0.3, 0.0, 0.5, 1.0, 0.75, 1.0, p->maxval, 0);
+	init_bg(d, p->spbg.pix, p->spbg.gc, p->s.width, p->s.height, palette);
+	free(palette);
 
-	p->pix = XCreatePixmap(d, p->win, w, h, planes);
-	p->bg = XCreatePixmap(d, p->pix, p->s.width, p->s.height, planes);
-	p->mask = XCreatePixmap(d, p->pix, p->s.width, p->s.height, 1);
+	palette = init_palette(d, 0.3, 0.0, 0.5, 1.0, 0.1, 0.15, p->maxval, 0);
+	init_bg(d, p->shbg.pix, p->shbg.gc, p->s.width, p->s.height, palette);
+	free(palette);
 
-	p->sbg = XCreatePixmap(d, p->pix, p->s.width, p->s.height, planes);
-	p->smask = XCreatePixmap(d, p->pix, p->s.width, p->s.height, 1);
+	p->palette = init_palette(d, 0.65, 0.35, 1.0, 0.0, 0.0, 1.0, p->maxval, 1);
 
-	p->pgc = XCreateGC(d, p->pix, 0, NULL);	
-	p->mgc = XCreateGC(d, p->mask, 0, NULL);	
-	p->sgc = XCreateGC(d, p->smask, 0, NULL);	
-
-	p->palette = init_palette(d, 0.65, 0.35, 1.0, 0.0, 0.0, 1.0,
-		p->maxval, 1);
-	bgpalette = init_palette(d, 0.3, 0.0, 0.5, 1.0, 0.75, 1.0,
-		p->maxval, 0);
-	shpalette = init_palette(d, 0.3, 0.0, 0.5, 1.0, 0.1, 0.15,
-		p->maxval, 0);
-
-	init_bg(d, p->bg, p->pgc, p->s.width, p->s.height, bgpalette);
-	init_bg(d, p->sbg, p->pgc, p->s.width, p->s.height, shpalette);
-
-	/* clear all */
-	XSetForeground(d, p->pgc, p->palette[0]);
-	XSetBackground(d, p->pgc, p->palette[0]);
-	XFillRectangle(d, p->pix, p->pgc,
-		p->p.x, p->p.y, p->p.width, p->p.height);
-
-	gray = hsvcolor(d, 0.0, 0.0, 0.1);
-	XSetForeground(d, p->pgc, gray);
-	XDrawLine(d, p->pix, p->pgc, p->w.x, p->w.y,
-		p->w.x + p->w.width, p->w.y);
+	/* clear waterfall */
+	XSetForeground(d, p->wfbuf.gc, p->palette[0]);
+	XFillRectangle(d, p->wfbuf.pix, p->wfbuf.gc,
+		0, 0, p->p.width, p->p.height);
 
 	/* clear shadow mask */
-	XSetForeground(d, p->sgc, 0);
-	XSetBackground(d, p->sgc, 0);
-	XFillRectangle(d, p->smask, p->sgc,
+	XSetForeground(d, p->shmask.gc, 0);
+	XFillRectangle(d, p->shmask.pix, p->shmask.gc,
 		0, 0, p->s.width, p->s.height);
 
-	free(bgpalette);
-	free(shpalette);
-
+	XMapWindow(d, p->wf);
+	XMapWindow(d, p->sp);
 	XMapWindow(d, p->win);
 	
 	return p;
@@ -295,13 +303,33 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 void
 del_panel(Display *d, struct panel *p)
 {
-	XFreePixmap(d, p->pix);
-	XFreePixmap(d, p->bg);
-	XFreePixmap(d, p->mask);
-	XFreeGC(d, p->pgc);
-	XFreeGC(d, p->mgc);
 	free(p->data);
 	free(p->palette);
+
+	XFreePixmap(d, p->shmask.pix);
+	XFreeGC(d, p->shmask.gc);
+
+	XFreePixmap(d, p->shbg.pix);
+	XFreeGC(d, p->shbg.gc);
+
+	XFreePixmap(d, p->spmask.pix);
+	XFreeGC(d, p->spmask.gc);
+
+	XFreePixmap(d, p->spbg.pix);
+	XFreeGC(d, p->spbg.gc);
+
+	XFreePixmap(d, p->spbuf.pix);
+	XFreeGC(d, p->spbuf.gc);
+
+	XDestroyWindow(d, p->sp);
+
+	XFreePixmap(d, p->wfbuf.pix);
+	XFreeGC(d, p->wfbuf.gc);
+
+	XDestroyWindow(d, p->wf);
+
+	XDestroyWindow(d, p->win);
+	
 	free(p);
 }
 
@@ -350,7 +378,7 @@ main(int argc, char **argv)
 		daemon(0, 0);
 
 	delta = get_round(sio);
-	width = delta + GAP;
+	width = delta + HGAP;
 	height = 0.75 * width;
 
 	scr = DefaultScreen(dsp);
@@ -377,7 +405,7 @@ main(int argc, char **argv)
 	XFree(hints);
 
 	left = init_panel(dsp, win, 0, 0, delta / 2, height, 1);
-	right = init_panel(dsp, win, delta / 2 + GAP, 0, delta / 2, height, 0);
+	right = init_panel(dsp, win, delta / 2 + HGAP, 0, delta / 2, height, 0);
 	fft = init_fft(delta);
 
 	XClearWindow(dsp, win);
@@ -419,6 +447,7 @@ main(int argc, char **argv)
 	del_fft(fft);
 	del_panel(dsp, left);
 	del_panel(dsp, right);
+
 	XDestroySubwindows(dsp, win);
 	XDestroyWindow(dsp, win);
 	XCloseDisplay(dsp);
