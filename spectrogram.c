@@ -207,6 +207,13 @@ draw_panel(Display *d, struct panel *p)
 
 }
 
+void
+init_pixmap(struct pixmap *p, Display *d, Drawable dr, XRectangle r, int pl)
+{
+	p->pix = XCreatePixmap(d, dr, r.width, r.height, pl);
+	p->gc = XCreateGC(d, p->pix, 0, NULL);	
+}
+
 struct panel *
 init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 {
@@ -242,20 +249,11 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	p->sp = XCreateSimpleWindow(d, p->win, p->s.x, p->s.y,
 		p->s.width, p->s.height, 0, white, white);
 
-	p->spbuf.pix = XCreatePixmap(d, p->sp, p->s.width, p->s.height, planes);
-	p->spbuf.gc = XCreateGC(d, p->spbuf.pix, 0, NULL);	
-
-	p->spbg.pix = XCreatePixmap(d, p->sp, p->s.width, p->s.height, planes);
-	p->spbg.gc = XCreateGC(d, p->spbg.pix, 0, NULL);	
-
-	p->spmask.pix = XCreatePixmap(d, p->sp, p->s.width, p->s.height, 1);
-	p->spmask.gc = XCreateGC(d, p->spmask.pix, 0, NULL);	
-
-	p->shbg.pix = XCreatePixmap(d, p->sp, p->s.width, p->s.height, planes);
-	p->shbg.gc = XCreateGC(d, p->shbg.pix, 0, NULL);	
-
-	p->shmask.pix = XCreatePixmap(d, p->sp, p->s.width, p->s.height, 1);
-	p->shmask.gc = XCreateGC(d, p->shmask.pix, 0, NULL);	
+	init_pixmap(&p->spbuf, d, p->sp, p->s, planes);
+	init_pixmap(&p->spbg, d, p->sp, p->s, planes);
+	init_pixmap(&p->spmask, d, p->sp, p->s, 1);
+	init_pixmap(&p->shbg, d, p->sp, p->s, planes);
+	init_pixmap(&p->shmask, d, p->sp, p->s, 1);
 
 	/* waterfall window and double buffer */
 	p->w.x = 0;
@@ -266,8 +264,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	p->wf = XCreateSimpleWindow(d, p->win, p->w.x, p->w.y,
 		p->w.width, p->w.height, 0, white, white);
 
-	p->wfbuf.pix = XCreatePixmap(d, p->wf, p->w.width, p->w.height, planes);
-	p->wfbuf.gc = XCreateGC(d, p->wfbuf.pix, 0, NULL);	
+	init_pixmap(&p->wfbuf, d, p->wf, p->w, planes);
 
 	/* palettes */
 	p->maxval = p->s.height;
