@@ -119,7 +119,7 @@ catch(int notused)
 	die = 1;
 }
 
-__dead void
+void
 usage(void)
 {
 	fprintf(stderr, "Usage: %s [-hsd]\n", __progname);
@@ -253,7 +253,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	p->w.x = 0;
 	p->w.y = p->s.height + VGAP;
 	p->w.width = w;
-	p->w.height = h * 0.75 - VGAP;
+	p->w.height = h - p->w.y;
 
 	p->wf = XCreateSimpleWindow(d, p->win, p->w.x, p->w.y,
 		p->w.width, p->w.height, 0, white, white);
