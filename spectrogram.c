@@ -363,7 +363,7 @@ main(int argc, char **argv)
 	if (!dsp)
 		errx(1, "Cannot connect to X11 server");
 
-	sio = init_sio(2, 16, 1);
+	sio = init_sio();
 
 	if (dflag)
 		daemon(0, 0);

@@ -19,6 +19,10 @@
 #include <stdlib.h>
 #include <sndio.h>
 
+#define RCHAN	2
+#define BITS	16
+#define SIGNED	1
+
 struct sio {
 	struct	sio_hdl *sio;
 	struct	sio_par par;
@@ -27,7 +31,7 @@ struct sio {
 };
 
 struct sio *
-init_sio(int rchan, int bits, int sig)
+init_sio(void)
 {
 	struct sio *sio;
 
@@ -42,20 +46,20 @@ init_sio(int rchan, int bits, int sig)
 
 	sio_initpar(&sio->par);
 
-	sio->par.rchan = rchan;
-	sio->par.bits = bits;
+	sio->par.rchan = RCHAN;
+	sio->par.bits = BITS;
 	sio->par.le = SIO_LE_NATIVE;
-	sio->par.sig = sig;
+	sio->par.sig = SIGNED;
 
 	if (!sio_setpar(sio->sio, &sio->par))
 		errx(1, "SIO set params failed");
 	if (!sio_getpar(sio->sio, &sio->par))
 		errx(1, "SIO get params failed");
 
-	if (sio->par.rchan != rchan ||
-	    sio->par.bits != bits ||
+	if (sio->par.rchan != RCHAN ||
+	    sio->par.bits != BITS ||
 	    sio->par.le != SIO_LE_NATIVE ||
-	    sio->par.sig != sig)
+	    sio->par.sig != SIGNED)
 		errx(1, "unsupported audio params");
 
 	sio->bufsz = sio->par.rchan * sio->par.round * sizeof(int16_t);
