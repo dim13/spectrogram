@@ -124,7 +124,7 @@ usage(void)
 {
 	fprintf(stderr, "Usage: %s [-hsd]\n", __progname);
 	fprintf(stderr, "\t-h\tthis help\n");
-	fprintf(stderr, "\t-d\tdon't fork\n");
+	fprintf(stderr, "\t-d\tdaemonize\n");
 
 	exit(0);
 }
@@ -339,7 +339,7 @@ main(int argc, char **argv)
 	struct		fft *fft;
 	int16_t		*buffer;
 
-	int		ch, dflag = 1;
+	int		ch, dflag = 0;
 	int		delta;
 	int		width, height;
 	unsigned long	black, white;
@@ -347,7 +347,7 @@ main(int argc, char **argv)
 	while ((ch = getopt(argc, argv, "hd")) != -1)
 		switch (ch) {
 		case 'd':
-			dflag = 0;
+			dflag = 1;
 			break;
 		case 'h':
 		default:
