@@ -122,9 +122,11 @@ catch(int notused)
 void
 usage(void)
 {
-	fprintf(stderr, "Usage: %s [-hd]\n", __progname);
-	fprintf(stderr, "\t-h\tthis help\n");
+	fprintf(stderr, "Usage: %s [-12dh]\n", __progname);
+	fprintf(stderr, "\t-1\thalf size\n");
+	fprintf(stderr, "\t-2\tdouble size\n");
 	fprintf(stderr, "\t-d\tdaemonize\n");
+	fprintf(stderr, "\t-h\tthis help\n");
 
 	exit(0);
 }
@@ -332,6 +334,7 @@ main(int argc, char **argv)
 	Atom		nhints;
 	XSizeHints	*hints;
 	int		scr;
+	int		factor = 0;
 
 	struct		panel *left, *right;
 	struct		sio *sio;
@@ -343,8 +346,14 @@ main(int argc, char **argv)
 	int		width, height;
 	unsigned long	black, white;
 
-	while ((ch = getopt(argc, argv, "hd")) != -1)
+	while ((ch = getopt(argc, argv, "12hd")) != -1)
 		switch (ch) {
+		case '1':
+			--factor;
+			break;
+		case '2':
+			++factor;
+			break;
 		case 'd':
 			dflag = 1;
 			break;
@@ -362,7 +371,7 @@ main(int argc, char **argv)
 	if (!dsp)
 		errx(1, "Cannot connect to X11 server");
 
-	sio = init_sio();
+	sio = init_sio(factor);
 
 	if (dflag)
 		daemon(0, 0);

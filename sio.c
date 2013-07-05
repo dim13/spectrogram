@@ -22,18 +22,23 @@
 #define RCHAN	2
 #define BITS	16
 #define SIGNED	1
+#define ROUND	512	/* FFT is fastest with powers of two */
+#define FPS	24
 
 struct sio {
 	struct	sio_hdl *sio;
 	struct	sio_par par;
 	int16_t	*buffer;
 	size_t	bufsz;
+	size_t	round;
+	size_t	roundsz;
 };
 
 struct sio *
-init_sio(void)
+init_sio(int factor)
 {
 	struct sio *sio;
+	size_t bufsz;
 
 	sio = malloc(sizeof(struct sio));
 	if (!sio)
@@ -62,7 +67,17 @@ init_sio(void)
 	    sio->par.sig != SIGNED)
 		errx(1, "unsupported audio params");
 
-	sio->bufsz = sio->par.rchan * sio->par.round * sizeof(int16_t);
+	if (factor < 0)
+		sio->round = ROUND >> -factor;
+	else
+		sio->round = ROUND << factor;
+	sio->roundsz = sio->round * sio->par.rchan * sizeof(int16_t);
+
+	bufsz = sio->par.rate / FPS;		/* 24 pictures/second */
+	bufsz -= bufsz % sio->par.round;	/* round to block size */
+	while (bufsz < sio->round)		/* not less than block size */
+		bufsz += sio->par.round;
+	sio->bufsz = bufsz * sio->par.rchan * sizeof(int16_t);
 	sio->buffer = malloc(sio->bufsz);
 
 	if (!sio->buffer)
@@ -76,25 +91,29 @@ init_sio(void)
 unsigned int
 get_round(struct sio *sio)
 {
-	return sio->par.round;
+	return sio->round;
 }
 
 int16_t *
 read_sio(struct sio *sio)
 {
 	int done = 0;
-	int16_t *buffer = sio->buffer;
+	char *buffer = (char *)sio->buffer;
 	size_t sz = sio->bufsz;
 
 	do {
-		done += sio_read(sio->sio, buffer, sz);
+		done = sio_read(sio->sio, buffer, sz);
 		if (sio_eof(sio->sio))
 			errx(1, "SIO EOF");
 		buffer += done;
 		sz -= done;
 	} while (sz);
 
-	return sio->buffer;
+	/*
+	 * return a pointer to the latest ROUND samples (the most recent
+	 * ones) to minimize latency between picture and sound
+	 */
+	return (int16_t *)(buffer - sio->roundsz);
 }
 
 void
