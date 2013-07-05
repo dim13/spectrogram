@@ -17,7 +17,7 @@ DIR=	${PROG}-${VERSION}
 package:
 	@mkdir ${DIR}
 	@cp Makefile ${SRCS} ${HEADERS} ${DIR}
-	@tar zcf ${DIR}.tgz ${DIR}
+	@tar zcf ${DIR}.tar.gz ${DIR}
 	@rm -rf ${DIR}
 
 .include <bsd.prog.mk>
