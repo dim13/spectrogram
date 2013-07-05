@@ -122,7 +122,7 @@ catch(int notused)
 void
 usage(void)
 {
-	fprintf(stderr, "Usage: %s [-hsd]\n", __progname);
+	fprintf(stderr, "Usage: %s [-hd]\n", __progname);
 	fprintf(stderr, "\t-h\tthis help\n");
 	fprintf(stderr, "\t-d\tdaemonize\n");
 
@@ -260,7 +260,6 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 
 	init_pixmap(&p->wfbuf, d, p->wf, p->w, planes);
 
-	/* palettes */
 	p->maxval = p->s.height;
 	p->mirror = mirror;
 
