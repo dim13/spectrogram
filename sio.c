@@ -22,7 +22,7 @@
 #define RCHAN	2
 #define BITS	16
 #define SIGNED	1
-#define ROUND	512	/* FFT is fastest with powers of two */
+#define ROUND	1024	/* FFT is fastest with powers of two */
 #define FPS	24
 
 struct sio {
