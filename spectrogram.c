@@ -447,7 +447,6 @@ main(int argc, char **argv)
 	del_panel(dsp, left);
 	del_panel(dsp, right);
 
-	XDestroySubwindows(dsp, win);
 	XDestroyWindow(dsp, win);
 	XCloseDisplay(dsp);
 
