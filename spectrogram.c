@@ -222,6 +222,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	int scr = DefaultScreen(d);
 	int planes = DisplayPlanes(d, scr);
 	unsigned long white = WhitePixel(d, scr);
+	unsigned long black = BlackPixel(d, scr);
 	unsigned long gray = hsvcolor(d, 0.0, 0.0, 0.1);
 	unsigned long *palette;
 
@@ -243,7 +244,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	p->s.height = h * 0.25;
 
 	p->sp = XCreateSimpleWindow(d, p->win, p->s.x, p->s.y,
-		p->s.width, p->s.height, 0, white, white);
+		p->s.width, p->s.height, 0, white, black);
 
 	init_pixmap(&p->spbuf, d, p->sp, p->s, planes);
 	init_pixmap(&p->spbg, d, p->sp, p->s, planes);
@@ -258,7 +259,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	p->w.height = h - p->w.y;
 
 	p->wf = XCreateSimpleWindow(d, p->win, p->w.x, p->w.y,
-		p->w.width, p->w.height, 0, white, white);
+		p->w.width, p->w.height, 0, white, black);
 
 	init_pixmap(&p->wfbuf, d, p->wf, p->w, planes);
 
