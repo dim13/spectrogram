@@ -35,7 +35,7 @@ struct sio {
 };
 
 struct sio *
-init_sio(int factor)
+init_sio()
 {
 	struct sio *sio;
 	size_t bufsz;
@@ -67,10 +67,7 @@ init_sio(int factor)
 	    sio->par.sig != SIGNED)
 		errx(1, "unsupported audio params");
 
-	if (factor < 0)
-		sio->round = ROUND >> -factor;
-	else
-		sio->round = ROUND << factor;
+	sio->round = ROUND;
 	sio->roundsz = sio->round * sio->par.rchan * sizeof(int16_t);
 
 	bufsz = sio->par.rate / FPS;		/* 24 pictures/second */

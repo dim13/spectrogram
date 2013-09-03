@@ -20,7 +20,7 @@
 
 struct sio;
 
-struct sio *init_sio(int);
+struct sio *init_sio(void);
 unsigned int get_round(struct sio *);
 int16_t *read_sio(struct sio *);
 void del_sio(struct sio *);
