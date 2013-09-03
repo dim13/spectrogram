@@ -30,7 +30,7 @@ struct fft {
 	double	*window;
 };
 
-double *
+static double *
 hamming(size_t n)
 {
 	double	*w;
@@ -46,8 +46,8 @@ hamming(size_t n)
 	return w;
 }
 
-double *
-fft_realloc(double *p, size_t n)
+static double *
+resize(double *p, size_t n)
 {
 	if (p)
 		fftw_free(p);
@@ -64,8 +64,8 @@ resize_fft(struct fft *p, size_t n)
 	if (n != p->n) {
 		p->n = n;
 
-		p->in = fft_realloc(p->in, p->n);
-		p->out = fft_realloc(p->out, p->n);
+		p->in = resize(p->in, p->n);
+		p->out = resize(p->out, p->n);
 
 		if (p->window)
 			free(p->window);
