@@ -26,12 +26,12 @@ struct fft {
 	fftw_plan	plan;
 	double	*in;
 	double	*out;
-	int	n;
+	size_t	n;
 	double	*window;
 };
 
 double *
-hamming(int n)
+hamming(size_t n)
 {
 	double	*w;
 	int	i;
@@ -47,19 +47,36 @@ hamming(int n)
 }
 
 struct fft *
-init_fft(int n)
+resize_fft(struct fft *p, size_t n)
+{
+	if (n != p->n) {
+		p->n = n;
+
+		if (p->in)
+			fftw_free(p->in);
+		p->in = fftw_malloc(p->n * sizeof(double));
+
+		if (p->out)
+			fftw_free(p->out);
+		p->out = fftw_malloc(p->n * sizeof(double));
+
+		if (p->window)
+			free(p->window);
+		p->window = hamming(p->n);
+
+		p->plan = fftw_plan_r2r_1d(p->n, p->in, p->out,
+			FFTW_R2HC, FFTW_MEASURE);
+	}
+	return p;
+}
+
+struct fft *
+init_fft(size_t n)
 {
 	struct	fft *p;
 
-	p = malloc(sizeof(struct fft));
-
-	p->n = n;
-	p->in = fftw_malloc(n * sizeof(double));
-	p->out = fftw_malloc(n * sizeof(double));
-	p->plan = fftw_plan_r2r_1d(n, p->in, p->out,
-		FFTW_R2HC, FFTW_MEASURE);
-
-	p->window = hamming(n);
+	p = calloc(1, sizeof(struct fft));
+	p = resize_fft(p, n);
 
 	return p;
 }
