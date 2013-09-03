@@ -403,7 +403,7 @@ main(int argc, char **argv)
 	XMapWindow(dsp, win);
 
 	while (!die) {
-		buffer = read_sio(sio);
+		buffer = read_sio(sio, delta);
 
 		dofft(fft, buffer, left->data, 0);
 		dofft(fft, buffer, right->data, 1);

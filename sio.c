@@ -31,7 +31,6 @@ struct sio {
 	int16_t	*buffer;
 	size_t	bufsz;
 	size_t	round;
-	size_t	roundsz;
 };
 
 struct sio *
@@ -68,7 +67,6 @@ init_sio()
 		errx(1, "unsupported audio params");
 
 	sio->round = ROUND;
-	sio->roundsz = sio->round * sio->par.rchan * sizeof(int16_t);
 
 	bufsz = sio->par.rate / FPS;		/* 24 pictures/second */
 	bufsz -= bufsz % sio->par.round;	/* round to block size */
@@ -92,11 +90,12 @@ get_round(struct sio *sio)
 }
 
 int16_t *
-read_sio(struct sio *sio)
+read_sio(struct sio *sio, size_t n)
 {
 	int done = 0;
 	char *buffer = (char *)sio->buffer;
 	size_t sz = sio->bufsz;
+	size_t roundsz = n * sio->par.rchan * sizeof(int16_t);
 
 	do {
 		done = sio_read(sio->sio, buffer, sz);
@@ -110,7 +109,7 @@ read_sio(struct sio *sio)
 	 * return a pointer to the latest ROUND samples (the most recent
 	 * ones) to minimize latency between picture and sound
 	 */
-	return (int16_t *)(buffer - sio->roundsz);
+	return (int16_t *)(buffer - roundsz);
 }
 
 void
