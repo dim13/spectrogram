@@ -324,11 +324,28 @@ del_panel(Display *d, struct panel *p)
 	free(p);
 }
 
+int
+move(Display *dsp, Window win, Window container)
+{
+	int dx, dy;
+	XWindowAttributes wa, wac;
+
+	XGetWindowAttributes(dsp, win, &wa);
+	XGetWindowAttributes(dsp, container, &wac);
+
+	dx = (wa.width - wac.width) / 2;
+	dy = (wa.height - wac.height) / 2;
+
+	XMoveWindow(dsp, container, dx, dy);
+
+	return 0;
+}
+
 int 
 main(int argc, char **argv)
 {
 	Display		*dsp;
-	Window		win;
+	Window		win, container;
 	Atom		delwin;
 	Atom		nhints;
 	XSizeHints	*hints;
@@ -344,7 +361,7 @@ main(int argc, char **argv)
 	int		width, height;
 	unsigned long	black, white;
 
-	while ((ch = getopt(argc, argv, "12hd")) != -1)
+	while ((ch = getopt(argc, argv, "hd")) != -1)
 		switch (ch) {
 		case 'd':
 			dflag = 1;
@@ -380,7 +397,7 @@ main(int argc, char **argv)
 		0, 0, width, height, 0, white, black);
 		
 	XStoreName(dsp, win, __progname);
-	XSelectInput(dsp, win, KeyPressMask);
+	XSelectInput(dsp, win, KeyPressMask|StructureNotifyMask);
 
 	/* catch delete window */
 	delwin = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);
@@ -395,8 +412,12 @@ main(int argc, char **argv)
 	XSetWMSizeHints(dsp, win, hints, nhints);
 	XFree(hints);
 
-	left = init_panel(dsp, win, 0, 0, delta / 2, height, 1);
-	right = init_panel(dsp, win, delta / 2 + HGAP, 0, delta / 2, height, 0);
+	container = XCreateSimpleWindow(dsp, win,
+		0, 0, width, height, 0, white, black);
+	XMapWindow(dsp, container);
+
+	left = init_panel(dsp, container, 0, 0, delta / 2, height, 1);
+	right = init_panel(dsp, container, delta / 2 + HGAP, 0, delta / 2, height, 0);
 	fft = init_fft(delta);
 
 	XClearWindow(dsp, win);
@@ -427,6 +448,9 @@ main(int argc, char **argv)
 				break;
 			case ClientMessage:
 				die = *ev.xclient.data.l == delwin;
+				break;
+			case ConfigureNotify:
+				move(dsp, win, container);
 				break;
 			default:
 				break;
