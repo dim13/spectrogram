@@ -349,6 +349,7 @@ main(int argc, char **argv)
 	Atom		delwin;
 	Atom		nhints;
 	XSizeHints	*hints;
+	XClassHint	*class;
 	int		scr;
 
 	struct		panel *left, *right;
@@ -397,6 +398,13 @@ main(int argc, char **argv)
 		0, 0, width, height, 0, white, black);
 		
 	XStoreName(dsp, win, __progname);
+	class = XAllocClassHint();
+	if (class) {
+		class->res_name = __progname;
+		class->res_class = __progname;
+		XSetClassHint(dsp, win, class);
+		XFree(class);
+	}
 	XSelectInput(dsp, win, KeyPressMask|StructureNotifyMask);
 
 	/* catch delete window */
