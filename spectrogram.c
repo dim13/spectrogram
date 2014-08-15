@@ -379,6 +379,7 @@ main(int argc, char **argv)
 	Atom		nhints;
 	XSizeHints	*hints;
 	XClassHint	*class;
+	XWindowAttributes wa;
 	int		scr;
 
 	struct		panel *left, *right;
@@ -390,6 +391,7 @@ main(int argc, char **argv)
 	int		delta;
 	int		width, height;
 	unsigned long	black, white;
+	float		factor;
 
 	while ((ch = getopt(argc, argv, "hd")) != -1)
 		switch (ch) {
@@ -415,9 +417,15 @@ main(int argc, char **argv)
 	if (dflag)
 		daemon(0, 0);
 
+	/* FIXME: not really useful */
+	XGetWindowAttributes(dsp, DefaultRootWindow(dsp), &wa);
+	factor = (float)wa.height / (float)wa.width;
+	if (factor < 0.75)
+		factor = 0.75;
+
 	delta = get_round(sio);
 	width = delta + HGAP;
-	height = 0.75 * width;
+	height = factor * width;
 
 	scr = DefaultScreen(dsp);
 	white = WhitePixel(dsp, scr);
