@@ -22,7 +22,6 @@
 #define RCHAN	2
 #define BITS	16
 #define SIGNED	1
-#define ROUND	1024	/* FFT is fastest with powers of two */
 #define FPS	24
 
 struct sio {
@@ -34,7 +33,7 @@ struct sio {
 };
 
 struct sio *
-init_sio()
+init_sio(int round)
 {
 	struct sio *sio;
 	size_t bufsz;
@@ -66,7 +65,7 @@ init_sio()
 	    sio->par.sig != SIGNED)
 		errx(1, "unsupported audio params");
 
-	sio->round = ROUND;
+	sio->round = round;
 
 	bufsz = sio->par.rate / FPS;		/* 24 pictures/second */
 	bufsz -= bufsz % sio->par.round;	/* round to block size */
@@ -81,12 +80,6 @@ init_sio()
 	sio_start(sio->sio);
 
 	return sio;
-}
-
-unsigned int
-get_round(struct sio *sio)
-{
-	return sio->round;
 }
 
 int16_t *

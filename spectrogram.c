@@ -136,6 +136,7 @@ usage(void)
 {
 	fprintf(stderr, "Usage: %s [-dh]\n", __progname);
 	fprintf(stderr, "\t-d\tdaemonize\n");
+	fprintf(stderr, "\t-f\tfullscreen\n");
 	fprintf(stderr, "\t-h\tthis help\n");
 
 	exit(0);
@@ -371,6 +372,26 @@ move(Display *dsp, Window win, Window container)
 	return 0;
 }
 
+int
+gofullscreen(Display *d, Window win)
+{
+	XEvent xev;
+	Atom wm_state = XInternAtom(d, "_NET_WM_STATE", False);
+	Atom fullscreen = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
+
+	memset(&xev, 0, sizeof(xev));
+	xev.type = ClientMessage;
+	xev.xclient.window = win;
+	xev.xclient.message_type = wm_state;
+	xev.xclient.format = 32;
+	xev.xclient.data.l[0] = 1;
+	xev.xclient.data.l[1] = fullscreen;
+	xev.xclient.data.l[2] = 0;
+
+	return XSendEvent(d, DefaultRootWindow(d), False,
+		SubstructureNotifyMask, &xev);
+}
+
 int 
 main(int argc, char **argv)
 {
@@ -388,16 +409,20 @@ main(int argc, char **argv)
 	struct		fft *fft;
 	int16_t		*buffer;
 
-	int		ch, dflag = 0;
-	int		delta;
+	int		ch;
+	int		dflag = 0;
+	int		fflag = 0;
 	int		width, height;
 	unsigned long	black, white;
-	float		factor;
-
-	while ((ch = getopt(argc, argv, "hd")) != -1)
+	float		factor = 0.75;
+	int		round = 1024;	/* FFT is fastest with powers of two */
+	while ((ch = getopt(argc, argv, "dfh")) != -1)
 		switch (ch) {
 		case 'd':
 			dflag = 1;
+			break;
+		case 'f':
+			fflag = 1;
 			break;
 		case 'h':
 		default:
@@ -408,25 +433,25 @@ main(int argc, char **argv)
 	argv += optind;
 
 	signal(SIGINT, catch);
+
+	if (dflag)
+		daemon(0, 0);
 		
 	dsp = XOpenDisplay(NULL);
 	if (!dsp)
 		errx(1, "Cannot connect to X11 server");
 
-	sio = init_sio();
+	if (fflag) {
+		XGetWindowAttributes(dsp, DefaultRootWindow(dsp), &wa);
+		round = wa.width - HGAP;
+		width = wa.width;
+		height = wa.height;
+	} else {
+		width = round + HGAP;
+		height = factor * width;
+	}
 
-	if (dflag)
-		daemon(0, 0);
-
-	/* FIXME: not really useful */
-	XGetWindowAttributes(dsp, DefaultRootWindow(dsp), &wa);
-	factor = (float)wa.height / (float)wa.width;
-	if (factor < 0.75)
-		factor = 0.75;
-
-	delta = get_round(sio);
-	width = delta + HGAP;
-	height = factor * width;
+	sio = init_sio(round);
 
 	scr = DefaultScreen(dsp);
 	white = WhitePixel(dsp, scr);
@@ -434,6 +459,9 @@ main(int argc, char **argv)
 
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr),
 		0, 0, width, height, 0, white, black);
+
+	if (fflag && gofullscreen(dsp, win) != Success)
+		XMoveResizeWindow(dsp, win, 0, 0, wa.width, wa.height);
 		
 	XStoreName(dsp, win, __progname);
 	class = XAllocClassHint();
@@ -462,15 +490,15 @@ main(int argc, char **argv)
 		0, 0, width, height, 0, white, black);
 	XMapWindow(dsp, container);
 
-	left = init_panel(dsp, container, 0, 0, delta / 2, height, 1);
-	right = init_panel(dsp, container, delta / 2 + HGAP, 0, delta / 2, height, 0);
-	fft = init_fft(delta);
+	left = init_panel(dsp, container, 0, 0, round / 2, height, 1);
+	right = init_panel(dsp, container, round / 2 + HGAP, 0, round / 2, height, 0);
+	fft = init_fft(round);
 
 	XClearWindow(dsp, win);
 	XMapWindow(dsp, win);
 
 	while (!die) {
-		buffer = read_sio(sio, delta);
+		buffer = read_sio(sio, round);
 
 		dofft(fft, buffer, left->data, 0);
 		dofft(fft, buffer, right->data, 1);
