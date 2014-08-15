@@ -268,7 +268,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	init_bg(d, p->spbg.pix, p->spbg.gc, p->s.width, p->s.height, palette);
 	free(palette);
 
-	palette = init_palette(d, 0.3, 0.0, 0.5, 1.0, 0.1, 0.15, p->maxval, 0);
+	palette = init_palette(d, 0.3, 0.0, 0.5, 1.0, 0.15, 0.3, p->maxval, 0);
 	init_bg(d, p->shbg.pix, p->shbg.gc, p->s.width, p->s.height, palette);
 	free(palette);
 
