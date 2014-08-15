@@ -67,15 +67,28 @@ struct	panel {
 	unsigned long *palette;
 };
 
+struct hsv {
+	float h, s, v;
+};
+
+struct palette {
+	struct hsv from, to;
+};
+
+enum scale { LIN_SCALE, LOG_SCALE };
+
 unsigned long
-hsvcolor(Display *d, float h, float s, float v)
+hsvcolor(Display *d, struct hsv hsv, enum scale scale)
 {
 	float r, g, b;
 	int scr = DefaultScreen(d);
 	Colormap cmap = DefaultColormap(d, scr);
 	XColor c;
 
-	hsv2rgb(&r, &g, &b, h, s, v);
+	if (scale == LOG_SCALE)
+		hsv.v = logf(100 * hsv.v + 1) / logf(101);
+
+	hsv2rgb(&r, &g, &b, hsv.h, hsv.s, hsv.v);
 
 	c.red = UINT16_MAX * r;
 	c.green = UINT16_MAX * g;
@@ -87,39 +100,26 @@ hsvcolor(Display *d, float h, float s, float v)
 	return c.pixel;
 }
 
-struct hsv {
-	float h, s, v;
-};
-
-struct palette {
-	struct hsv from, to;
-};
-
 unsigned long *
-init_palette(Display *d, struct palette *pal, int n, int lg)
+init_palette(Display *d, struct palette *pal, int n, enum scale scale)
 {
 	unsigned long *p;
-	float	h, s, v, hstep, sstep, vstep, vv;
+	float	hstep, sstep, vstep;
 	int	i;
 
 	p = calloc(n, sizeof(unsigned long));
 	if (!p)
 		errx(1, "malloc failed");
 
-	h = pal->from.h;
-	s = pal->from.s;
-	v = pal->from.v;
-
-	hstep = (pal->to.h - h) / n;
-	sstep = (pal->to.s - s) / n;
-	vstep = (pal->to.v - v) / n;
+	hstep = (pal->to.h - pal->from.h) / n;
+	sstep = (pal->to.s - pal->from.s) / n;
+	vstep = (pal->to.v - pal->from.v) / n;
 
 	for (i = 0; i < n; i++) {
-		vv = lg ? logf(100 * v + 1) / logf(101) : v;
-		p[i] = hsvcolor(d, h, s, vv);
-		h += hstep;
-		s += sstep;
-		v += vstep;
+		p[i] = hsvcolor(d, pal->from, scale);
+		pal->from.h += hstep;
+		pal->from.s += sstep;
+		pal->from.v += vstep;
 	}
 
 	return p;
@@ -233,7 +233,8 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	int planes = DisplayPlanes(d, scr);
 	unsigned long white = WhitePixel(d, scr);
 	unsigned long black = BlackPixel(d, scr);
-	unsigned long gray = hsvcolor(d, 0.0, 0.0, 0.1);
+	struct hsv hsv_gray = {0.00, 0.00, 0.15};
+	unsigned long gray = hsvcolor(d, hsv_gray, LIN_SCALE);
 	unsigned long *palette;
 
 	p = malloc(sizeof(struct panel));
@@ -281,7 +282,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 		{ 0.00, 1.00, 1.00 }
 	};
 
-	palette = init_palette(d, &p_spectr, p->maxval, 0);
+	palette = init_palette(d, &p_spectr, p->maxval, LIN_SCALE);
 	init_bg(d, p->spbg.pix, p->spbg.gc, p->s.width, p->s.height, palette);
 	free(palette);
 
@@ -290,7 +291,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 		{ 0.00, 1.00, 0.30 }
 	};
 
-	palette = init_palette(d, &p_shadow, p->maxval, 0);
+	palette = init_palette(d, &p_shadow, p->maxval, LIN_SCALE);
 	init_bg(d, p->shbg.pix, p->shbg.gc, p->s.width, p->s.height, palette);
 	free(palette);
 
@@ -299,7 +300,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 		{ 0.45, 0.00, 1.00 }
 	};
 
-	p->palette = init_palette(d, &p_waterfall, p->maxval, 1);
+	p->palette = init_palette(d, &p_waterfall, p->maxval, LOG_SCALE);
 
 	/* clear waterfall */
 	XSetForeground(d, p->wfbuf.gc, p->palette[0]);
