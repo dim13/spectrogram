@@ -87,20 +87,32 @@ hsvcolor(Display *d, float h, float s, float v)
 	return c.pixel;
 }
 
+struct hsv {
+	float h, s, v;
+};
+
+struct palette {
+	struct hsv from, to;
+};
+
 unsigned long *
-init_palette(Display *d, float h, float dh, float s, float ds, float v, float dv, int n, int lg)
+init_palette(Display *d, struct palette *pal, int n, int lg)
 {
 	unsigned long *p;
-	float	hstep, sstep, vstep, vv;
+	float	h, s, v, hstep, sstep, vstep, vv;
 	int	i;
 
 	p = calloc(n, sizeof(unsigned long));
 	if (!p)
 		errx(1, "malloc failed");
 
-	hstep = (dh - h) / n;
-	sstep = (ds - s) / n;
-	vstep = (dv - v) / n;
+	h = pal->from.h;
+	s = pal->from.s;
+	v = pal->from.v;
+
+	hstep = (pal->to.h - h) / n;
+	sstep = (pal->to.s - s) / n;
+	vstep = (pal->to.v - v) / n;
 
 	for (i = 0; i < n; i++) {
 		vv = lg ? logf(100 * v + 1) / logf(101) : v;
@@ -264,15 +276,30 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	p->maxval = p->s.height;
 	p->mirror = mirror;
 
-	palette = init_palette(d, 0.3, 0.0, 0.5, 1.0, 0.75, 1.0, p->maxval, 0);
+	struct palette p_spectr = {
+		{ 0.30, 0.50, 0.75 },
+		{ 0.00, 1.00, 1.00 }
+	};
+
+	palette = init_palette(d, &p_spectr, p->maxval, 0);
 	init_bg(d, p->spbg.pix, p->spbg.gc, p->s.width, p->s.height, palette);
 	free(palette);
 
-	palette = init_palette(d, 0.3, 0.0, 0.5, 1.0, 0.15, 0.3, p->maxval, 0);
+	struct palette p_shadow = {
+		{ 0.30, 0.50, 0.15 },
+		{ 0.00, 1.00, 0.30 }
+	};
+
+	palette = init_palette(d, &p_shadow, p->maxval, 0);
 	init_bg(d, p->shbg.pix, p->shbg.gc, p->s.width, p->s.height, palette);
 	free(palette);
 
-	p->palette = init_palette(d, 0.65, 0.35, 1.0, 0.0, 0.0, 1.0, p->maxval, 1);
+	struct palette p_waterfall = {
+		{ 0.55, 1.00, 0.00 },
+		{ 0.45, 0.00, 1.00 }
+	};
+
+	p->palette = init_palette(d, &p_waterfall, p->maxval, 1);
 
 	/* clear waterfall */
 	XSetForeground(d, p->wfbuf.gc, p->palette[0]);
