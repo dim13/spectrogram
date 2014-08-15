@@ -279,7 +279,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	p->mirror = mirror;
 
 	struct palette p_spectr = {
-		{ 0.30, 0.50, 0.75 },
+		{ 0.30, 0.30, 0.50 },
 		{ 0.00, 1.00, 1.00 }
 	};
 
@@ -288,8 +288,8 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	free(palette);
 
 	struct palette p_shadow = {
-		{ 0.30, 0.50, 0.15 },
-		{ 0.00, 1.00, 0.30 }
+		{ 0.30, 0.30, 0.10 },
+		{ 0.00, 1.00, 0.20 }
 	};
 
 	palette = init_palette(d, &p_shadow, p->maxval, LIN_SCALE);
