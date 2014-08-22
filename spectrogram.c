@@ -76,6 +76,7 @@ struct palette {
 };
 
 enum scale { LIN_SCALE, LOG_SCALE };
+enum ewmh { _NET_WM_STATE_REMOVE, _NET_WM_STATE_ADD, _NET_WM_STATE_TOGGLE };
 
 unsigned long
 hsvcolor(Display *d, struct hsv hsv, enum scale scale)
@@ -372,7 +373,7 @@ move(Display *dsp, Window win, Window container)
 	return 0;
 }
 
-int
+void
 gofullscreen(Display *d, Window win)
 {
 	XClientMessageEvent cm;
@@ -382,11 +383,12 @@ gofullscreen(Display *d, Window win)
 	cm.window = win;
 	cm.message_type = XInternAtom(d, "_NET_WM_STATE", False);
 	cm.format = 32;
-	cm.data.l[0] = 1;	/* 0: remove, 1: add, 2: toggle */
+	cm.data.l[0] = _NET_WM_STATE_ADD;
 	cm.data.l[1] = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
 
-	return XSendEvent(d, DefaultRootWindow(d), False,
-		NoEventMask, (XEvent *)&cm) != Success;
+	if (XSendEvent(d, DefaultRootWindow(d), False,
+		NoEventMask, (XEvent *)&cm) != Success)
+		warnx("failed to go fullscreen");
 }
 
 int 
@@ -457,10 +459,8 @@ main(int argc, char **argv)
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr),
 		0, 0, width, height, 0, white, black);
 
-	if (fflag && gofullscreen(dsp, win)) {
-		fprintf(stderr, "failed to go fullscreen, trying resize\n");
-		XMoveResizeWindow(dsp, win, 0, 0, wa.width, wa.height);
-	}
+	if (fflag)
+		gofullscreen(dsp, win);
 		
 	XStoreName(dsp, win, __progname);
 	class = XAllocClassHint();
