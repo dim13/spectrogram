@@ -393,6 +393,27 @@ gofullscreen(Display *d, Window win)
 	XMoveWindow(d, win, 0, 0);
 }
 
+void
+hide_ptr(Display *d, Window win)
+{
+	Pixmap		bm;
+	Cursor		ptr;
+	Colormap	cmap;
+	XColor		black, dummy;
+	static char empty[] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+	cmap = DefaultColormap(d, DefaultScreen(d));
+	XAllocNamedColor(d, cmap, "black", &black, &dummy);
+	bm = XCreateBitmapFromData(d, win, empty, 8, 8);
+	ptr = XCreatePixmapCursor(d, bm, bm, &black, &black, 0, 0);
+
+	XDefineCursor(d, win, ptr);
+	XFreeCursor(d, ptr);
+	if (bm != None)
+		XFreePixmap(d, bm);
+	XFreeColors(d, cmap, &black.pixel, 1, 0);
+}
+
 int 
 main(int argc, char **argv)
 {
@@ -497,8 +518,10 @@ main(int argc, char **argv)
 	XClearWindow(dsp, win);
 	XMapRaised(dsp, win);	/* XMapWindow */
 
-	if (fflag)
+	if (fflag) {
 		gofullscreen(dsp, win);
+		hide_ptr(dsp, win);
+	}
 
 	while (!die) {
 		buffer = read_sio(sio, round);
