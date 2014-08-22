@@ -382,7 +382,7 @@ gofullscreen(Display *d, Window win)
 	cm.window = win;
 	cm.message_type = XInternAtom(d, "_NET_WM_STATE", False);
 	cm.format = 32;
-	cm.data.l[0] = XInternAtom(d, "_NET_WM_STATE_ADD", False);
+	cm.data.l[0] = 1;	/* 0: remove, 1: add, 2: toggle */
 	cm.data.l[1] = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
 
 	return XSendEvent(d, DefaultRootWindow(d), False,
