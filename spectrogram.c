@@ -473,6 +473,7 @@ main(int argc, char **argv)
 		round = wa.width - HGAP;
 		width = wa.width;
 		height = wa.height;
+		fflag = 1;
 	}
 
 	sio = init_sio(round);
