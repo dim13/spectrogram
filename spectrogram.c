@@ -382,11 +382,11 @@ gofullscreen(Display *d, Window win)
 	cm.window = win;
 	cm.message_type = XInternAtom(d, "_NET_WM_STATE", False);
 	cm.format = 32;
-	cm.data.l[0] = 1;
+	cm.data.l[0] = XInternAtom(d, "_NET_WM_STATE_ADD", False);
 	cm.data.l[1] = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
 
 	return XSendEvent(d, DefaultRootWindow(d), False,
-		NoEventMask, (XEvent *)&cm);
+		NoEventMask, (XEvent *)&cm) != Success;
 }
 
 int 
@@ -457,7 +457,7 @@ main(int argc, char **argv)
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr),
 		0, 0, width, height, 0, white, black);
 
-	if (fflag && gofullscreen(dsp, win) != Success) {
+	if (fflag && gofullscreen(dsp, win)) {
 		fprintf(stderr, "failed to go fullscreen, trying resize\n");
 		XMoveResizeWindow(dsp, win, 0, 0, wa.width, wa.height);
 	}
