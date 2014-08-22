@@ -375,25 +375,18 @@ move(Display *dsp, Window win, Window container)
 int
 gofullscreen(Display *d, Window win)
 {
-	XEvent xev;
-	Atom state = XInternAtom(d, "_NET_WM_STATE", False);
-	Atom fullscreen = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
+	XClientMessageEvent cm;
 
-	memset(&xev, 0, sizeof(xev));
-	xev.xclient.type = ClientMessage;
-	xev.xclient.serial = 0;
-	xev.xclient.send_event = True;
-	xev.xclient.window = win;
-	xev.xclient.message_type = state;
-	xev.xclient.format = 32;
-	xev.xclient.data.l[0] = 1;
-	xev.xclient.data.l[1] = fullscreen;
-	xev.xclient.data.l[2] = 0;
-	xev.xclient.data.l[3] = 0;
-	xev.xclient.data.l[4] = 0;
+	bzero(&cm, sizeof(cm));
+	cm.type = ClientMessage;
+	cm.window = win;
+	cm.message_type = XInternAtom(d, "_NET_WM_STATE", False);
+	cm.format = 32;
+	cm.data.l[0] = 1;
+	cm.data.l[1] = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
 
 	return XSendEvent(d, DefaultRootWindow(d), False,
-		SubstructureRedirectMask|SubstructureNotifyMask, &xev);
+		NoEventMask, (XEvent *)&cm);
 }
 
 int 
