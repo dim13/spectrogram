@@ -76,7 +76,6 @@ struct palette {
 };
 
 enum scale { LIN_SCALE, LOG_SCALE };
-enum ewmh { _NET_WM_STATE_REMOVE, _NET_WM_STATE_ADD, _NET_WM_STATE_TOGGLE };
 
 unsigned long
 hsvcolor(Display *d, struct hsv hsv, enum scale scale)
@@ -384,12 +383,13 @@ gofullscreen(Display *d, Window win)
 	cm.message_type = XInternAtom(d, "_NET_WM_STATE", False);
 	cm.window = win;
 	cm.format = 32;
-	cm.data.l[0] = _NET_WM_STATE_ADD;
+	cm.data.l[0] = 1;	/* _NET_WM_STATE_ADD */
 	cm.data.l[1] = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
+	cm.data.l[2] = 0;	/* no secondary property */
+	cm.data.l[3] = 1;	/* normal application */
 
-	if (XSendEvent(d, DefaultRootWindow(d), False,
-		NoEventMask, (XEvent *)&cm) != Success)
-		warnx("failed to go fullscreen");
+	XSendEvent(d, DefaultRootWindow(d), False, NoEventMask, (XEvent *)&cm);
+	XMoveWindow(d, win, 0, 0);
 }
 
 int 
