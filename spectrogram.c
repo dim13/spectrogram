@@ -380,8 +380,9 @@ gofullscreen(Display *d, Window win)
 
 	bzero(&cm, sizeof(cm));
 	cm.type = ClientMessage;
-	cm.window = win;
+	cm.send_event = True;
 	cm.message_type = XInternAtom(d, "_NET_WM_STATE", False);
+	cm.window = win;
 	cm.format = 32;
 	cm.data.l[0] = _NET_WM_STATE_ADD;
 	cm.data.l[1] = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
@@ -458,9 +459,6 @@ main(int argc, char **argv)
 
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr),
 		0, 0, width, height, 0, white, black);
-
-	if (fflag)
-		gofullscreen(dsp, win);
 		
 	XStoreName(dsp, win, __progname);
 	class = XAllocClassHint();
@@ -494,7 +492,10 @@ main(int argc, char **argv)
 	fft = init_fft(round);
 
 	XClearWindow(dsp, win);
-	XMapWindow(dsp, win);
+	XMapRaised(dsp, win);	/* XMapWindow */
+
+	if (fflag)
+		gofullscreen(dsp, win);
 
 	while (!die) {
 		buffer = read_sio(sio, round);
