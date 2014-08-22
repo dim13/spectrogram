@@ -376,20 +376,24 @@ int
 gofullscreen(Display *d, Window win)
 {
 	XEvent xev;
-	Atom wm_state = XInternAtom(d, "_NET_WM_STATE", False);
+	Atom state = XInternAtom(d, "_NET_WM_STATE", False);
 	Atom fullscreen = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
 
 	memset(&xev, 0, sizeof(xev));
-	xev.type = ClientMessage;
+	xev.xclient.type = ClientMessage;
+	xev.xclient.serial = 0;
+	xev.xclient.send_event = True;
 	xev.xclient.window = win;
-	xev.xclient.message_type = wm_state;
+	xev.xclient.message_type = state;
 	xev.xclient.format = 32;
 	xev.xclient.data.l[0] = 1;
 	xev.xclient.data.l[1] = fullscreen;
 	xev.xclient.data.l[2] = 0;
+	xev.xclient.data.l[3] = 0;
+	xev.xclient.data.l[4] = 0;
 
 	return XSendEvent(d, DefaultRootWindow(d), False,
-		SubstructureNotifyMask, &xev);
+		SubstructureRedirectMask|SubstructureNotifyMask, &xev);
 }
 
 int 
@@ -460,8 +464,10 @@ main(int argc, char **argv)
 	win = XCreateSimpleWindow(dsp, RootWindow(dsp, scr),
 		0, 0, width, height, 0, white, black);
 
-	if (fflag && gofullscreen(dsp, win) != Success)
+	if (fflag && gofullscreen(dsp, win) != Success) {
+		fprintf(stderr, "failed to go fullscreen, trying resize\n");
 		XMoveResizeWindow(dsp, win, 0, 0, wa.width, wa.height);
+	}
 		
 	XStoreName(dsp, win, __progname);
 	class = XAllocClassHint();
