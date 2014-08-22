@@ -135,9 +135,10 @@ void
 usage(void)
 {
 	fprintf(stderr, "Usage: %s [-dh]\n", __progname);
-	fprintf(stderr, "\t-d\tdaemonize\n");
-	fprintf(stderr, "\t-f\tfullscreen\n");
-	fprintf(stderr, "\t-h\tthis help\n");
+	fprintf(stderr, "\t-d\t\tdaemonize\n");
+	fprintf(stderr, "\t-f\t\tfullscreen\n");
+	fprintf(stderr, "\t-r <round>\tsio round\n");
+	fprintf(stderr, "\t-h\t\tthis help\n");
 
 	exit(0);
 }
@@ -416,13 +417,16 @@ main(int argc, char **argv)
 	unsigned long	black, white;
 	float		factor = 0.75;
 	int		round = 1024;	/* FFT is fastest with powers of two */
-	while ((ch = getopt(argc, argv, "dfh")) != -1)
+	while ((ch = getopt(argc, argv, "dfr:h")) != -1)
 		switch (ch) {
 		case 'd':
 			dflag = 1;
 			break;
 		case 'f':
 			fflag = 1;
+			break;
+		case 'r':
+			round = atoi(optarg);
 			break;
 		case 'h':
 		default:
@@ -441,14 +445,13 @@ main(int argc, char **argv)
 	if (!dsp)
 		errx(1, "Cannot connect to X11 server");
 
-	if (fflag) {
-		XGetWindowAttributes(dsp, DefaultRootWindow(dsp), &wa);
+	XGetWindowAttributes(dsp, DefaultRootWindow(dsp), &wa);
+	width = round + HGAP;
+	height = factor * width;
+	if (fflag || width > wa.width || height > wa.height) {
 		round = wa.width - HGAP;
 		width = wa.width;
 		height = wa.height;
-	} else {
-		width = round + HGAP;
-		height = factor * width;
 	}
 
 	sio = init_sio(round);
