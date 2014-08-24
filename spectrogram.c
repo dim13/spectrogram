@@ -134,12 +134,13 @@ catch(int notused)
 void
 usage(void)
 {
-	fprintf(stderr, "Usage: %s [-dh]\n", __progname);
-	fprintf(stderr, "\t-d\t\tdaemonize\n");
-	fprintf(stderr, "\t-f\t\tfullscreen mode\n");
-	fprintf(stderr, "\t-p\tdon't hide pointer in fullscreen mode\n");
-	fprintf(stderr, "\t-r <round>\tsio round count\n");
-	fprintf(stderr, "\t-h\t\tthis help\n");
+	#define USGFMT "\t%-12s%s\n"
+	fprintf(stderr, "Usage: %s [-dfph] [-r <round>]\n", __progname);
+	fprintf(stderr, USGFMT, "-d", "daemonize");
+	fprintf(stderr, USGFMT, "-f", "fullscreen mode");
+	fprintf(stderr, USGFMT, "-p", "don't hide pointer in fullscreen mode");
+	fprintf(stderr, USGFMT, "-r <round>", "sio round count");
+	fprintf(stderr, USGFMT, "-h", "this help");
 
 	exit(0);
 }
