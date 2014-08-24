@@ -136,8 +136,9 @@ usage(void)
 {
 	fprintf(stderr, "Usage: %s [-dh]\n", __progname);
 	fprintf(stderr, "\t-d\t\tdaemonize\n");
-	fprintf(stderr, "\t-f\t\tfullscreen\n");
-	fprintf(stderr, "\t-r <round>\tsio round\n");
+	fprintf(stderr, "\t-f\t\tfullscreen mode\n");
+	fprintf(stderr, "\t-p\tdon't hide pointer in fullscreen mode\n");
+	fprintf(stderr, "\t-r <round>\tsio round count\n");
 	fprintf(stderr, "\t-h\t\tthis help\n");
 
 	exit(0);
@@ -431,20 +432,25 @@ main(int argc, char **argv)
 	struct		fft *fft;
 	int16_t		*buffer;
 
+	int		dflag = 0;	/* daemonize */
+	int		fflag = 0;	/* fullscreen */
+	int		pflag = 1;	/* hide ptr */
+
 	int		ch;
-	int		dflag = 0;
-	int		fflag = 0;
 	int		width, height;
 	unsigned long	black, white;
 	float		factor = 0.75;
 	int		round = 1024;	/* FFT is fastest with powers of two */
-	while ((ch = getopt(argc, argv, "dfr:h")) != -1)
+	while ((ch = getopt(argc, argv, "dfpr:h")) != -1)
 		switch (ch) {
 		case 'd':
 			dflag = 1;
 			break;
 		case 'f':
 			fflag = 1;
+			break;
+		case 'p':
+			pflag = 0;
 			break;
 		case 'r':
 			round = atoi(optarg);
@@ -521,7 +527,8 @@ main(int argc, char **argv)
 
 	if (fflag) {
 		gofullscreen(dsp, win);
-		hide_ptr(dsp, win);
+		if (pflag)
+			hide_ptr(dsp, win);
 	}
 
 	while (!die) {
