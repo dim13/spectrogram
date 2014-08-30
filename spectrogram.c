@@ -210,7 +210,11 @@ draw_panel(Display *d, struct panel *p)
 	XSetClipMask(d, p->spbuf.gc, p->spmask.pix);
 	XCopyArea(d, p->spbg.pix, p->spbuf.pix, p->spbuf.gc,
 		0, 0, p->s.width, p->s.height, 0, 0);
+}
 
+void
+flip_panel(Display *d, struct panel *p)
+{
 	/* flip spectrogram */
 	XSetClipMask(d, p->spbuf.gc, None);
 	XCopyArea(d, p->spbuf.pix, p->sp, p->spbuf.gc, 0, 0,
@@ -219,7 +223,6 @@ draw_panel(Display *d, struct panel *p)
 	/* flip waterfall */
 	XCopyArea(d, p->wfbuf.pix, p->wf, p->wfbuf.gc, 0, 0,
 		p->w.width, p->w.height, 0, 0);
-
 }
 
 void
@@ -537,8 +540,12 @@ main(int argc, char **argv)
 
 		dofft(fft, buffer, left->data, 0);
 		dofft(fft, buffer, right->data, 1);
+
 		draw_panel(dsp, left);
 		draw_panel(dsp, right);
+
+		flip_panel(dsp, left);
+		flip_panel(dsp, right);
 
 		while (XPending(dsp)) {
 			XEvent ev;
