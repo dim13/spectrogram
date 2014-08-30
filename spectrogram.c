@@ -547,6 +547,9 @@ main(int argc, char **argv)
 		flip_panel(dsp, left);
 		flip_panel(dsp, right);
 
+		if (fflag)
+			XResetScreenSaver(dsp);
+
 		while (XPending(dsp)) {
 			XEvent ev;
 
