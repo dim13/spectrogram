@@ -32,7 +32,7 @@ hsv2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	/* normalize */
 	h /= 360.0;
 	s /= 100.0;
-	l /= 100.0;
+	v /= 100.0;
 
 	if (s == 0.0) {
 		*r = *g = *b = UINT16_MAX * v;
@@ -72,7 +72,7 @@ void
 hsl2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	double h, double s, double l)
 {
-	double v, F, M, mv, K, N;
+	double v, F, M, K, N;
 	int i;
 
 	/* normalize */
