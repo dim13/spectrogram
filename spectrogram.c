@@ -67,26 +67,27 @@ struct	panel {
 	unsigned long *palette;
 };
 
-struct hsv {
-	float h, s, v;
+struct hsl {
+	float h, s, l;
 };
 
 struct palette {
-	struct hsv from, to;
+	struct hsl from, to;
 };
 
-struct palette p_spectr =    { { 120.0,  80.0,  80.0 }, {   0.0, 100.0, 100.0 } };
-struct palette p_shadow =    { { 120.0,  80.0,  15.0 }, {   0.0, 100.0,  25.0 } };
-struct palette p_waterfall = { { 240.0, 100.0,   0.0 }, { 200.0,   0.0, 100.0 } };
+struct palette p_spectr =    {{ 120.0, 100.0,  75.0 }, {   0.0, 100.0,  25.0 }};
+struct palette p_shadow =    {{ 120.0, 100.0,  10.0 }, {   0.0, 100.0,  10.0 }};
+struct palette p_waterfall = {{ 200.0, 100.0,   0.0 }, { 200.0, 100.0, 100.0 }};
+struct hsl hsl_gray = {0.0, 0.0, 20.0};
 
 unsigned long
-hsvcolor(Display *d, struct hsv hsv)
+hslcolor(Display *d, struct hsl hsl)
 {
 	int scr = DefaultScreen(d);
 	Colormap cmap = DefaultColormap(d, scr);
 	XColor c;
 
-	hsv2rgb(&c.red, &c.green, &c.blue, hsv.h, hsv.s, hsv.v);
+	hsl2rgb(&c.red, &c.green, &c.blue, hsl.h, hsl.s, hsl.l);
 	c.flags = DoRed|DoGreen|DoBlue;
 
 	XAllocColor(d, cmap, &c);
@@ -98,7 +99,7 @@ unsigned long *
 init_palette(Display *d, struct palette pal, int n)
 {
 	unsigned long *p;
-	float	hstep, sstep, vstep;
+	float	hstep, sstep, lstep;
 	int	i;
 
 	p = calloc(n, sizeof(unsigned long));
@@ -107,13 +108,13 @@ init_palette(Display *d, struct palette pal, int n)
 
 	hstep = (pal.to.h - pal.from.h) / n;
 	sstep = (pal.to.s - pal.from.s) / n;
-	vstep = (pal.to.v - pal.from.v) / n;
+	lstep = (pal.to.l - pal.from.l) / n;
 
 	for (i = 0; i < n; i++) {
-		p[i] = hsvcolor(d, pal.from);
+		p[i] = hslcolor(d, pal.from);
 		pal.from.h += hstep;
 		pal.from.s += sstep;
-		pal.from.v += vstep;
+		pal.from.l += lstep;
 	}
 
 	return p;
@@ -234,8 +235,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	int planes = DisplayPlanes(d, scr);
 	unsigned long white = WhitePixel(d, scr);
 	unsigned long black = BlackPixel(d, scr);
-	struct hsv hsv_gray = {0.0, 0.0, 20.0};
-	unsigned long gray = hsvcolor(d, hsv_gray);
+	unsigned long gray = hslcolor(d, hsl_gray);
 	unsigned long *palette;
 
 	p = malloc(sizeof(struct panel));
