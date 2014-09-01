@@ -1,6 +1,6 @@
 /* $Id$ */
 /*
- * Copyright (c) 2010 Dimitri Sokolyuk <demon@dim13.org>
+ * Copyright (c) 2014 Dimitri Sokolyuk <demon@dim13.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,9 +15,17 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __HSV2RGB_H
-#define __HSV2RGB_H
+#ifndef __CMS_H
+#define __CMS_H
 
-void hsv2rgb(float *r, float *g, float *b, float h, float s, float v);
+void hsv2rgb(
+	unsigned short *r, unsigned short *g, unsigned short *b,
+	double h, double s, double v
+);
+
+void hsl2rgb(
+	unsigned short *r, unsigned short *g, unsigned short *b,
+	double h, double s, double l
+);
 
 #endif

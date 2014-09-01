@@ -24,7 +24,6 @@
 #include <err.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -33,7 +32,7 @@
 
 #include "sio.h"
 #include "fft.h"
-#include "hsv2rgb.h"
+#include "cms.h"
 
 #define	HGAP	4
 #define	VGAP	1
@@ -80,7 +79,6 @@ enum scale { LIN_SCALE, LOG_SCALE };
 unsigned long
 hsvcolor(Display *d, struct hsv hsv, enum scale scale)
 {
-	float r, g, b;
 	int scr = DefaultScreen(d);
 	Colormap cmap = DefaultColormap(d, scr);
 	XColor c;
@@ -88,11 +86,7 @@ hsvcolor(Display *d, struct hsv hsv, enum scale scale)
 	if (scale == LOG_SCALE)
 		hsv.v = logf(100 * hsv.v + 1) / logf(101);
 
-	hsv2rgb(&r, &g, &b, hsv.h, hsv.s, hsv.v);
-
-	c.red = UINT16_MAX * r;
-	c.green = UINT16_MAX * g;
-	c.blue = UINT16_MAX * b;
+	hsv2rgb(&c.red, &c.green, &c.blue, hsv.h, hsv.s, hsv.v);
 	c.flags = DoRed|DoGreen|DoBlue;
 
 	XAllocColor(d, cmap, &c);
