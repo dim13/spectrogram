@@ -21,18 +21,19 @@
 
 #include <sys/types.h>
 #include <sys/time.h>
+
 #include <err.h>
-#include <stdio.h>
+#include <math.h>
+#include <signal.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <math.h>
-#include <signal.h>
 
-#include "sio.h"
-#include "fft.h"
 #include "cms.h"
+#include "fft.h"
+#include "sio.h"
 
 #define	HGAP	4
 #define	VGAP	1
