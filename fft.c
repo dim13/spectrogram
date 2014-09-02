@@ -54,8 +54,8 @@ init_fft(size_t n)
 	assert(p);
 
 	p->n = n;
-	p->in = fftw_alloc_real(p->n);
-	p->out = fftw_alloc_real(p->n);
+	p->in = fftw_malloc(p->n * sizeof(double));
+	p->out = fftw_malloc(p->n * sizeof(double));
 	assert(p->in && p->out);
 
 	p->window = hamming(p->n);
