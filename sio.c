@@ -103,7 +103,7 @@ read_sio(struct sio *sio)
 }
 
 void
-del_sio(struct sio *sio)
+free_sio(struct sio *sio)
 {
 	sio_stop(sio->sio);
 	sio_close(sio->sio);

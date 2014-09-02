@@ -304,7 +304,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 }
 
 void
-del_panel(Display *d, struct panel *p)
+free_panel(Display *d, struct panel *p)
 {
 	free(p->data);
 	free(p->palette);
@@ -515,8 +515,8 @@ main(int argc, char **argv)
 	while (!die) {
 		buffer = read_sio(sio);
 
-		dofft(fft, buffer, left->data, 0);
-		dofft(fft, buffer, right->data, 1);
+		exec_fft(fft, buffer, left->data, 0);
+		exec_fft(fft, buffer, right->data, 1);
 
 		draw_panel(dsp, left);
 		draw_panel(dsp, right);
@@ -554,10 +554,10 @@ main(int argc, char **argv)
 		}
 	}
 
-	del_sio(sio);
-	del_fft(fft);
-	del_panel(dsp, left);
-	del_panel(dsp, right);
+	free_sio(sio);
+	free_fft(fft);
+	free_panel(dsp, left);
+	free_panel(dsp, right);
 
 	XDestroyWindow(dsp, win);
 	XCloseDisplay(dsp);

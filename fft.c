@@ -66,7 +66,7 @@ init_fft(size_t n)
 }
 
 int
-dofft(struct fft *p, int16_t *data, double *out, int odd)
+exec_fft(struct fft *p, int16_t *data, double *out, int odd)
 {
 	int	i;
 
@@ -84,7 +84,7 @@ dofft(struct fft *p, int16_t *data, double *out, int odd)
 }
 
 void
-del_fft(struct fft *p)
+free_fft(struct fft *p)
 {
 	fftw_free(p->in);
 	fftw_free(p->out);

@@ -86,7 +86,7 @@ read_sio(struct sio *sio)
 }
 
 void
-del_sio(struct sio *sio)
+free_sio(struct sio *sio)
 {
 	snd_pcm_drain(sio->handle);
 	snd_pcm_close(sio->handle);

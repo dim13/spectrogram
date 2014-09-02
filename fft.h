@@ -22,8 +22,8 @@ struct fft;
 
 __BEGIN_DECLS
 struct fft *init_fft(int);
-int dofft(struct fft *, int16_t *, double *, int);
-void del_fft(struct fft *);
+int exec_fft(struct fft *, int16_t *, double *, int);
+void free_fft(struct fft *);
 __END_DECLS
 
 #endif
