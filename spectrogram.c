@@ -425,6 +425,7 @@ main(int argc, char **argv)
 	unsigned long	black, white;
 	float		factor = 0.75;
 	int		round = 1024;	/* FFT is fastest with powers of two */
+
 	while ((ch = getopt(argc, argv, "dfpr:h")) != -1)
 		switch (ch) {
 		case 'd':
