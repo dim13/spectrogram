@@ -30,7 +30,7 @@ struct sio {
 };
 
 struct sio *
-init_sio(void)
+init_sio(unsigned int round)
 {
 	struct sio *sio;
 	unsigned int rate = 48000;
@@ -51,6 +51,7 @@ init_sio(void)
 	snd_pcm_hw_params_set_format(sio->handle, sio->params, SND_PCM_FORMAT_S16_LE);
 	snd_pcm_hw_params_set_rate_near(sio->handle, sio->params, &rate, NULL);
 	snd_pcm_hw_params_set_channels(sio->handle, sio->params, RCHAN);
+	snd_pcm_hw_params_set_period_size(sio->handle, sio->params, round, 0);
 
 	rc = snd_pcm_hw_params(sio->handle, sio->params);
 	if (rc < 0)
@@ -67,12 +68,6 @@ init_sio(void)
 		errx(1, "malloc failed");
 
 	return sio;
-}
-
-unsigned int
-get_round(struct sio *sio)
-{
-	return sio->frames;
 }
 
 int16_t *

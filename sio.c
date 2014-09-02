@@ -33,7 +33,7 @@ struct sio {
 };
 
 struct sio *
-init_sio(int round)
+init_sio(unsigned int round)
 {
 	struct sio *sio;
 	size_t bufsz;
