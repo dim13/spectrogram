@@ -37,6 +37,7 @@ hsv2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	if (s > 0.0) {
 		if (h >= 1.0)
 			h -= 1.0;
+
 		h *= 6.0;
 		i = (int)h;
 		F = h - i;
@@ -85,6 +86,7 @@ hsl2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	if (v > 0.0) {
 		if (h >= 1.0)
 			h -= 1.0;
+
 		h *= 6.0;
 		i = (int)h;
 		F = h - i;
