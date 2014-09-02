@@ -34,9 +34,6 @@ hsv2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	s /= 100.0;
 	v /= 100.0;
 
-	/* default to gray */
-	*r = *g = *b = UINT16_MAX * v;
-
 	if (s > 0.0) {
 		if (h >= 1.0)
 			h -= 1.0;
@@ -61,6 +58,8 @@ hsv2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 		case 4: *r = K; *g = M; *b = v; break;
 		case 5: *r = v; *g = M; *b = N; break;
 		}
+	} else {
+		*r = *g = *b = UINT16_MAX * v;
 	}
 }
 
@@ -81,10 +80,7 @@ hsl2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	s /= 100.0;
 	l /= 100.0;
 
-	/* default to gray */
-	*r = *g = *b = UINT16_MAX * l;
-
-	v = (l <= 0.5) ? (l * (1.0 + s)) : (l + s - l * s);
+	v = (l <= 0.5) ? (l + l * s) : (l - l * s + s);
 
 	if (v > 0.0) {
 		if (h >= 1.0)
@@ -92,7 +88,7 @@ hsl2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 		h *= 6.0;
 		i = (int)h;
 		F = h - i;
-		M = 2.0 * l - v;
+		M = l + l - v;
 		K = M + F * (v - M);
 		N = v - F * (v - M);
 
@@ -110,5 +106,7 @@ hsl2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 		case 4: *r = K; *g = M; *b = v; break;
 		case 5: *r = v; *g = M; *b = N; break;
 		}
+	} else {
+		*r = *g = *b = UINT16_MAX * l;
 	}
 }
