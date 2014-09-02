@@ -554,12 +554,7 @@ main(int argc, char **argv)
 	free_panel(dsp, left);
 	free_panel(dsp, right);
 
-	XUnmapSubwindows(dsp, win);
-	XDestroySubwindows(dsp, win);
-
-	XUnmapWindow(dsp, win);
 	XDestroyWindow(dsp, win);
-
 	XCloseDisplay(dsp);
 
 	return 0;
