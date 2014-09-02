@@ -18,14 +18,15 @@
 #ifndef __CMS_H
 #define __CMS_H
 
+__BEGIN_DECLS
 void hsv2rgb(
 	unsigned short *r, unsigned short *g, unsigned short *b,
 	double h, double s, double v
 );
-
 void hsl2rgb(
 	unsigned short *r, unsigned short *g, unsigned short *b,
 	double h, double s, double l
 );
+__END_DECLS
 
 #endif
