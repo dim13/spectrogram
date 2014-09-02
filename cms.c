@@ -34,11 +34,12 @@ hsv2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	s /= 100.0;
 	v /= 100.0;
 
-	if (s == 0.0) {
-		*r = *g = *b = UINT16_MAX * v;
-	} else {
-		if (h == 1.0)
-			h = 0.0;
+	/* default to gray */
+	*r = *g = *b = UINT16_MAX * v;
+
+	if (s > 0.0) {
+		if (h >= 1.0)
+			h -= 1.0;
 		h *= 6.0;
 		i = (int)h;
 		F = h - i;
@@ -85,7 +86,9 @@ hsl2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 
 	v = (l <= 0.5) ? (l * (1.0 + s)) : (l + s - l * s);
 
-	if (v > 0) {
+	if (v > 0.0) {
+		if (h >= 1.0)
+			h -= 1.0;
 		h *= 6.0;
 		i = (int)h;
 		F = h - i;
