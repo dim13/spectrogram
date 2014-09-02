@@ -106,9 +106,9 @@ init_palette(Display *d, struct palette pal, int n)
 	p = calloc(n, sizeof(unsigned long));
 	assert(p);
 
-	hstep = (pal.to.h - pal.from.h) / n;
-	sstep = (pal.to.s - pal.from.s) / n;
-	lstep = (pal.to.l - pal.from.l) / n;
+	hstep = (pal.to.h - pal.from.h) / (n - 1);
+	sstep = (pal.to.s - pal.from.s) / (n - 1);
+	lstep = (pal.to.l - pal.from.l) / (n - 1);
 
 	for (i = 0; i < n; i++) {
 		p[i] = hslcolor(d, pal.from);
