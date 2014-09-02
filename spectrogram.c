@@ -513,7 +513,7 @@ main(int argc, char **argv)
 	}
 
 	while (!die) {
-		buffer = read_sio(sio, round);
+		buffer = read_sio(sio);
 
 		dofft(fft, buffer, left->data, 0);
 		dofft(fft, buffer, right->data, 1);

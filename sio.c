@@ -80,12 +80,12 @@ init_sio(unsigned int round)
 }
 
 int16_t *
-read_sio(struct sio *sio, size_t n)
+read_sio(struct sio *sio)
 {
 	int done = 0;
 	char *buffer = (char *)sio->buffer;
 	size_t sz = sio->bufsz;
-	size_t roundsz = n * sio->par.rchan * sizeof(int16_t);
+	size_t roundsz = sio->round * sio->par.rchan * sizeof(int16_t);
 
 	do {
 		done = sio_read(sio->sio, buffer, sz);
