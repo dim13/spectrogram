@@ -15,6 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <assert.h>
 #include <err.h>
 #include <stdlib.h>
 #include <sndio.h>
@@ -39,11 +40,9 @@ init_sio(unsigned int round)
 	size_t bufsz;
 
 	sio = malloc(sizeof(struct sio));
-	if (!sio)
-		errx(1, "malloc failed");
+	assert(sio);
 
 	sio->sio = sio_open(SIO_DEVANY, SIO_REC, 0);
-
 	if (!sio->sio)
 		errx(1, "cannot connect to sound server, is it running?");
 
@@ -73,9 +72,7 @@ init_sio(unsigned int round)
 		bufsz += sio->par.round;
 	sio->bufsz = bufsz * sio->par.rchan * sizeof(int16_t);
 	sio->buffer = malloc(sio->bufsz);
-
-	if (!sio->buffer)
-		errx(1, "malloc failed");
+	assert(sio->buffer);
 
 	sio_start(sio->sio);
 

@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
+#include <assert.h>
 #include <err.h>
 #include <math.h>
 #include <signal.h>
@@ -103,8 +104,7 @@ init_palette(Display *d, struct palette pal, int n)
 	int	i;
 
 	p = calloc(n, sizeof(unsigned long));
-	if (!p)
-		errx(1, "malloc failed");
+	assert(p);
 
 	hstep = (pal.to.h - pal.from.h) / n;
 	sstep = (pal.to.s - pal.from.s) / n;
@@ -239,12 +239,10 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	unsigned long *palette;
 
 	p = malloc(sizeof(struct panel));
-	if (!p)
-		errx(1, "malloc failed");
+	assert(p);
 
 	p->data = calloc(w, sizeof(double));
-	if (!p->data)
-		errx(1, "malloc failed");
+	assert(p->data);
 
 	/* main panel window */
 	p->win = XCreateSimpleWindow(d, win, x, y, w, h, 0, white, gray);

@@ -15,7 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <err.h>
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,8 +37,7 @@ hamming(size_t n)
 	int	i;
 
 	w = calloc(n, sizeof(double));
-	if (!w)
-		errx(1, "malloc failed");
+	assert(w);
 
 	for (i = 0; i < n; i++)
 		w[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
@@ -46,44 +45,22 @@ hamming(size_t n)
 	return w;
 }
 
-static double *
-resize(double *p, size_t n)
-{
-	if (p)
-		fftw_free(p);
-	p = fftw_malloc(n * sizeof(double));
-	if (!p)
-		errx(1, "malloc failed");
-
-	return p;
-}
-
-struct fft *
-resize_fft(struct fft *p, size_t n)
-{
-	if (n != p->n) {
-		p->n = n;
-
-		p->in = resize(p->in, p->n);
-		p->out = resize(p->out, p->n);
-
-		if (p->window)
-			free(p->window);
-		p->window = hamming(p->n);
-
-		p->plan = fftw_plan_r2r_1d(p->n, p->in, p->out,
-			FFTW_R2HC, FFTW_MEASURE);
-	}
-	return p;
-}
-
 struct fft *
 init_fft(size_t n)
 {
 	struct	fft *p;
 
-	p = calloc(1, sizeof(struct fft));
-	p = resize_fft(p, n);
+	p = malloc(sizeof(struct fft));
+	assert(p);
+
+	p->n = n;
+	p->in = fftw_alloc_real(p->n);
+	p->out = fftw_alloc_real(p->n);
+	assert(p->in && p->out);
+
+	p->window = hamming(p->n);
+	p->plan = fftw_plan_r2r_1d(p->n, p->in, p->out,
+		FFTW_R2HC, FFTW_MEASURE);
 
 	return p;
 }

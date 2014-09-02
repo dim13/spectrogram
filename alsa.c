@@ -15,6 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <assert.h>
 #include <err.h>
 #include <stdlib.h>
 #include <alsa/asoundlib.h>
@@ -38,8 +39,7 @@ init_sio(unsigned int round)
 
 
 	sio = malloc(sizeof(struct sio));
-	if (!sio)
-		errx(1, "malloc failed");
+	assert(sio);
 
 	rc = snd_pcm_open(&sio->handle, "default", SND_PCM_STREAM_CAPTURE, 0);
 	if (rc < 0)
@@ -63,9 +63,7 @@ init_sio(unsigned int round)
 
 	sio->bufsz = sio->frames * RCHAN * sizeof(int16_t);
 	sio->buffer = malloc(sio->bufsz);
-
-	if (!sio->buffer)
-		errx(1, "malloc failed");
+	assert(sio->buffer);
 
 	return sio;
 }
