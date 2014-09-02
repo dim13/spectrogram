@@ -324,13 +324,16 @@ free_panel(Display *d, struct panel *p)
 	XFreePixmap(d, p->spbuf.pix);
 	XFreeGC(d, p->spbuf.gc);
 
+	XUnmapWindow(d, p->sp);
 	XDestroyWindow(d, p->sp);
 
 	XFreePixmap(d, p->wfbuf.pix);
 	XFreeGC(d, p->wfbuf.gc);
 
+	XUnmapWindow(d, p->wf);
 	XDestroyWindow(d, p->wf);
 
+	XUnmapWindow(d, p->win);
 	XDestroyWindow(d, p->win);
 	
 	free(p);
@@ -559,6 +562,7 @@ main(int argc, char **argv)
 	free_panel(dsp, left);
 	free_panel(dsp, right);
 
+	XUnmapWindow(dsp, win);
 	XDestroyWindow(dsp, win);
 	XCloseDisplay(dsp);
 
