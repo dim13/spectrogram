@@ -22,7 +22,7 @@ struct sio;
 
 __BEGIN_DECLS
 struct sio *init_sio(int);
-int16_t *read_sio(struct sio *, size_t);
+int16_t *read_sio(struct sio *);
 void del_sio(struct sio *);
 __END_DECLS
 
