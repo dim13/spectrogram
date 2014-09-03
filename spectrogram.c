@@ -148,13 +148,13 @@ usage(void)
 void
 init_bg(Display *d, Pixmap pix, GC gc, XRectangle r, unsigned long *pal)
 {
-	int i;
+	int i, x, y;
 
+	x = r.width - 1;
 	for (i = 0; i < r.height; i++) {
+		y = r.height - i - 1;
 		XSetForeground(d, gc, pal[i]);
-		XDrawLine(d, pix, gc,
-			0, r.height - i - 1,
-			r.width - 1, r.height - i - 1);
+		XDrawLine(d, pix, gc, 0, y, x, y);
 	}
 }
 
