@@ -78,7 +78,7 @@ struct palette {
 
 struct palette p_spectr =    {{ 120.0, 100.0,  75.0 }, {   0.0, 100.0,  25.0 }};
 struct palette p_shadow =    {{ 120.0, 100.0,  10.0 }, {   0.0, 100.0,  10.0 }};
-struct palette p_waterfall = {{ 200.0,  75.0,   0.0 }, { 200.0, 100.0, 100.0 }};
+struct palette p_waterfall = {{ 210.0,  75.0,   0.0 }, { 180.0, 100.0, 100.0 }};
 struct hsl hsl_gray = {0.0, 0.0, 20.0};
 
 unsigned long
