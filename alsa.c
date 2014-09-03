@@ -24,11 +24,11 @@
 #define RATE	44100
 
 struct sio {
-	int16_t *buffer;
-	size_t bufsz;
 	snd_pcm_t *handle;
 	snd_pcm_hw_params_t *params;
-	snd_pcm_uframes_t frames;
+	int16_t *buffer;
+	size_t bufsz;
+	snd_pcm_uframes_t round;
 };
 
 struct sio *
@@ -56,14 +56,14 @@ init_sio(unsigned int round)
 	if (rc < 0)
 		errx(1, "unable to set hw parameters: %s", snd_strerror(rc));
 	
-	snd_pcm_hw_params_get_period_size(sio->params, &sio->frames, NULL);
+	snd_pcm_hw_params_get_period_size(sio->params, &sio->round, NULL);
 	snd_pcm_hw_params_free(sio->params);
 	snd_pcm_prepare(sio->handle);
 
-	if (sio->frames != round)
-		warnx("requested %d frames, got %d", round, sio->frames);
+	if (sio->round != round)
+		warnx("requested %d frames, got %d", round, sio->round);
 
-	sio->bufsz = sio->frames * STEREO * sizeof(int16_t);
+	sio->bufsz = sio->round * STEREO * sizeof(int16_t);
 	sio->buffer = malloc(sio->bufsz);
 	assert(sio->buffer);
 
@@ -75,8 +75,8 @@ read_sio(struct sio *sio)
 {
 	int rc;
 
-	rc = snd_pcm_readi(sio->handle, sio->buffer, sio->frames);
-	if (rc != sio->frames) {
+	rc = snd_pcm_readi(sio->handle, sio->buffer, sio->round);
+	if (rc != sio->round) {
 		warnx("error read from audio interface: %s", snd_strerror(rc));
 		if (rc == -EPIPE)
 			snd_pcm_prepare(sio->handle);
