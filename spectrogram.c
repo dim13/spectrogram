@@ -80,6 +80,9 @@ struct palette p_spectr =    {{ 120.0, 100.0,  75.0 }, {   0.0, 100.0,  25.0 }};
 struct palette p_shadow =    {{ 120.0, 100.0,  10.0 }, {   0.0, 100.0,  10.0 }};
 struct palette p_waterfall = {{ 210.0,  75.0,   0.0 }, { 180.0, 100.0, 100.0 }};
 struct hsl hsl_gray = {0.0, 0.0, 20.0};
+unsigned long *sp_pal = NULL;
+unsigned long *sh_pal = NULL;
+unsigned long *wf_pal = NULL;
 
 unsigned long
 hslcolor(Display *d, struct hsl hsl)
@@ -276,15 +279,17 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	p->maxval = p->s.height;
 	p->mirror = mirror;
 
-	palette = init_palette(d, p_spectr, p->maxval);
-	init_bg(d, p->spbg.pix, p->spbg.gc, p->s.width, p->s.height, palette);
-	free(palette);
+	if (!sp_pal)
+		sp_pal = init_palette(d, p_spectr, p->maxval);
+	init_bg(d, p->spbg.pix, p->spbg.gc, p->s.width, p->s.height, sp_pal);
 
-	palette = init_palette(d, p_shadow, p->maxval);
-	init_bg(d, p->shbg.pix, p->shbg.gc, p->s.width, p->s.height, palette);
-	free(palette);
+	if (!sh_pal)
+		sh_pal = init_palette(d, p_shadow, p->maxval);
+	init_bg(d, p->shbg.pix, p->shbg.gc, p->s.width, p->s.height, sh_pal);
 
-	p->palette = init_palette(d, p_waterfall, p->maxval);
+	if (!wf_pal)
+		wf_pal = init_palette(d, p_waterfall, p->maxval);
+	p->palette = wf_pal;
 
 	/* clear waterfall */
 	XSetForeground(d, p->wfbuf.gc, p->palette[0]);
@@ -306,9 +311,6 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 void
 free_panel(Display *d, struct panel *p)
 {
-	free(p->data);
-	free(p->palette);
-
 	XFreePixmap(d, p->shmask.pix);
 	XFreeGC(d, p->shmask.gc);
 
@@ -327,6 +329,7 @@ free_panel(Display *d, struct panel *p)
 	XFreePixmap(d, p->wfbuf.pix);
 	XFreeGC(d, p->wfbuf.gc);
 
+	free(p->data);
 	free(p);
 }
 
@@ -494,9 +497,11 @@ main(int argc, char **argv)
 		0, 0, width, height, 0, white, black);
 	XMapWindow(dsp, container);
 
+	fft = init_fft(round);
 	left = init_panel(dsp, container, 0, 0, round / 2, height, 1);
 	right = init_panel(dsp, container, round / 2 + HGAP, 0, round / 2, height, 0);
-	fft = init_fft(round);
+	free(sp_pal);
+	free(sh_pal);
 
 	XClearWindow(dsp, win);
 	XMapRaised(dsp, win);	/* XMapWindow */
@@ -553,6 +558,7 @@ main(int argc, char **argv)
 	free_fft(fft);
 	free_panel(dsp, left);
 	free_panel(dsp, right);
+	free(wf_pal);
 
 	XDestroyWindow(dsp, win);
 	XCloseDisplay(dsp);
