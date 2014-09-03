@@ -502,8 +502,10 @@ main(int argc, char **argv)
 	XMapWindow(dsp, container);
 
 	fft = init_fft(round);
-	left = init_panel(dsp, container, 0, 0, round / 2, height, RTL);
-	right = init_panel(dsp, container, round / 2 + HGAP, 0, round / 2, height, LTR);
+	left = init_panel(dsp, container,
+		0, 0, round / 2, height, RTL);
+	right = init_panel(dsp, container,
+		round / 2 + HGAP, 0, round / 2, height, LTR);
 	free(sp_pal);
 	free(sh_pal);
 

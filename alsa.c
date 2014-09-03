@@ -48,8 +48,10 @@ init_sio(unsigned int round)
 
 	snd_pcm_hw_params_malloc(&sio->params);
 	snd_pcm_hw_params_any(sio->handle, sio->params);
-	snd_pcm_hw_params_set_access(sio->handle, sio->params, SND_PCM_ACCESS_RW_INTERLEAVED);
-	snd_pcm_hw_params_set_format(sio->handle, sio->params, SND_PCM_FORMAT_S16_LE);
+	snd_pcm_hw_params_set_access(sio->handle, sio->params,
+		SND_PCM_ACCESS_RW_INTERLEAVED);
+	snd_pcm_hw_params_set_format(sio->handle, sio->params,
+		SND_PCM_FORMAT_S16_LE);
 	snd_pcm_hw_params_set_rate(sio->handle, sio->params, RATE, 0);
 	snd_pcm_hw_params_set_channels(sio->handle, sio->params, STEREO);
 	snd_pcm_hw_params_set_period_size(sio->handle, sio->params, round, 0);
