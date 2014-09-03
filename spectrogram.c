@@ -255,18 +255,10 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, enum mirror m)
 	p->win = XCreateSimpleWindow(d, win, x, y, w, h, 0, white, gray);
 
 	/* sperctrogram window and its bitmasks */
-#if 0
 	p->s.x = 0;
 	p->s.y = 0;
 	p->s.width = w;
 	p->s.height = h * 0.25;
-#endif
-	p->s = {
-		.x = 0,
-		.y = 0,
-		.width = w,
-		.height = h * 0.25,
-	};
 
 	p->sp = XCreateSimpleWindow(d, p->win, p->s.x, p->s.y,
 		p->s.width, p->s.height, 0, white, black);
