@@ -243,7 +243,6 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, enum mirror m)
 	unsigned long white = WhitePixel(d, scr);
 	unsigned long black = BlackPixel(d, scr);
 	unsigned long gray = hslcolor(d, hsl_gray);
-	unsigned long *palette;
 
 	p = malloc(sizeof(struct panel));
 	assert(p);
