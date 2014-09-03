@@ -76,6 +76,8 @@ struct palette {
 	struct hsl from, to;
 };
 
+enum mirror { LTR, RTL };
+
 struct palette p_spectr =    {{ 120.0, 100.0,  75.0 }, {   0.0, 100.0,  25.0 }};
 struct palette p_shadow =    {{ 120.0, 100.0,  10.0 }, {   0.0, 100.0,  10.0 }};
 struct palette p_waterfall = {{ 210.0,  75.0,   0.0 }, { 180.0, 100.0, 100.0 }};
@@ -233,7 +235,7 @@ init_pixmap(struct pixmap *p, Display *d, Drawable dr, XRectangle r, int pl)
 }
 
 struct panel *
-init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
+init_panel(Display *d, Window win, int x, int y, int w, int h, enum mirror m)
 {
 	struct panel *p;
 	int scr = DefaultScreen(d);
@@ -279,7 +281,7 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 	init_pixmap(&p->wfbuf, d, p->wf, p->w, planes);
 
 	p->maxval = p->s.height;
-	p->mirror = mirror;
+	p->mirror = m;
 
 	if (!sp_pal)
 		sp_pal = init_palette(d, p_spectr, p->maxval);
@@ -500,8 +502,8 @@ main(int argc, char **argv)
 	XMapWindow(dsp, container);
 
 	fft = init_fft(round);
-	left = init_panel(dsp, container, 0, 0, round / 2, height, 1);
-	right = init_panel(dsp, container, round / 2 + HGAP, 0, round / 2, height, 0);
+	left = init_panel(dsp, container, 0, 0, round / 2, height, RTL);
+	right = init_panel(dsp, container, round / 2 + HGAP, 0, round / 2, height, LTR);
 	free(sp_pal);
 	free(sh_pal);
 
