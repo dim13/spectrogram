@@ -144,13 +144,15 @@ usage(void)
 }
 
 void
-init_bg(Display *d, Pixmap pix, GC gc, int w, int h, unsigned long *pal)
+init_bg(Display *d, Pixmap pix, GC gc, XRectangle r, unsigned long *pal)
 {
 	int i;
 
-	for (i = 0; i < h; i++) {
+	for (i = 0; i < r.height; i++) {
 		XSetForeground(d, gc, pal[i]);
-		XDrawLine(d, pix, gc, 0, h - i - 1, w - 1, h - i - 1);
+		XDrawLine(d, pix, gc,
+			0, r.height - i - 1,
+			r.width - 1, r.height - i - 1);
 	}
 }
 
@@ -281,11 +283,11 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, int mirror)
 
 	if (!sp_pal)
 		sp_pal = init_palette(d, p_spectr, p->maxval);
-	init_bg(d, p->spbg.pix, p->spbg.gc, p->s.width, p->s.height, sp_pal);
+	init_bg(d, p->spbg.pix, p->spbg.gc, p->s, sp_pal);
 
 	if (!sh_pal)
 		sh_pal = init_palette(d, p_shadow, p->maxval);
-	init_bg(d, p->shbg.pix, p->shbg.gc, p->s.width, p->s.height, sh_pal);
+	init_bg(d, p->shbg.pix, p->shbg.gc, p->s, sh_pal);
 
 	if (!wf_pal)
 		wf_pal = init_palette(d, p_waterfall, p->maxval);
