@@ -17,10 +17,10 @@
 
 #include <assert.h>
 #include <err.h>
-#include <stdlib.h>
 #include <sndio.h>
+#include <stdlib.h>
 
-#define RCHAN	2
+#define STEREO	2
 #define BITS	16
 #define SIGNED	1
 #define FPS	24
@@ -48,7 +48,7 @@ init_sio(unsigned int round)
 
 	sio_initpar(&sio->par);
 
-	sio->par.rchan = RCHAN;
+	sio->par.rchan = STEREO;
 	sio->par.bits = BITS;
 	sio->par.le = SIO_LE_NATIVE;
 	sio->par.sig = SIGNED;
@@ -58,7 +58,7 @@ init_sio(unsigned int round)
 	if (!sio_getpar(sio->sio, &sio->par))
 		errx(1, "SIO get params failed");
 
-	if (sio->par.rchan != RCHAN ||
+	if (sio->par.rchan != STEREO ||
 	    sio->par.bits != BITS ||
 	    sio->par.le != SIO_LE_NATIVE ||
 	    sio->par.sig != SIGNED)

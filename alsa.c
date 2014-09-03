@@ -20,7 +20,8 @@
 #include <stdlib.h>
 #include <alsa/asoundlib.h>
 
-#define	RCHAN	2
+#define STEREO	2
+#define RATE	44100
 
 struct sio {
 	int16_t *buffer;
@@ -34,9 +35,7 @@ struct sio *
 init_sio(unsigned int round)
 {
 	struct sio *sio;
-	unsigned int rate = 44100;
 	int rc;
-
 
 	sio = malloc(sizeof(struct sio));
 	assert(sio);
@@ -49,8 +48,8 @@ init_sio(unsigned int round)
 	snd_pcm_hw_params_any(sio->handle, sio->params);
 	snd_pcm_hw_params_set_access(sio->handle, sio->params, SND_PCM_ACCESS_RW_INTERLEAVED);
 	snd_pcm_hw_params_set_format(sio->handle, sio->params, SND_PCM_FORMAT_S16_LE);
-	snd_pcm_hw_params_set_rate_near(sio->handle, sio->params, &rate, NULL);
-	snd_pcm_hw_params_set_channels(sio->handle, sio->params, RCHAN);
+	snd_pcm_hw_params_set_rate(sio->handle, sio->params, RATE, 0);
+	snd_pcm_hw_params_set_channels(sio->handle, sio->params, STEREO);
 	snd_pcm_hw_params_set_period_size(sio->handle, sio->params, round, 0);
 
 	rc = snd_pcm_hw_params(sio->handle, sio->params);
@@ -61,7 +60,10 @@ init_sio(unsigned int round)
 	snd_pcm_hw_params_free(sio->params);
 	snd_pcm_prepare(sio->handle);
 
-	sio->bufsz = sio->frames * RCHAN * sizeof(int16_t);
+	if (sio->frames != round)
+		warnx("requested %d frames, got %d", round, sio->frames);
+
+	sio->bufsz = sio->frames * STEREO * sizeof(int16_t);
 	sio->buffer = malloc(sio->bufsz);
 	assert(sio->buffer);
 
@@ -74,13 +76,11 @@ read_sio(struct sio *sio)
 	int rc;
 
 	rc = snd_pcm_readi(sio->handle, sio->buffer, sio->frames);
-	if (rc == -EPIPE) {
-		warnx("overrun occured");
-		snd_pcm_prepare(sio->handle);
-	} else if (rc < 0)
-		warnx("error from read: %s", snd_strerror(rc));
-	else if (rc != sio->frames)
-		warnx("shor read, read %d frames", rc);
+	if (rc != sio->frames) {
+		warnx("error read from audio interface: %s", snd_strerror(rc));
+		if (rc == -EPIPE)
+			snd_pcm_prepare(sio->handle);
+	}
 
 	return sio->buffer;
 }
