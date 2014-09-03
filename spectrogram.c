@@ -543,6 +543,16 @@ main(int argc, char **argv)
 				case XK_q:
 					die = 1;
 					break;
+				case XK_1:
+					left->mirror ^= 1;
+					break;
+				case XK_2:
+					right->mirror ^= 1;
+					break;
+				case XK_3:
+					left->mirror ^= 1;
+					right->mirror ^= 1;
+					break;
 				default:
 					break;
 				}
