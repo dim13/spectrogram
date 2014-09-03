@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <alsa/asoundlib.h>
 
+#include "sio.h"
+
 #define STEREO	2
 #define RATE	44100
 

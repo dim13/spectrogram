@@ -515,8 +515,8 @@ main(int argc, char **argv)
 	while (!die) {
 		buffer = read_sio(sio);
 
-		exec_fft(fft, buffer, left->data, 0);
-		exec_fft(fft, buffer, right->data, 1);
+		exec_fft(fft, buffer, left->data, FFT_LEFT);
+		exec_fft(fft, buffer, right->data, FFT_RIGHT);
 
 		draw_panel(dsp, left);
 		draw_panel(dsp, right);

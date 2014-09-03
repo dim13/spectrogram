@@ -20,6 +20,8 @@
 #include <sndio.h>
 #include <stdlib.h>
 
+#include "sio.h"
+
 #define STEREO	2
 #define BITS	16
 #define SIGNED	1

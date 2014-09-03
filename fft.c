@@ -22,6 +22,8 @@
 #include <math.h>
 #include <fftw3.h>
 
+#include "fft.h"
+
 struct fft {
 	fftw_plan	plan;
 	double	*in;
@@ -66,12 +68,12 @@ init_fft(size_t n)
 }
 
 int
-exec_fft(struct fft *p, int16_t *data, double *out, int odd)
+exec_fft(struct fft *p, int16_t *data, double *out, enum fft_chan chan)
 {
 	int	i;
 
 	for (i = 0; i < p->n; i++)
-		p->in[i] = p->window[i] * data[2 * i + odd]
+		p->in[i] = p->window[i] * data[2 * i + chan]
 			/ (double)INT16_MAX;
 
 	fftw_execute(p->plan);

@@ -22,6 +22,8 @@
 
 #include <stdint.h>
 
+#include "cms.h"
+
 void
 hsv2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	double h, double s, double v)
