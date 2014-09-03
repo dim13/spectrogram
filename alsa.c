@@ -34,7 +34,7 @@ struct sio *
 init_sio(unsigned int round)
 {
 	struct sio *sio;
-	unsigned int rate = 48000;
+	unsigned int rate = 44100;
 	int rc;
 
 
