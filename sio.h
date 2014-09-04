@@ -23,6 +23,7 @@ struct sio;
 __BEGIN_DECLS
 struct sio *init_sio(void);
 int16_t *read_sio(struct sio *, unsigned int);
+unsigned int max_samples_sio(struct sio *);
 void free_sio(struct sio *);
 __END_DECLS
 

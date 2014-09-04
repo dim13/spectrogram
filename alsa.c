@@ -23,20 +23,22 @@
 #include "sio.h"
 
 #define STEREO	2
-#define RATE	44100
+#define RATE	48000
+#define FPS	25
 
 struct sio {
 	snd_pcm_t *handle;
 	snd_pcm_hw_params_t *params;
 	int16_t *buffer;
-	size_t bufsz;
-	snd_pcm_uframes_t round;
+	unsigned int samples;
 };
 
 struct sio *
 init_sio(void)
 {
 	struct sio *sio;
+	snd_pcm_uframes_t round;
+	unsigned int rate;
 	int rc;
 
 	sio = malloc(sizeof(struct sio));
@@ -53,39 +55,44 @@ init_sio(void)
 	snd_pcm_hw_params_set_format(sio->handle, sio->params,
 		SND_PCM_FORMAT_S16_LE);
 	snd_pcm_hw_params_set_channels(sio->handle, sio->params, STEREO);
-	//snd_pcm_hw_params_set_rate(sio->handle, sio->params, RATE, 0);
-	//snd_pcm_hw_params_set_period_size(sio->handle, sio->params, round, 0);
+	snd_pcm_hw_params_set_rate(sio->handle, sio->params, RATE, 0);
 
 	rc = snd_pcm_hw_params(sio->handle, sio->params);
 	if (rc < 0)
 		errx(1, "unable to set hw parameters: %s", snd_strerror(rc));
 	
-	/* FIXME */
-	snd_pcm_hw_params_get_period_size(sio->params, &sio->round, NULL);
-	//snd_pcm_hw_params_get_rate(sio->handle, sio->params, &sio->rate, 0);
+	snd_pcm_hw_params_get_period_size(sio->params, &round, NULL);
+	snd_pcm_hw_params_get_rate(sio->params, &rate, 0);
 	snd_pcm_hw_params_free(sio->params);
 	snd_pcm_prepare(sio->handle);
 
-	sio->bufsz = sio->round * STEREO * sizeof(int16_t);
-	sio->buffer = malloc(sio->bufsz);
+	sio->samples = rate / FPS;
+	sio->samples -= sio->samples % round;
+	sio->buffer = calloc(sio->samples * STEREO, sizeof(int16_t));
 	assert(sio->buffer);
 
 	return sio;
 }
 
+unsigned int
+max_samples_sio(struct sio *sio)
+{
+	return sio->samples;
+}
+
 int16_t *
 read_sio(struct sio *sio, unsigned int n)
 {
-	int rc;
+	snd_pcm_sframes_t rc;
 
-	rc = snd_pcm_readi(sio->handle, sio->buffer, sio->round);
-	if (rc != sio->round) {
-		warnx("error read from audio interface: %s", snd_strerror(rc));
+	rc = snd_pcm_readi(sio->handle, sio->buffer, sio->samples);
+	if (rc != sio->samples) {
+		warnx("audio read error: %s", snd_strerror(rc));
 		if (rc == -EPIPE)
 			snd_pcm_prepare(sio->handle);
 	}
 
-	return sio->buffer;
+	return sio->buffer + sio->samples - n;
 }
 
 void
