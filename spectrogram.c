@@ -47,22 +47,14 @@ struct pixmap {
 	GC	gc;
 };
 
-struct spectrogram {
-	Window	win;
+struct background {
+	Pixmap	bg;
+	Pixmap	mask;
 	GC	gc;
-
-	Pixmap	pix;		/* buffer */
-	Pixmap	bg;		/* main bg */
-	Pixmap	sbg;		/* shadow bg */
-
-	Pixmap	mask;		/* main mask */
-	GC	mgc;		/* main GC */
-
-	Pixmap	smask;		/* shadow mask */
-	GC	sgc;		/* shadow GC */
+	XRectangle geo;
 };
 
-struct waterfall {
+struct subwin {
 	Window	win;
 	Pixmap	pix;		/* buffer */
 	GC	gc;
@@ -71,16 +63,10 @@ struct waterfall {
 
 struct	panel {
 	Window	win;		/* container */
-	struct waterfall *wf;
-
-	Window	sp;		/* spectrogram */
-	XRectangle s;
-	struct	pixmap spbuf;
-	struct	pixmap spbg;
-	struct	pixmap spmask;
-	struct	pixmap shbg;
-	struct	pixmap shmask;
-
+	struct subwin *wf;
+	struct subwin *sp;
+	struct background *main;
+	struct background *shadow;
 	int	mirror;
 	int	maxval;
 	double	*data;
@@ -165,6 +151,75 @@ usage(void)
 }
 
 void
+draw_panel(Display *d, struct panel *p)
+{
+	int i, v, x;
+
+	/* blit waterfall */
+	XCopyArea(d, p->wf->pix, p->wf->pix, p->wf->gc,
+		0, 0, p->wf->geo.width, p->wf->geo.height - 1, 0, 1);
+
+	/* blit shadow mask */
+	XCopyArea(d, p->shadow->mask, p->shadow->mask, p->shadow->gc,
+		0, 0, p->shadow->geo.width, p->shadow->geo.height - 1, 0, 1);
+
+	/* clear spectrogram */
+	XSetForeground(d, p->sp->gc, p->palette[0]);
+	XFillRectangle(d, p->sp->pix, p->sp->gc,
+		0, 0, p->sp->geo.width, p->sp->geo.height);
+
+	/* clear mask */
+	XSetForeground(d, p->main->gc, 0);
+	XFillRectangle(d, p->main->mask, p->main->gc,
+		0, 0, p->main->geo.width, p->main->geo.height);
+
+	for (i = 0; i < p->sp->geo.width; i++) {
+		/* limit maxval */
+		v = p->data[i] >= p->maxval ? p->maxval - 1 : p->data[i];
+		x = p->mirror ? p->sp->geo.width - i - 1 : i;
+
+		/* draw waterfall */
+		XSetForeground(d, p->wf->gc, p->palette[v]);
+		XDrawPoint(d, p->wf->pix, p->wf->gc, x, 0);
+
+		/* draw spectrogram */
+		XSetForeground(d, p->main->gc, 1);
+		XDrawLine(d, p->main->mask, p->main->gc,
+			x, p->main->geo.height - v,
+			x, p->main->geo.height);
+	}
+
+	/* copy mask to shadow mask */
+	XSetClipMask(d, p->shadow->gc, p->shadow->mask);
+	XCopyArea(d, p->main->mask, p->shadow->mask, p->shadow->gc,
+		0, 0, p->main->geo.width, p->main->geo.height, 0, 0);
+	XSetClipMask(d, p->shadow->gc, None);
+
+	/* shadow */
+	XSetClipMask(d, p->sp->gc, p->shadow->mask);
+	XCopyArea(d, p->shadow->bg, p->sp->pix, p->sp->gc,
+		0, 0, p->sp->geo.width, p->sp->geo.height, 0, 0);
+
+	/* spectrogram */
+	XSetClipMask(d, p->sp->gc, p->main->mask);
+	XCopyArea(d, p->main->bg, p->sp->pix, p->sp->gc,
+		0, 0, p->sp->geo.width, p->sp->geo.height, 0, 0);
+}
+
+void
+flip_panel(Display *d, struct panel *p)
+{
+	/* flip spectrogram */
+	XSetClipMask(d, p->sp->gc, None);
+	XCopyArea(d, p->sp->pix, p->sp->win, p->sp->gc, 0, 0,
+		p->sp->geo.width, p->sp->geo.height, 0, 0);
+
+	/* flip waterfall */
+	XCopyArea(d, p->wf->pix, p->wf->win, p->wf->gc, 0, 0,
+		p->wf->geo.width, p->wf->geo.height, 0, 0);
+}
+
+void
 init_bg(Display *d, Pixmap pix, GC gc, XRectangle r, unsigned long *pal)
 {
 	int i, x, y;
@@ -177,92 +232,37 @@ init_bg(Display *d, Pixmap pix, GC gc, XRectangle r, unsigned long *pal)
 	}
 }
 
-void
-draw_panel(Display *d, struct panel *p)
+struct background *
+init_background(Display *d, Drawable parent, XRectangle r)
 {
-	int i, v, x;
+	struct background *p;
+	int scr = DefaultScreen(d);
+	int planes = DisplayPlanes(d, scr);
 
-	/* blit waterfall */
-	XCopyArea(d, p->wf->pix, p->wf->pix, p->wf->gc,
-		0, 0, p->wf->geo.width, p->wf->geo.height - 1, 0, 1);
+	p = malloc(sizeof(struct subwin));
+	assert(p);
 
-	/* blit shadow mask */
-	XCopyArea(d, p->shmask.pix, p->shmask.pix, p->shmask.gc,
-		0, 0, p->s.width, p->s.height - 1, 0, 1);
+	p->bg = XCreatePixmap(d, parent, r.width, r.height, planes);
+	p->mask = XCreatePixmap(d, parent, r.width, r.height, 1);
+	p->gc = XCreateGC(d, p->mask, 0, NULL);	
+	p->geo = r;
 
-	/* clear spectrogram */
-	XSetForeground(d, p->spbuf.gc, p->palette[0]);
-	XFillRectangle(d, p->spbuf.pix, p->spbuf.gc,
-		0, 0, p->s.width, p->s.height);
+	XSetForeground(d, p->gc, 0);
+	XFillRectangle(d, p->mask, p->gc, 0, 0, r.width, r.height);
 
-	/* clear mask */
-	XSetForeground(d, p->spmask.gc, 0);
-	XFillRectangle(d, p->spmask.pix, p->spmask.gc,
-		0, 0, p->s.width, p->s.height);
-
-	for (i = 0; i < p->s.width; i++) {
-		/* limit maxval */
-		v = p->data[i] >= p->maxval ? p->maxval - 1 : p->data[i];
-		x = p->mirror ? p->s.width - i - 1 : i;
-
-		/* draw waterfall */
-		XSetForeground(d, p->wf->gc, p->palette[v]);
-		XDrawPoint(d, p->wf->pix, p->wf->gc, x, 0);
-
-		/* draw spectrogram */
-		XSetForeground(d, p->spmask.gc, 1);
-		XDrawLine(d, p->spmask.pix, p->spmask.gc,
-			x, p->s.height - v,
-			x, p->s.height);
-	}
-
-	/* copy mask to shadow mask */
-	XSetClipMask(d, p->shmask.gc, p->spmask.pix);
-	XCopyArea(d, p->spmask.pix, p->shmask.pix, p->shmask.gc,
-		0, 0, p->s.width, p->s.height, 0, 0);
-	XSetClipMask(d, p->shmask.gc, None);
-
-	/* shadow */
-	XSetClipMask(d, p->spbuf.gc, p->shmask.pix);
-	XCopyArea(d, p->shbg.pix, p->spbuf.pix, p->spbuf.gc,
-		0, 0, p->s.width, p->s.height, 0, 0);
-
-	/* spectrogram */
-	XSetClipMask(d, p->spbuf.gc, p->spmask.pix);
-	XCopyArea(d, p->spbg.pix, p->spbuf.pix, p->spbuf.gc,
-		0, 0, p->s.width, p->s.height, 0, 0);
+	return p;
 }
 
-void
-flip_panel(Display *d, struct panel *p)
+struct subwin *
+init_subwin(Display *d, Drawable parent, XRectangle r)
 {
-	/* flip spectrogram */
-	XSetClipMask(d, p->spbuf.gc, None);
-	XCopyArea(d, p->spbuf.pix, p->sp, p->spbuf.gc, 0, 0,
-		p->s.width, p->s.height, 0, 0);
-
-	/* flip waterfall */
-	XCopyArea(d, p->wf->pix, p->wf->win, p->wf->gc, 0, 0,
-		p->wf->geo.width, p->wf->geo.height, 0, 0);
-}
-
-void
-init_pixmap(struct pixmap *p, Display *d, Drawable dr, XRectangle r, int pl)
-{
-	p->pix = XCreatePixmap(d, dr, r.width, r.height, pl);
-	p->gc = XCreateGC(d, p->pix, 0, NULL);	
-}
-
-struct waterfall *
-init_waterfall(Display *d, Drawable parent, XRectangle r)
-{
-	struct waterfall *p;
+	struct subwin *p;
 	int scr = DefaultScreen(d);
 	int white = WhitePixel(d, scr);
 	int black = BlackPixel(d, scr);
 	int planes = DisplayPlanes(d, scr);
 
-	p = malloc(sizeof(struct waterfall));
+	p = malloc(sizeof(struct subwin));
 	assert(p);
 
 	p->win = XCreateSimpleWindow(d, parent, r.x, r.y,
@@ -298,61 +298,40 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 
 	/* main panel window */
 	p->win = XCreateSimpleWindow(d, win,
-		r.x, r.y,
-		r.width, r.height,
+		r.x, r.y, r.width, r.height,
 		0, white, gray);
 
 	/* sperctrogram window and its bitmasks */
-	p->s.x = 0;
-	p->s.y = 0;
-	p->s.width = r.width;
-	p->s.height = r.height * 0.25;
-
-	p->sp = XCreateSimpleWindow(d, p->win,
-		p->s.x, p->s.y,
-		p->s.width, p->s.height,
-		0, white, black);
-
-	init_pixmap(&p->spbuf, d, p->sp, p->s, planes);
-	init_pixmap(&p->spbg, d, p->sp, p->s, planes);
-	init_pixmap(&p->spmask, d, p->sp, p->s, 1);
-	init_pixmap(&p->shbg, d, p->sp, p->s, planes);
-	init_pixmap(&p->shmask, d, p->sp, p->s, 1);
+	geo.x = 0;
+	geo.y = 0;
+	geo.width = r.width;
+	geo.height = r.height / 4;
+	p->sp = init_subwin(d, p->win, geo);
+	p->main = init_background(d, p->sp->win, geo);
+	p->shadow = init_background(d, p->sp->win, geo);
 
 	/* waterfall window and double buffer */
 	geo.x = 0;
-	geo.y = p->s.height + VGAP;
+	geo.y = p->sp->geo.height + VGAP;
 	geo.width = r.width;
-	geo.height = r.height - p->s.y;
-	p->wf = init_waterfall(d, p->win, geo);
+	geo.height = r.height - p->sp->geo.y;
+	p->wf = init_subwin(d, p->win, geo);
 
-	//p->wf = XCreateSimpleWindow(d, p->win, p->w.x, p->w.y,
-	//	p->w.width, p->w.height, 0, white, black);
-
-	//init_pixmap(&p->wfbuf, d, p->wf, p->w, planes);
-
-	p->maxval = p->s.height;
+	p->maxval = p->sp->geo.height;
 	p->mirror = m;
 
 	if (!sp_pal)
 		sp_pal = init_palette(d, p_spectr, p->maxval);
-	init_bg(d, p->spbg.pix, p->spbg.gc, p->s, sp_pal);
+	init_bg(d, p->main->bg, p->sp->gc, p->main->geo, sp_pal);
 
 	if (!sh_pal)
 		sh_pal = init_palette(d, p_shadow, p->maxval);
-	init_bg(d, p->shbg.pix, p->shbg.gc, p->s, sh_pal);
+	init_bg(d, p->shadow->bg, p->sp->gc, p->shadow->geo, sh_pal);
 
 	if (!wf_pal)
 		wf_pal = init_palette(d, p_waterfall, p->maxval);
 	p->palette = wf_pal;
 
-
-	/* clear shadow mask */
-	XSetForeground(d, p->shmask.gc, 0);
-	XFillRectangle(d, p->shmask.pix, p->shmask.gc,
-		0, 0, p->s.width, p->s.height);
-
-	XMapWindow(d, p->sp);
 	XMapWindow(d, p->win);
 	
 	return p;
@@ -361,6 +340,7 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 void
 free_panel(Display *d, struct panel *p)
 {
+	/*
 	XFreePixmap(d, p->shmask.pix);
 	XFreeGC(d, p->shmask.gc);
 
@@ -375,6 +355,7 @@ free_panel(Display *d, struct panel *p)
 
 	XFreePixmap(d, p->spbuf.pix);
 	XFreeGC(d, p->spbuf.gc);
+	 */
 
 	XFreePixmap(d, p->wf->pix);
 	XFreeGC(d, p->wf->gc);
