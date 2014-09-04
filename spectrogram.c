@@ -157,6 +157,13 @@ blit(Display *d, Drawable p, GC gc, XRectangle r)
 }
 
 void
+clear(Display *d, Drawable p, GC gc, XRectangle r)
+{
+	XSetForeground(d, gc, BlackPixel(d, DefaultScreen(d)));
+	XFillRectangle(d, p, gc, 0, 0, r.width, r.height);
+}
+
+void
 draw_panel(Display *d, struct panel *p)
 {
 	int i, v, x;
@@ -168,14 +175,9 @@ draw_panel(Display *d, struct panel *p)
 
 
 	/* clear spectrogram */
-	XSetForeground(d, p->sp->gc, p->palette[0]);
-	XFillRectangle(d, p->sp->pix, p->sp->gc,
-		0, 0, p->sp->geo.width, p->sp->geo.height);
-
+	clear(d, p->sp->pix, p->sp->gc, p->sp->geo);
 	/* clear mask */
-	XSetForeground(d, p->bg->gc, 0);
-	XFillRectangle(d, p->bg->mask, p->bg->gc,
-		0, 0, p->bg->geo.width, p->bg->geo.height);
+	clear(d, p->bg->mask, p->bg->gc, p->bg->geo);
 
 	for (i = 0; i < p->sp->geo.width; i++) {
 		/* limit maxval */
