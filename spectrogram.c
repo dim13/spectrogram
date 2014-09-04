@@ -181,7 +181,6 @@ draw_panel(Display *d, struct panel *p)
 	/* blit shadow mask */
 	blit(d, p->shadow->mask, p->shadow->gc, p->shadow->geo);
 
-
 	/* clear spectrogram */
 	clear(d, p->sp->pix, p->sp->gc, p->sp->geo);
 	/* clear mask */
