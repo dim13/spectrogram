@@ -54,7 +54,7 @@ struct spectrogram {
 	GC	gc;
 	Pixmap	shadow;
 	GC	shadowgc;
-}
+};
 
 struct watterfall {
 	Window	win;
@@ -65,13 +65,9 @@ struct watterfall {
 struct	panel {
 	Window	win;		/* container */
 
-	struct watterfall wf;
-
-#if 0
 	Window	wf;		/* waterfall */
 	XRectangle w;
 	struct	pixmap wfbuf;
-#endif
 
 	Window	sp;		/* spectrogram */
 	XRectangle s;
