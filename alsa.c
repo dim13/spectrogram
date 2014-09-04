@@ -67,7 +67,7 @@ init_sio(void)
 	snd_pcm_prepare(sio->handle);
 
 	sio->samples = rate / FPS;
-	sio->samples -= sio->samples % round;
+	sio->samples -= spf % round - round;
 	sio->buffer = calloc(sio->samples * STEREO, sizeof(int16_t));
 	assert(sio->buffer);
 
