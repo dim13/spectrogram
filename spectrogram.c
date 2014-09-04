@@ -450,10 +450,17 @@ main(int argc, char **argv)
 
 	if (dflag)
 		daemon(0, 0);
+
+	sio = init_sio();
+	maxwidth = max_samples_sio(sio);
+	maxheight = wa.height;
 		
 	dsp = XOpenDisplay(NULL);
 	if (!dsp)
 		errx(1, "Cannot connect to X11 server");
+
+	if (round > maxwidth)
+		round = maxwidth;
 
 	XGetWindowAttributes(dsp, DefaultRootWindow(dsp), &wa);
 	width = round + HGAP;
@@ -461,13 +468,10 @@ main(int argc, char **argv)
 		round = wa.width - HGAP;
 		width = wa.width;
 	}
+
 	height = factor * width;
 	if (height > wa.height)
 		height = wa.height;
-
-	sio = init_sio();
-	maxwidth = max_samples_sio(sio);
-	maxheight = wa.height;
 
 	scr = DefaultScreen(dsp);
 	white = WhitePixel(dsp, scr);
