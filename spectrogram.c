@@ -48,7 +48,7 @@ struct pixmap {
 };
 
 struct background {
-	Pixmap	bg;
+	Pixmap	pix;
 	Pixmap	mask;
 	GC	gc;
 	XRectangle geo;
@@ -65,7 +65,7 @@ struct	panel {
 	Window	win;		/* container */
 	struct subwin *wf;
 	struct subwin *sp;
-	struct background *main;
+	struct background *bg;
 	struct background *shadow;
 	int	mirror;
 	int	maxval;
@@ -169,9 +169,9 @@ draw_panel(Display *d, struct panel *p)
 		0, 0, p->sp->geo.width, p->sp->geo.height);
 
 	/* clear mask */
-	XSetForeground(d, p->main->gc, 0);
-	XFillRectangle(d, p->main->mask, p->main->gc,
-		0, 0, p->main->geo.width, p->main->geo.height);
+	XSetForeground(d, p->bg->gc, 0);
+	XFillRectangle(d, p->bg->mask, p->bg->gc,
+		0, 0, p->bg->geo.width, p->bg->geo.height);
 
 	for (i = 0; i < p->sp->geo.width; i++) {
 		/* limit maxval */
@@ -183,26 +183,26 @@ draw_panel(Display *d, struct panel *p)
 		XDrawPoint(d, p->wf->pix, p->wf->gc, x, 0);
 
 		/* draw spectrogram */
-		XSetForeground(d, p->main->gc, 1);
-		XDrawLine(d, p->main->mask, p->main->gc,
-			x, p->main->geo.height - v,
-			x, p->main->geo.height);
+		XSetForeground(d, p->bg->gc, 1);
+		XDrawLine(d, p->bg->mask, p->bg->gc,
+			x, p->bg->geo.height - v,
+			x, p->bg->geo.height);
 	}
 
 	/* copy mask to shadow mask */
 	XSetClipMask(d, p->shadow->gc, p->shadow->mask);
-	XCopyArea(d, p->main->mask, p->shadow->mask, p->shadow->gc,
-		0, 0, p->main->geo.width, p->main->geo.height, 0, 0);
+	XCopyArea(d, p->bg->mask, p->shadow->mask, p->shadow->gc,
+		0, 0, p->bg->geo.width, p->bg->geo.height, 0, 0);
 	XSetClipMask(d, p->shadow->gc, None);
 
 	/* shadow */
 	XSetClipMask(d, p->sp->gc, p->shadow->mask);
-	XCopyArea(d, p->shadow->bg, p->sp->pix, p->sp->gc,
+	XCopyArea(d, p->shadow->pix, p->sp->pix, p->sp->gc,
 		0, 0, p->sp->geo.width, p->sp->geo.height, 0, 0);
 
 	/* spectrogram */
-	XSetClipMask(d, p->sp->gc, p->main->mask);
-	XCopyArea(d, p->main->bg, p->sp->pix, p->sp->gc,
+	XSetClipMask(d, p->sp->gc, p->bg->mask);
+	XCopyArea(d, p->bg->pix, p->sp->pix, p->sp->gc,
 		0, 0, p->sp->geo.width, p->sp->geo.height, 0, 0);
 }
 
@@ -242,7 +242,7 @@ init_background(Display *d, Drawable parent, XRectangle r)
 	p = malloc(sizeof(struct subwin));
 	assert(p);
 
-	p->bg = XCreatePixmap(d, parent, r.width, r.height, planes);
+	p->pix = XCreatePixmap(d, parent, r.width, r.height, planes);
 	p->mask = XCreatePixmap(d, parent, r.width, r.height, 1);
 	p->gc = XCreateGC(d, p->mask, 0, NULL);	
 	p->geo = r;
@@ -307,7 +307,7 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 	geo.width = r.width;
 	geo.height = r.height / 4;
 	p->sp = init_subwin(d, p->win, geo);
-	p->main = init_background(d, p->sp->win, geo);
+	p->bg = init_background(d, p->sp->win, geo);
 	p->shadow = init_background(d, p->sp->win, geo);
 
 	/* waterfall window and double buffer */
@@ -322,11 +322,11 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 
 	if (!sp_pal)
 		sp_pal = init_palette(d, p_spectr, p->maxval);
-	init_bg(d, p->main->bg, p->sp->gc, p->main->geo, sp_pal);
+	init_bg(d, p->bg->pix, p->sp->gc, p->bg->geo, sp_pal);
 
 	if (!sh_pal)
 		sh_pal = init_palette(d, p_shadow, p->maxval);
-	init_bg(d, p->shadow->bg, p->sp->gc, p->shadow->geo, sh_pal);
+	init_bg(d, p->shadow->pix, p->sp->gc, p->shadow->geo, sh_pal);
 
 	if (!wf_pal)
 		wf_pal = init_palette(d, p_waterfall, p->maxval);
@@ -338,28 +338,31 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 }
 
 void
+free_background(Display *d, struct background *p)
+{
+	XFreePixmap(d, p->pix);
+	XFreePixmap(d, p->mask);
+	XFreeGC(d, p->gc);
+}
+
+void
+free_subwin(Display *d, struct subwin *p)
+{
+	XFreePixmap(d, p->pix);
+	XFreeGC(d, p->gc);
+	XUnmapWindow(d, p->win);
+	XDestroyWindow(d, p->win);
+}
+
+void
 free_panel(Display *d, struct panel *p)
 {
-	/*
-	XFreePixmap(d, p->shmask.pix);
-	XFreeGC(d, p->shmask.gc);
-
-	XFreePixmap(d, p->shbg.pix);
-	XFreeGC(d, p->shbg.gc);
-
-	XFreePixmap(d, p->spmask.pix);
-	XFreeGC(d, p->spmask.gc);
-
-	XFreePixmap(d, p->spbg.pix);
-	XFreeGC(d, p->spbg.gc);
-
-	XFreePixmap(d, p->spbuf.pix);
-	XFreeGC(d, p->spbuf.gc);
-	 */
-
-	XFreePixmap(d, p->wf->pix);
-	XFreeGC(d, p->wf->gc);
-
+	free_background(d, p->bg);
+	free_background(d, p->shadow);
+	free_subwin(d, p->sp);
+	free_subwin(d, p->wf);
+	XUnmapWindow(d, p->win);
+	XDestroyWindow(d, p->win);
 	free(p->data);
 	free(p);
 }
