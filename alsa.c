@@ -67,11 +67,12 @@ init_sio(void)
 	snd_pcm_prepare(sio->handle);
 
 	sio->samples = rate / FPS;
+	warnx("min samples: %d", sio->samples);
 	sio->samples -= sio->samples % round - round;
+	warnx("max samples: %d", sio->samples);
 	sio->buffer = calloc(sio->samples * STEREO, sizeof(int16_t));
 	assert(sio->buffer);
 
-	warnx("max samples: %d", sio->samples);
 
 	return sio;
 }

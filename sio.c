@@ -65,11 +65,11 @@ init_sio(void)
 		errx(1, "unsupported audio params");
 
 	sio->samples = sio->par.rate / FPS;
+	warnx("min samples: %d", sio->samples);
 	sio->samples -= sio->samples % sio->par.round - sio->par.round;
+	warnx("max samples: %d", sio->samples);
 	sio->buffer = calloc(sio->samples * sio->par.rchan, sizeof(int16_t));
 	assert(sio->buffer);
-
-	warnx("max samples: %d", sio->samples);
 
 	sio_start(sio->sio);
 
