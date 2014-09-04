@@ -419,6 +419,7 @@ main(int argc, char **argv)
 
 	int		ch;
 	int		width, height;
+	unsigned int	maxwidth, maxheight;
 	unsigned long	black, white;
 	float		factor = 0.75;
 	int		round = 1024;	/* FFT is fastest with powers of two */
@@ -465,6 +466,8 @@ main(int argc, char **argv)
 		height = wa.height;
 
 	sio = init_sio();
+	maxwidth = max_samples_sio(sio);
+	maxheight = wa.height;
 
 	scr = DefaultScreen(dsp);
 	white = WhitePixel(dsp, scr);
@@ -490,9 +493,11 @@ main(int argc, char **argv)
 	/* set minimal size */
 	nhints = XInternAtom(dsp, "WM_NORMAL_HINTS", 0);
 	hints = XAllocSizeHints();
-	hints->flags = PMinSize;
+	hints->flags = PMinSize|PMaxSize;
 	hints->min_width = width;
 	hints->min_height = height;
+	hints->max_width = maxwidth;
+	hints->max_height = maxheight;
 	XSetWMSizeHints(dsp, win, hints, nhints);
 	XFree(hints);
 
