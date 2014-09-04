@@ -235,7 +235,7 @@ init_pixmap(struct pixmap *p, Display *d, Drawable dr, XRectangle r, int pl)
 }
 
 struct panel *
-init_panel(Display *d, Window win, int x, int y, int w, int h, enum mirror m)
+init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 {
 	struct panel *p;
 	int scr = DefaultScreen(d);
@@ -247,20 +247,25 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, enum mirror m)
 	p = malloc(sizeof(struct panel));
 	assert(p);
 
-	p->data = calloc(w, sizeof(double));
+	p->data = calloc(r.width, sizeof(double));
 	assert(p->data);
 
 	/* main panel window */
-	p->win = XCreateSimpleWindow(d, win, x, y, w, h, 0, white, gray);
+	p->win = XCreateSimpleWindow(d, win,
+		r.x, r.y,
+		r.width, r.height,
+		0, white, gray);
 
 	/* sperctrogram window and its bitmasks */
 	p->s.x = 0;
 	p->s.y = 0;
-	p->s.width = w;
-	p->s.height = h * 0.25;
+	p->s.width = r.width;
+	p->s.height = r.height * 0.25;
 
-	p->sp = XCreateSimpleWindow(d, p->win, p->s.x, p->s.y,
-		p->s.width, p->s.height, 0, white, black);
+	p->sp = XCreateSimpleWindow(d, p->win,
+		p->s.x, p->s.y,
+		p->s.width, p->s.height,
+		0, white, black);
 
 	init_pixmap(&p->spbuf, d, p->sp, p->s, planes);
 	init_pixmap(&p->spbg, d, p->sp, p->s, planes);
@@ -271,8 +276,8 @@ init_panel(Display *d, Window win, int x, int y, int w, int h, enum mirror m)
 	/* waterfall window and double buffer */
 	p->w.x = 0;
 	p->w.y = p->s.height + VGAP;
-	p->w.width = w;
-	p->w.height = h - p->w.y;
+	p->w.width = r.width;
+	p->w.height = r.height - p->w.y;
 
 	p->wf = XCreateSimpleWindow(d, p->win, p->w.x, p->w.y,
 		p->w.width, p->w.height, 0, white, black);
@@ -406,6 +411,7 @@ main(int argc, char **argv)
 	XSizeHints	*hints;
 	XClassHint	*class;
 	XWindowAttributes wa;
+	XRectangle	geo;
 	int		scr;
 
 	struct		panel *left, *right;
@@ -510,10 +516,19 @@ main(int argc, char **argv)
 	XMapWindow(dsp, container);
 
 	fft = init_fft(round);
-	left = init_panel(dsp, container,
-		0, 0, round / 2, height, RTL);
-	right = init_panel(dsp, container,
-		round / 2 + HGAP, 0, round / 2, height, LTR);
+
+	geo.x = 0;
+	geo.y = 0;
+	geo.width = round / 2;
+	geo.height = height;
+	left = init_panel(dsp, container, geo, RTL);
+
+	geo.x = round / 2 + HGAP;
+	geo.y = 0;
+	geo.width = round / 2;
+	geo.height = height;
+	right = init_panel(dsp, container, geo, LTR);
+
 	free(sp_pal);
 	free(sh_pal);
 
