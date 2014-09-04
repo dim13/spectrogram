@@ -164,6 +164,14 @@ clear(Display *d, Drawable p, GC gc, XRectangle r)
 }
 
 void
+copy(Display *d, Drawable from, Drawable to, GC gc, XRectangle r, Drawable mask)
+{
+	XSetClipMask(d, gc, mask);
+	XCopyArea(d, from, to, gc, 0, 0, r.width, r.height, 0, 0);
+	XSetClipMask(d, gc, None);
+}
+
+void
 draw_panel(Display *d, struct panel *p)
 {
 	int i, v, x;
@@ -196,33 +204,30 @@ draw_panel(Display *d, struct panel *p)
 	}
 
 	/* copy mask to shadow mask */
-	XSetClipMask(d, p->shadow->gc, p->bg->mask);
-	XCopyArea(d, p->bg->mask, p->shadow->mask, p->shadow->gc,
-		0, 0, p->bg->geo.width, p->bg->geo.height, 0, 0);
-	XSetClipMask(d, p->shadow->gc, None);
+	copy(d, p->bg->mask, p->shadow->mask, p->shadow->gc, p->shadow->geo,
+		p->bg->mask);
+	/* shadow to buffer */
+	copy(d, p->shadow->pix, p->sp->pix, p->sp->gc, p->sp->geo,
+		p->shadow->mask);
+	/* spectrogram to buffer */
+	copy(d, p->bg->pix, p->sp->pix, p->sp->gc, p->sp->geo,
+		p->bg->mask);
+}
 
-	/* shadow */
-	XSetClipMask(d, p->sp->gc, p->shadow->mask);
-	XCopyArea(d, p->shadow->pix, p->sp->pix, p->sp->gc,
-		0, 0, p->sp->geo.width, p->sp->geo.height, 0, 0);
-
-	/* spectrogram */
-	XSetClipMask(d, p->sp->gc, p->bg->mask);
-	XCopyArea(d, p->bg->pix, p->sp->pix, p->sp->gc,
-		0, 0, p->sp->geo.width, p->sp->geo.height, 0, 0);
+void
+flip(Display *d, struct subwin *p)
+{
+	XCopyArea(d, p->pix, p->win, p->gc,
+		0, 0, p->geo.width, p->geo.height, 0, 0);
 }
 
 void
 flip_panel(Display *d, struct panel *p)
 {
 	/* flip spectrogram */
-	XSetClipMask(d, p->sp->gc, None);
-	XCopyArea(d, p->sp->pix, p->sp->win, p->sp->gc, 0, 0,
-		p->sp->geo.width, p->sp->geo.height, 0, 0);
-
+	flip(d, p->sp);
 	/* flip waterfall */
-	XCopyArea(d, p->wf->pix, p->wf->win, p->wf->gc, 0, 0,
-		p->wf->geo.width, p->wf->geo.height, 0, 0);
+	flip(d, p->wf);
 }
 
 void
