@@ -71,6 +71,8 @@ init_sio(void)
 	sio->buffer = calloc(sio->samples * STEREO, sizeof(int16_t));
 	assert(sio->buffer);
 
+	warnx("max samples: %d", sio->samples);
+
 	return sio;
 }
 

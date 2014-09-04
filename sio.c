@@ -69,6 +69,8 @@ init_sio(void)
 	sio->buffer = calloc(sio->samples * sio->par.rchan, sizeof(int16_t));
 	assert(sio->buffer);
 
+	warnx("max samples: %d", sio->samples);
+
 	sio_start(sio->sio);
 
 	return sio;
