@@ -231,7 +231,7 @@ flip_panel(Display *d, struct panel *p)
 }
 
 void
-init_bg(Display *d, Pixmap pix, GC gc, XRectangle r, unsigned long *pal)
+draw_background(Display *d, Pixmap pix, GC gc, XRectangle r, unsigned long *pal)
 {
 	int i, x, y;
 
@@ -302,6 +302,7 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 	unsigned long white = WhitePixel(d, scr);
 	unsigned long black = BlackPixel(d, scr);
 	unsigned long gray = hslcolor(d, hsl_gray);
+	unsigned int maxval = r.height / 4;
 	XRectangle geo;
 
 	p = malloc(sizeof(struct panel));
@@ -309,6 +310,13 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 
 	p->data = calloc(r.width, sizeof(double));
 	assert(p->data);
+
+	if (!sp_pal)
+		sp_pal = init_palette(d, p_spectr, maxval);
+	if (!sh_pal)
+		sh_pal = init_palette(d, p_shadow, maxval);
+	if (!wf_pal)
+		wf_pal = init_palette(d, p_waterfall, maxval);
 
 	/* main panel window */
 	p->win = XCreateSimpleWindow(d, win,
@@ -319,32 +327,25 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 	geo.x = 0;
 	geo.y = 0;
 	geo.width = r.width;
-	geo.height = r.height / 4;
+	geo.height = maxval;
 	p->sp = init_subwin(d, p->win, geo);
+
 	p->bg = init_background(d, p->sp->win, geo);
+	draw_background(d, p->bg->pix, p->sp->gc, p->bg->geo, sp_pal);
+
 	p->shadow = init_background(d, p->sp->win, geo);
+	draw_background(d, p->shadow->pix, p->sp->gc, p->shadow->geo, sh_pal);
+
+	p->palette = wf_pal;
+	p->maxval = maxval;
+	p->mirror = m;
 
 	/* waterfall window and double buffer */
 	geo.x = 0;
 	geo.y = p->sp->geo.height + VGAP;
 	geo.width = r.width;
-	geo.height = r.height - p->sp->geo.y;
+	geo.height = r.height - maxval;
 	p->wf = init_subwin(d, p->win, geo);
-
-	p->maxval = p->sp->geo.height;
-	p->mirror = m;
-
-	if (!sp_pal)
-		sp_pal = init_palette(d, p_spectr, p->maxval);
-	init_bg(d, p->bg->pix, p->sp->gc, p->bg->geo, sp_pal);
-
-	if (!sh_pal)
-		sh_pal = init_palette(d, p_shadow, p->maxval);
-	init_bg(d, p->shadow->pix, p->sp->gc, p->shadow->geo, sh_pal);
-
-	if (!wf_pal)
-		wf_pal = init_palette(d, p_waterfall, p->maxval);
-	p->palette = wf_pal;
 
 	XMapWindow(d, p->win);
 	
