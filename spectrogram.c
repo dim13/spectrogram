@@ -151,17 +151,21 @@ usage(void)
 }
 
 void
+blit(Display *d, Drawable p, GC gc, XRectangle r)
+{
+	XCopyArea(d, p, p, gc, 0, 0, r.width, r.height - 1, 0, 1);
+}
+
+void
 draw_panel(Display *d, struct panel *p)
 {
 	int i, v, x;
 
 	/* blit waterfall */
-	XCopyArea(d, p->wf->pix, p->wf->pix, p->wf->gc,
-		0, 0, p->wf->geo.width, p->wf->geo.height - 1, 0, 1);
-
+	blit(d, p->wf->pix, p->wf->gc, p->wf->geo);
 	/* blit shadow mask */
-	XCopyArea(d, p->shadow->mask, p->shadow->mask, p->shadow->gc,
-		0, 0, p->shadow->geo.width, p->shadow->geo.height - 1, 0, 1);
+	blit(d, p->shadow->mask, p->shadow->gc, p->shadow->geo);
+
 
 	/* clear spectrogram */
 	XSetForeground(d, p->sp->gc, p->palette[0]);
@@ -190,7 +194,7 @@ draw_panel(Display *d, struct panel *p)
 	}
 
 	/* copy mask to shadow mask */
-	XSetClipMask(d, p->shadow->gc, p->shadow->mask);
+	XSetClipMask(d, p->shadow->gc, p->bg->mask);
 	XCopyArea(d, p->bg->mask, p->shadow->mask, p->shadow->gc,
 		0, 0, p->bg->geo.width, p->bg->geo.height, 0, 0);
 	XSetClipMask(d, p->shadow->gc, None);
