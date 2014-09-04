@@ -456,13 +456,13 @@ main(int argc, char **argv)
 
 	XGetWindowAttributes(dsp, DefaultRootWindow(dsp), &wa);
 	width = round + HGAP;
-	height = factor * width;
-	if (fflag || width > wa.width || height > wa.height) {
+	if (fflag || width > wa.width) {
 		round = wa.width - HGAP;
 		width = wa.width;
-		height = wa.height;
-		fflag = 1;
 	}
+	height = factor * width;
+	if (height > wa.height)
+		height = wa.height;
 
 	sio = init_sio();
 
