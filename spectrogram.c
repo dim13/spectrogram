@@ -49,16 +49,22 @@ struct pixmap {
 
 struct spectrogram {
 	Window	win;
-	Pixmap	pix;
-	Pixmap	bg;
 	GC	gc;
-	Pixmap	shadow;
-	GC	shadowgc;
+
+	Pixmap	pix;		/* buffer */
+	Pixmap	bg;		/* main bg */
+	Pixmap	sbg;		/* shadow bg */
+
+	Pixmap	mask;		/* main mask */
+	GC	mgc;		/* main GC */
+
+	Pixmap	smask;		/* shadow mask */
+	GC	sgc;		/* shadow GC */
 };
 
 struct waterfall {
 	Window	win;
-	Pixmap	pix;
+	Pixmap	pix;		/* buffer */
 	GC	gc;
 	XRectangle geo;
 };
