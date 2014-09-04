@@ -56,18 +56,16 @@ struct spectrogram {
 	GC	shadowgc;
 };
 
-struct watterfall {
+struct waterfall {
 	Window	win;
 	Pixmap	pix;
 	GC	gc;
+	XRectangle geo;
 };
 
 struct	panel {
 	Window	win;		/* container */
-
-	Window	wf;		/* waterfall */
-	XRectangle w;
-	struct	pixmap wfbuf;
+	struct waterfall *wf;
 
 	Window	sp;		/* spectrogram */
 	XRectangle s;
@@ -179,8 +177,8 @@ draw_panel(Display *d, struct panel *p)
 	int i, v, x;
 
 	/* blit waterfall */
-	XCopyArea(d, p->wfbuf.pix, p->wfbuf.pix, p->wfbuf.gc,
-		0, 0, p->w.width, p->w.height - 1, 0, 1);
+	XCopyArea(d, p->wf->pix, p->wf->pix, p->wf->gc,
+		0, 0, p->wf->geo.width, p->wf->geo.height - 1, 0, 1);
 
 	/* blit shadow mask */
 	XCopyArea(d, p->shmask.pix, p->shmask.pix, p->shmask.gc,
@@ -202,8 +200,8 @@ draw_panel(Display *d, struct panel *p)
 		x = p->mirror ? p->s.width - i - 1 : i;
 
 		/* draw waterfall */
-		XSetForeground(d, p->wfbuf.gc, p->palette[v]);
-		XDrawPoint(d, p->wfbuf.pix, p->wfbuf.gc, x, 0);
+		XSetForeground(d, p->wf->gc, p->palette[v]);
+		XDrawPoint(d, p->wf->pix, p->wf->gc, x, 0);
 
 		/* draw spectrogram */
 		XSetForeground(d, p->spmask.gc, 1);
@@ -235,11 +233,11 @@ flip_panel(Display *d, struct panel *p)
 	/* flip spectrogram */
 	XSetClipMask(d, p->spbuf.gc, None);
 	XCopyArea(d, p->spbuf.pix, p->sp, p->spbuf.gc, 0, 0,
-		p->w.width, p->w.height, 0, 0);
+		p->s.width, p->s.height, 0, 0);
 
 	/* flip waterfall */
-	XCopyArea(d, p->wfbuf.pix, p->wf, p->wfbuf.gc, 0, 0,
-		p->w.width, p->w.height, 0, 0);
+	XCopyArea(d, p->wf->pix, p->wf->win, p->wf->gc, 0, 0,
+		p->wf->geo.width, p->wf->geo.height, 0, 0);
 }
 
 void
@@ -247,6 +245,32 @@ init_pixmap(struct pixmap *p, Display *d, Drawable dr, XRectangle r, int pl)
 {
 	p->pix = XCreatePixmap(d, dr, r.width, r.height, pl);
 	p->gc = XCreateGC(d, p->pix, 0, NULL);	
+}
+
+struct waterfall *
+init_waterfall(Display *d, Drawable parent, XRectangle r)
+{
+	struct waterfall *p;
+	int scr = DefaultScreen(d);
+	int white = WhitePixel(d, scr);
+	int black = BlackPixel(d, scr);
+	int planes = DisplayPlanes(d, scr);
+
+	p = malloc(sizeof(struct waterfall));
+	assert(p);
+
+	p->win = XCreateSimpleWindow(d, parent, r.x, r.y,
+		r.width, r.height, 0, white, black);
+	p->pix = XCreatePixmap(d, p->win, r.width, r.height, planes);
+	p->gc = XCreateGC(d, p->pix, 0, NULL);	
+	p->geo = r;
+
+	XSetForeground(d, p->gc, black);
+	XFillRectangle(d, p->pix, p->gc, 0, 0, r.width, r.height);
+
+	XMapWindow(d, p->win);
+	
+	return p;
 }
 
 struct panel *
@@ -258,6 +282,7 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 	unsigned long white = WhitePixel(d, scr);
 	unsigned long black = BlackPixel(d, scr);
 	unsigned long gray = hslcolor(d, hsl_gray);
+	XRectangle geo;
 
 	p = malloc(sizeof(struct panel));
 	assert(p);
@@ -289,15 +314,16 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 	init_pixmap(&p->shmask, d, p->sp, p->s, 1);
 
 	/* waterfall window and double buffer */
-	p->w.x = 0;
-	p->w.y = p->s.height + VGAP;
-	p->w.width = r.width;
-	p->w.height = r.height - p->w.y;
+	geo.x = 0;
+	geo.y = p->s.height + VGAP;
+	geo.width = r.width;
+	geo.height = r.height - p->s.y;
+	p->wf = init_waterfall(d, p->win, geo);
 
-	p->wf = XCreateSimpleWindow(d, p->win, p->w.x, p->w.y,
-		p->w.width, p->w.height, 0, white, black);
+	//p->wf = XCreateSimpleWindow(d, p->win, p->w.x, p->w.y,
+	//	p->w.width, p->w.height, 0, white, black);
 
-	init_pixmap(&p->wfbuf, d, p->wf, p->w, planes);
+	//init_pixmap(&p->wfbuf, d, p->wf, p->w, planes);
 
 	p->maxval = p->s.height;
 	p->mirror = m;
@@ -314,17 +340,12 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 		wf_pal = init_palette(d, p_waterfall, p->maxval);
 	p->palette = wf_pal;
 
-	/* clear waterfall */
-	XSetForeground(d, p->wfbuf.gc, p->palette[0]);
-	XFillRectangle(d, p->wfbuf.pix, p->wfbuf.gc,
-		0, 0, p->w.width, p->w.height);
 
 	/* clear shadow mask */
 	XSetForeground(d, p->shmask.gc, 0);
 	XFillRectangle(d, p->shmask.pix, p->shmask.gc,
 		0, 0, p->s.width, p->s.height);
 
-	XMapWindow(d, p->wf);
 	XMapWindow(d, p->sp);
 	XMapWindow(d, p->win);
 	
@@ -349,8 +370,8 @@ free_panel(Display *d, struct panel *p)
 	XFreePixmap(d, p->spbuf.pix);
 	XFreeGC(d, p->spbuf.gc);
 
-	XFreePixmap(d, p->wfbuf.pix);
-	XFreeGC(d, p->wfbuf.gc);
+	XFreePixmap(d, p->wf->pix);
+	XFreeGC(d, p->wf->gc);
 
 	free(p->data);
 	free(p);
