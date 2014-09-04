@@ -297,9 +297,7 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 {
 	struct panel *p;
 	int scr = DefaultScreen(d);
-	int planes = DisplayPlanes(d, scr);
 	unsigned long white = WhitePixel(d, scr);
-	unsigned long black = BlackPixel(d, scr);
 	unsigned long gray = hslcolor(d, hsl_gray);
 	unsigned int maxval = r.height / 4;
 	XRectangle geo;
