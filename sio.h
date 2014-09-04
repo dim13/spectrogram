@@ -21,8 +21,8 @@
 struct sio;
 
 __BEGIN_DECLS
-struct sio *init_sio(unsigned int);
-int16_t *read_sio(struct sio *);
+struct sio *init_sio(void);
+int16_t *read_sio(struct sio *, unsigned int);
 void free_sio(struct sio *);
 __END_DECLS
 

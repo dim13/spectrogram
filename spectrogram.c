@@ -464,7 +464,7 @@ main(int argc, char **argv)
 		fflag = 1;
 	}
 
-	sio = init_sio(round);
+	sio = init_sio();
 
 	scr = DefaultScreen(dsp);
 	white = WhitePixel(dsp, scr);
@@ -518,7 +518,7 @@ main(int argc, char **argv)
 	}
 
 	while (!die) {
-		buffer = read_sio(sio);
+		buffer = read_sio(sio, round);
 
 		exec_fft(fft, buffer, left->data, FFT_LEFT);
 		exec_fft(fft, buffer, right->data, FFT_RIGHT);

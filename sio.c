@@ -25,21 +25,19 @@
 #define STEREO	2
 #define BITS	16
 #define SIGNED	1
-#define FPS	24
+#define FPS	25
 
 struct sio {
 	struct	sio_hdl *sio;
 	struct	sio_par par;
 	int16_t	*buffer;
-	size_t	bufsz;
-	size_t	round;
+	unsigned int samples;
 };
 
 struct sio *
-init_sio(unsigned int round)
+init_sio(void)
 {
 	struct sio *sio;
-	size_t bufsz;
 
 	sio = malloc(sizeof(struct sio));
 	assert(sio);
@@ -66,14 +64,9 @@ init_sio(unsigned int round)
 	    sio->par.sig != SIGNED)
 		errx(1, "unsupported audio params");
 
-	sio->round = round;
-
-	bufsz = sio->par.rate / FPS;		/* 24 pictures/second */
-	bufsz -= bufsz % sio->par.round;	/* round to block size */
-	while (bufsz < sio->round)		/* not less than block size */
-		bufsz += sio->par.round;
-	sio->bufsz = bufsz * sio->par.rchan * sizeof(int16_t);
-	sio->buffer = malloc(sio->bufsz);
+	sio->samples = sio->par.rate / FPS;
+	sio->samples -= sio->samples % sio->par.round;
+	sio->buffer = calloc(sio->samples * sio->par.rchan, sizeof(int16_t));
 	assert(sio->buffer);
 
 	sio_start(sio->sio);
@@ -81,27 +74,39 @@ init_sio(unsigned int round)
 	return sio;
 }
 
-int16_t *
-read_sio(struct sio *sio)
+unsigned int
+max_samples_sio(struct sio *sio)
 {
-	int done = 0;
-	char *buffer = (char *)sio->buffer;
-	size_t sz = sio->bufsz;
-	size_t roundsz = sio->round * sio->par.rchan * sizeof(int16_t);
+	/*
+	 * maximal number of samples we're willing to provide
+	 * with 1920 at 25 fps and 48000 Hz or
+	 * with 1764 at 25 fps and 44100 Hz it shall fit on most screens
+	 */
+	return sio->samples;
+}
 
-	do {
-		done = sio_read(sio->sio, buffer, sz);
+int16_t *
+read_sio(struct sio *sio, unsigned int n)
+{
+	int done;
+	char *buffer = (char *)sio->buffer;
+	size_t bufsz = sio->samples * sio->par.rchan * sizeof(int16_t);
+	size_t rndsz = n * sio->par.rchan * sizeof(int16_t);
+
+	if (rndsz > bufsz)
+		rndsz = bufsz;
+
+	for (done = 0; bufsz > 0; buffer += done, bufsz -= done) {
+		done = sio_read(sio->sio, buffer, bufsz);
 		if (sio_eof(sio->sio))
 			errx(1, "SIO EOF");
-		buffer += done;
-		sz -= done;
-	} while (sz);
+	}
 
 	/*
 	 * return a pointer to the latest ROUND samples (the most recent
 	 * ones) to minimize latency between picture and sound
 	 */
-	return (int16_t *)(buffer - roundsz);
+	return (int16_t *)(buffer - rndsz);
 }
 
 void

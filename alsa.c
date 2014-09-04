@@ -34,7 +34,7 @@ struct sio {
 };
 
 struct sio *
-init_sio(unsigned int round)
+init_sio(void)
 {
 	struct sio *sio;
 	int rc;
@@ -52,20 +52,19 @@ init_sio(unsigned int round)
 		SND_PCM_ACCESS_RW_INTERLEAVED);
 	snd_pcm_hw_params_set_format(sio->handle, sio->params,
 		SND_PCM_FORMAT_S16_LE);
-	snd_pcm_hw_params_set_rate(sio->handle, sio->params, RATE, 0);
 	snd_pcm_hw_params_set_channels(sio->handle, sio->params, STEREO);
-	snd_pcm_hw_params_set_period_size(sio->handle, sio->params, round, 0);
+	//snd_pcm_hw_params_set_rate(sio->handle, sio->params, RATE, 0);
+	//snd_pcm_hw_params_set_period_size(sio->handle, sio->params, round, 0);
 
 	rc = snd_pcm_hw_params(sio->handle, sio->params);
 	if (rc < 0)
 		errx(1, "unable to set hw parameters: %s", snd_strerror(rc));
 	
+	/* FIXME */
 	snd_pcm_hw_params_get_period_size(sio->params, &sio->round, NULL);
+	//snd_pcm_hw_params_get_rate(sio->handle, sio->params, &sio->rate, 0);
 	snd_pcm_hw_params_free(sio->params);
 	snd_pcm_prepare(sio->handle);
-
-	if (sio->round != round)
-		warnx("requested %d frames, got %d", round, sio->round);
 
 	sio->bufsz = sio->round * STEREO * sizeof(int16_t);
 	sio->buffer = malloc(sio->bufsz);
@@ -75,7 +74,7 @@ init_sio(unsigned int round)
 }
 
 int16_t *
-read_sio(struct sio *sio)
+read_sio(struct sio *sio, unsigned int n)
 {
 	int rc;
 
