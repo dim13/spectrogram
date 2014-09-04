@@ -85,6 +85,9 @@ read_sio(struct sio *sio, unsigned int n)
 {
 	snd_pcm_sframes_t rc;
 
+	if (n > sio->samples)
+		n = sio->samples;
+
 	rc = snd_pcm_readi(sio->handle, sio->buffer, sio->samples);
 	if (rc != sio->samples) {
 		warnx("audio read error: %s", snd_strerror(rc));
