@@ -523,20 +523,6 @@ main(int argc, char **argv)
 	}
 
 	while (!die) {
-		buffer = read_sio(sio, round);
-
-		exec_fft(fft, buffer, left->data, FFT_LEFT);
-		exec_fft(fft, buffer, right->data, FFT_RIGHT);
-
-		draw_panel(dsp, left);
-		draw_panel(dsp, right);
-
-		flip_panel(dsp, left);
-		flip_panel(dsp, right);
-
-		if (fflag)
-			XResetScreenSaver(dsp);
-
 		while (XPending(dsp)) {
 			XEvent ev;
 
@@ -572,6 +558,20 @@ main(int argc, char **argv)
 				break;
 			}
 		}
+
+		buffer = read_sio(sio, round);
+
+		exec_fft(fft, buffer, left->data, FFT_LEFT);
+		exec_fft(fft, buffer, right->data, FFT_RIGHT);
+
+		draw_panel(dsp, left);
+		draw_panel(dsp, right);
+
+		flip_panel(dsp, left);
+		flip_panel(dsp, right);
+
+		if (fflag)
+			XResetScreenSaver(dsp);
 	}
 
 	free_sio(sio);
