@@ -18,14 +18,41 @@
 #ifndef _Spectrogram_h
 #define _Spectrogram_h
 
-/* Spectrogram Widget */
-/* Parameters:
- *	Name	Class	RepType	Default Value
- */
+#include <X11/Intrinsic.h>
 
-typedef struct _SpectrogramRec *SpectrogramWidget;
+/****************************************************************
+ *
+ * Spectrogram widget
+ *
+ ****************************************************************/
+
+/* Resources:
+
+ Name		     Class		RepType		Default Value
+ ----		     -----		-------		-------------
+ background	     Background		Pixel		XtDefaultBackground
+ border		     BorderColor	Pixel		XtDefaultForeground
+ borderWidth	     BorderWidth	Dimension	1
+ destroyCallback     Callback		Pointer		NULL
+ height		     Height		Dimension	0
+ mappedWhenManaged   MappedWhenManaged	Boolean		True
+ sensitive	     Sensitive		Boolean		True
+ width		     Width		Dimension	0
+ x		     Position		Position	0
+ y		     Position		Position	0
+
+*/
+
+/* define any special resource names here that are not in <X11/StringDefs.h> */
+#define XtNspectrogramResource "spectrogramResource"
+
+#define XtCSpectrogramResource "SpectrogramResource"
+
+/* declare specific SpectrogramWidget class and instance datatypes */
 typedef struct _SpectrogramClassRec *SpectrogramWidgetClass;
+typedef struct _SpectrogramRec *SpectrogramWidget;
 
+/* declare the class constant */
 extern WidgetClass spectrogramWidgetClass;
 
 #endif

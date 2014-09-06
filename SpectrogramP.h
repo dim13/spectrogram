@@ -20,25 +20,33 @@
 
 #include "Spectrogram.h"
 
-typedef struct {
-	int dummy;
-} SpectrogramPart;
+/* include superclass private header file */
+#include <X11/CoreP.h>
 
-typedef struct _SpectrogramRec {
-	int dummy;
-} SpectrogramRec;
+/* define unique representation types not found in <X11/StringDefs.h> */
+#define XtRSpectrogramResource "SpectrogramResource"
 
 typedef struct {
-	int dummy;
+	XtPointer extension;
 } SpectrogramClassPart;
 
 typedef struct _SpectrogramClassRec {
-	int dummy;
+	CoreClassPart		core_class;
+	SpectrogramClassPart	spectrogram_class;
 } SpectrogramClassRec;
 
 extern SpectrogramClassRec spectrogramClassRec;
 
-__BEGIN_DECLS
-__END_DECLS
+typedef struct {
+	/* resources */
+	char* resource;
+	/* private */
+	char *private;
+} SpectrogramPart;
+
+typedef struct _SpectrogramRec {
+	CorePart		core;
+	SpectrogramPart	spectrogram;
+} SpectrogramRec;
 
 #endif
