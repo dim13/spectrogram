@@ -21,13 +21,13 @@
 #include "SpectrogramP.h"
 
 /* Class Methods */
-static void SpectrogramInitialize(Widget, Widget, ArgList, Cardinal *);
+static void Initialize(Widget, Widget, ArgList, Cardinal *);
 
 /* Prototypes */
-static Bool SpectrogramFunction(SpectrogramWidget, int, int, Bool);
+static Bool Function(SpectrogramWidget, int, int, Bool);
 
 /* Actions */
-static void SpectrogramAction(Widget, XEvent *, String *, Cardinal *);
+static void Action(Widget, XEvent *, String *, Cardinal *);
 
 /* Initialization */
 #define offset(field) XtOffsetOf(SpectrogramRec, spectrogram.field)
@@ -48,7 +48,7 @@ static XtActionsRec actions[] =
 {
 	{
 		"spectrogram",			/* name */
-		SpectrogramAction		/* procedure */
+		Action				/* procedure */
 	},
 };
 
@@ -64,7 +64,7 @@ SpectrogramClassRec spectrogramClassRec = {
 		NULL,				/* class_initialize */
 		NULL,				/* class_part_initialize */
 		False,				/* class_inited */
-		SpectrogramInitialize,		/* initialize */
+		Initialize,			/* initialize */
 		NULL,				/* initialize_hook */
 		XtInheritRealize,		/* realize */
 		actions,			/* actions */
@@ -103,7 +103,7 @@ WidgetClass spectrogramWidgetClass = (WidgetClass)&spectrogramClassRec;
 
 /*
  * Function:
- *	SpectrogramInitialize
+ *	Initialize
  *
  * Parameters:
  *	request - requested widget
@@ -116,7 +116,7 @@ WidgetClass spectrogramWidgetClass = (WidgetClass)&spectrogramClassRec;
  */
 /* ARGSUSED */
 static void
-SpectrogramInitialize(Widget request, Widget w, ArgList args, Cardinal *num_args)
+Initialize(Widget request, Widget w, ArgList args, Cardinal *num_args)
 {
 	SpectrogramWidget 	sw = (SpectrogramWidget)w;
 
@@ -125,7 +125,7 @@ SpectrogramInitialize(Widget request, Widget w, ArgList args, Cardinal *num_args
 
 /*
  * Function:
- *	SpectrogramFunction
+ *	Function
  *
  * Parameters:
  *	sw    - spectrogram widget
@@ -141,14 +141,14 @@ SpectrogramInitialize(Widget request, Widget w, ArgList args, Cardinal *num_args
  */
 /* ARGSUSED */
 static 		Bool
-SpectrogramFunction(SpectrogramWidget sw, int x, int y, Bool force)
+Function(SpectrogramWidget sw, int x, int y, Bool force)
 {
 	return (force);
 }
 
 /*
  * Function:
- *	SpectrogramAction
+ *	Action
  *
  * Parameters:
  *	w	   - spectrogram widget
@@ -161,6 +161,6 @@ SpectrogramFunction(SpectrogramWidget sw, int x, int y, Bool force)
  */
 /* ARGSUSED */
 static void
-SpectrogramAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
+Action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
 }
