@@ -33,13 +33,13 @@ static void SpectrogramAction(Widget, XEvent *, String *, Cardinal *);
 #define offset(field) XtOffsetOf(SpectrogramRec, spectrogram.field)
 static XtResource resources[] = {
 	{
-		XtNspectrogramResource,	/* name */
-		XtCSpectrogramResource,	/* class */
-		XtRSpectrogramResource,	/* type */
-		sizeof(char *),		/* size */
-		offset(resource),	/* offset */
-		XtRString,		/* default_type */
-		(XtPointer) "default"	/* default_addr */
+		XtNspectrogramResource,		/* name */
+		XtCSpectrogramResource,		/* class */
+		XtRSpectrogramResource,		/* type */
+		sizeof(char *),			/* size */
+		offset(resource),		/* offset */
+		XtRString,			/* default_type */
+		(XtPointer) "default"		/* default_addr */
 	},
 };
 #undef offset
@@ -47,7 +47,7 @@ static XtResource resources[] = {
 static XtActionsRec actions[] =
 {
 	{
-		"spectrogram",		/* name */
+		"spectrogram",			/* name */
 		SpectrogramAction		/* procedure */
 	},
 };
