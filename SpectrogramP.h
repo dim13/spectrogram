@@ -15,3 +15,30 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#ifndef _SpectrogramP_h
+#define _SpectrogramP_h
+
+#include "Spectrogram.h"
+
+typedef struct {
+	int dummy;
+} SpectrogramPart;
+
+typedef struct _SpectrogramRec {
+	int dummy;
+} SpectrogramRec;
+
+typedef struct {
+	int dummy;
+} SpectrogramClassPart;
+
+typedef struct _SpectrogramClassRec {
+	int dummy;
+} SpectrogramClassRec;
+
+extern SpectrogramClassRec spectrogramClassRec;
+
+__BEGIN_DECLS
+__END_DECLS
+
+#endif

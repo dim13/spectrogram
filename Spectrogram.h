@@ -15,3 +15,17 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#ifndef _Spectrogram_h
+#define _Spectrogram_h
+
+/* Spectrogram Widget */
+/* Parameters:
+ *	Name	Class	RepType	Default Value
+ */
+
+typedef struct _SpectrogramRec *SpectrogramWidget;
+typedef struct _SpectrogramClassRec *SpectrogramWidgetClass;
+
+extern WidgetClass spectrogramWidgetClass;
+
+#endif
