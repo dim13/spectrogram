@@ -45,7 +45,6 @@
 
 /* define any special resource names here that are not in <X11/StringDefs.h> */
 #define XtNspectrogramResource "spectrogramResource"
-
 #define XtCSpectrogramResource "SpectrogramResource"
 
 /* declare specific SpectrogramWidget class and instance datatypes */

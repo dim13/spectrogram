@@ -97,7 +97,7 @@ SpectrogramClassRec spectrogramClassRec = {
 	}
 };
 
-WidgetClass spectrogramWidgetClass = (WidgetClass) & spectrogramClassRec;
+WidgetClass spectrogramWidgetClass = (WidgetClass)&spectrogramClassRec;
 
 /* Implementation */
 
@@ -116,11 +116,11 @@ WidgetClass spectrogramWidgetClass = (WidgetClass) & spectrogramClassRec;
  */
 /* ARGSUSED */
 static void
-SpectrogramInitialize(Widget request, Widget w, ArgList args, Cardinal * num_args)
+SpectrogramInitialize(Widget request, Widget w, ArgList args, Cardinal *num_args)
 {
-	SpectrogramWidget 	tw = (SpectrogramWidget) w;
+	SpectrogramWidget 	sw = (SpectrogramWidget)w;
 
-	tw->spectrogram.private = NULL;
+	sw->spectrogram.private = NULL;
 }
 
 /*
@@ -128,7 +128,7 @@ SpectrogramInitialize(Widget request, Widget w, ArgList args, Cardinal * num_arg
  *	SpectrogramFunction
  *
  * Parameters:
- *	tw    - spectrogram widget
+ *	sw    - spectrogram widget
  *	x     - x coordinate
  *	y     - y coordinate
  *	force - force action
@@ -141,7 +141,7 @@ SpectrogramInitialize(Widget request, Widget w, ArgList args, Cardinal * num_arg
  */
 /* ARGSUSED */
 static 		Bool
-SpectrogramFunction(SpectrogramWidget tw, int x, int y, Bool force)
+SpectrogramFunction(SpectrogramWidget sw, int x, int y, Bool force)
 {
 	return (force);
 }
@@ -161,6 +161,6 @@ SpectrogramFunction(SpectrogramWidget tw, int x, int y, Bool force)
  */
 /* ARGSUSED */
 static void
-SpectrogramAction(Widget w, XEvent * event, String * params, Cardinal * num_params)
+SpectrogramAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
 }

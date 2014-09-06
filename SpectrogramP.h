@@ -38,15 +38,13 @@ typedef struct _SpectrogramClassRec {
 extern SpectrogramClassRec spectrogramClassRec;
 
 typedef struct {
-	/* resources */
-	char* resource;
-	/* private */
-	char *private;
+	char			*resource;
+	char			*private;
 } SpectrogramPart;
 
 typedef struct _SpectrogramRec {
 	CorePart		core;
-	SpectrogramPart	spectrogram;
+	SpectrogramPart		spectrogram;
 } SpectrogramRec;
 
 #endif

@@ -2,9 +2,9 @@
 
 VERSION=2.0
 PROG=	spectrogram
-SRCS=	spectrogram.c sio.c fft.c cms.c
+SRCS=	spectrogram.c sio.c fft.c cms.c Spectrogram.c
 BINDIR=	/usr/local/bin
-HEADERS=sio.h fft.h cms.h
+HEADERS=sio.h fft.h cms.h Spectrogram.h SpectrogramP.h
 LIBS=	fftw3 x11 xaw7
 PCCF!=	pkg-config --cflags ${LIBS}
 PCLA!=	pkg-config --libs ${LIBS}
