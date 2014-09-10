@@ -125,7 +125,6 @@ init_background(Display *d, Drawable parent, XRectangle r)
 	struct background *p;
 	int scr = DefaultScreen(d);
 	int planes = DisplayPlanes(d, scr);
-	int black = BlackPixel(d, scr);
 
 	p = malloc(sizeof(struct subwin));
 	assert(p);
@@ -135,9 +134,7 @@ init_background(Display *d, Drawable parent, XRectangle r)
 	p->gc = XCreateGC(d, p->mask, 0, NULL);	
 	p->geo = r;
 
-	/* clear */
-	XSetForeground(d, p->gc, black);
-	XFillRectangle(d, p->mask, p->gc, 0, 0, r.width, r.height);
+	clear(d, p->mask, p->gc, p->geo);
 
 	return p;
 }
@@ -160,9 +157,7 @@ init_subwin(Display *d, Drawable parent, XRectangle r)
 	p->gc = XCreateGC(d, p->pix, 0, NULL);	
 	p->geo = r;
 
-	/* clear */
-	XSetForeground(d, p->gc, black);
-	XFillRectangle(d, p->pix, p->gc, 0, 0, r.width, r.height);
+	clear(d, p->pix, p->gc, p->geo);
 
 	XMapWindow(d, p->win);
 	
