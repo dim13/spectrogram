@@ -25,7 +25,6 @@
 #include <unistd.h>
 
 #include "aux.h"
-#include "cms.h"
 #include "fft.h"
 #include "sio.h"
 #include "widget.h"
@@ -59,8 +58,6 @@ main(int argc, char **argv)
 	Display		*dsp;
 	Window		win, container;
 	Atom		delwin;
-	Atom		nhints;
-	XSizeHints	*hints;
 	XClassHint	*class;
 	XWindowAttributes wa;
 	XRectangle	geo;
@@ -151,15 +148,7 @@ main(int argc, char **argv)
 	XSetWMProtocols(dsp, win, &delwin, 1);
 
 	/* set minimal size */
-	nhints = XInternAtom(dsp, "WM_NORMAL_HINTS", 0);
-	hints = XAllocSizeHints();
-	hints->flags = PMinSize|PMaxSize;
-	hints->min_width = width;
-	hints->min_height = height;
-	hints->max_width = maxwidth;
-	hints->max_height = maxheight;
-	XSetWMSizeHints(dsp, win, hints, nhints);
-	XFree(hints);
+	restrictsize(dsp, win, width, height, maxwidth, maxheight);
 
 	container = XCreateSimpleWindow(dsp, win,
 		0, 0, width, height, 0, white, black);

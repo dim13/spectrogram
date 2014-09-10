@@ -16,6 +16,7 @@
  */
 
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 #include <string.h>
 
@@ -75,4 +76,21 @@ move(Display *d, Window win, Window container)
 		dy = 0;
 
 	XMoveWindow(d, container, dx, dy);
+}
+
+void
+restrictsize(Display *d, Window win, int minw, int minh, int maxw, int maxh)
+{
+	Atom		nhints;
+	XSizeHints	*hints;
+
+	nhints = XInternAtom(d, "WM_NORMAL_HINTS", 0);
+	hints = XAllocSizeHints();
+	hints->flags = PMinSize|PMaxSize;
+	hints->min_width = minw;
+	hints->min_height = minh;
+	hints->max_width = maxw;
+	hints->max_height = maxh;
+	XSetWMSizeHints(d, win, hints, nhints);
+	XFree(hints);
 }
