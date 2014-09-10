@@ -35,6 +35,8 @@ static double	*sq;
 static double *
 hamming(size_t n)
 {
+	double	alpha = 0.53836;
+	double	beta = 1.0 - alpha;
 	double	*p;
 	int	i;
 
@@ -42,7 +44,7 @@ hamming(size_t n)
 	assert(p);
 
 	for (i = 0; i < n; i++) {
-		p[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
+		p[i] = alpha - beta * cos(2 * M_PI * i / (n - 1));
 		p[i] /= INT16_MAX;
 	}
 
