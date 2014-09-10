@@ -59,3 +59,20 @@ hide_ptr(Display *d, Window win)
 		XFreePixmap(d, bm);
 	XFreeColors(d, cmap, &black.pixel, 1, 0);
 }
+
+void
+move(Display *d, Window win, Window container)
+{
+	XWindowAttributes wa, wac;
+	int dx, dy;
+
+	XGetWindowAttributes(d, win, &wa);
+	XGetWindowAttributes(d, container, &wac);
+
+	dx = (wa.width - wac.width) / 2;
+	dy = (wa.height - wac.height) / 2;
+	if (dy < 0)
+		dy = 0;
+
+	XMoveWindow(d, container, dx, dy);
+}

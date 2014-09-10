@@ -376,25 +376,6 @@ free_panel(Display *d, struct panel *p)
 	free(p);
 }
 
-int
-move(Display *dsp, Window win, Window container)
-{
-	int dx, dy;
-	XWindowAttributes wa, wac;
-
-	XGetWindowAttributes(dsp, win, &wa);
-	XGetWindowAttributes(dsp, container, &wac);
-
-	dx = (wa.width - wac.width) / 2;
-	dy = (wa.height - wac.height) / 2;
-	if (dy < 0)
-		dy = 0;
-
-	XMoveWindow(dsp, container, dx, dy);
-
-	return 0;
-}
-
 int 
 main(int argc, char **argv)
 {

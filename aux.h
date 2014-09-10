@@ -21,6 +21,7 @@
 __BEGIN_DECLS
 void fullscreen(Display *, Window);
 void hide_ptr(Display *, Window);
+void move(Display *, Window, Window);
 __END_DECLS
 
 #endif
