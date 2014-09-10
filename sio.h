@@ -20,7 +20,7 @@
 
 __BEGIN_DECLS
 int init_sio(void);
-int16_t *read_sio(size_t);
+void read_sio(double *, double *, size_t);
 unsigned int max_samples_sio(void);
 void free_sio(void);
 __END_DECLS

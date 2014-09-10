@@ -84,17 +84,17 @@ init_fft(size_t n)
 }
 
 int
-exec_fft(int16_t *data, double *out, enum fft_chan chan)
+exec_fft(double *io)
 {
 	int	i;
 
 	for (i = 0; i < fft.n; i++)
-		fft.in[i] = fft.window[i] * data[2 * i + chan];
+		fft.in[i] = fft.window[i] * io[i];
 
 	fftw_execute(fft.plan);
 
 	for (i = 0; i < fft.n / 2; i++)
-		out[i] = fft.sq[i] * cabs(fft.out[i]);
+		io[i] = fft.sq[i] * cabs(fft.out[i]);
 
 	return 0;
 }

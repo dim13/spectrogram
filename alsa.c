@@ -31,6 +31,11 @@ static snd_pcm_hw_params_t *par;
 static int16_t *buffer;
 static unsigned int samples;
 
+struct data {
+	int16_t left;
+	int16_t right;
+};
+
 int
 init_sio(void)
 {
@@ -76,10 +81,12 @@ max_samples_sio(void)
 	return samples;
 }
 
-int16_t *
-read_sio(size_t n)
+void
+read_sio(double *left, double *right, size_t n)
 {
 	snd_pcm_sframes_t rc;
+	struct data *data;
+	int i;
 
 	if (n > samples)
 		n = samples;
@@ -91,7 +98,12 @@ read_sio(size_t n)
 			snd_pcm_prepare(hdl);
 	}
 
-	return buffer + samples - n;
+	data = (struct data *)&buffer[samples - n];
+
+	for (i = 0; i < n; i++) {
+		left[i] = data[i].left;
+		right[i] = data[i].right;
+	}
 }
 
 void

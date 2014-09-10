@@ -32,6 +32,11 @@ static struct	sio_par par;
 static int16_t	*buffer;
 static unsigned int samples;
 
+struct data {
+	int16_t left;
+	int16_t right;
+};
+
 int
 init_sio(void)
 {
@@ -78,13 +83,14 @@ max_samples_sio(void)
 	return samples;
 }
 
-int16_t *
-read_sio(size_t n)
+void
+read_sio(double *left, double *right, size_t n)
 {
-	int done;
+	int done, i;
 	char *p = (char *)buffer;
 	size_t bufsz = samples * par.rchan * sizeof(int16_t);
 	size_t rndsz = n * par.rchan * sizeof(int16_t);
+	struct data *data;
 
 	if (rndsz > bufsz)
 		rndsz = bufsz;
@@ -99,7 +105,12 @@ read_sio(size_t n)
 	 * return a pointer to the latest ROUND samples (the most recent
 	 * ones) to minimize latency between picture and sound
 	 */
-	return (int16_t *)(p - rndsz);
+	data = (struct data *)(p - rndsz);
+
+	for (i = 0; i < n; i++) {
+		left[i] = data[i].left;
+		right[i] = data[i].right;
+	}
 }
 
 void

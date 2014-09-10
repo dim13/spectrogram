@@ -303,7 +303,7 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 	p = malloc(sizeof(struct panel));
 	assert(p);
 
-	p->data = calloc(r.width, sizeof(double));
+	p->data = calloc(2 * r.width, sizeof(double));
 	assert(p->data);
 
 	/* main panel window */
@@ -449,7 +449,6 @@ main(int argc, char **argv)
 	int		scr;
 
 	struct		panel *left, *right;
-	int16_t		*buffer;
 
 	int		dflag = 0;	/* daemonize */
 	int		fflag = 0;	/* fullscreen */
@@ -607,10 +606,10 @@ main(int argc, char **argv)
 			}
 		}
 
-		buffer = read_sio(round);
+		read_sio(left->data, right->data, round);
 
-		exec_fft(buffer, left->data, FFT_LEFT);
-		exec_fft(buffer, right->data, FFT_RIGHT);
+		exec_fft(left->data);
+		exec_fft(right->data);
 
 		draw_panel(dsp, left);
 		draw_panel(dsp, right);
