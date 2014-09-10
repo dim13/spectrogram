@@ -20,31 +20,48 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <complex.h>		/* must be prior fftw3 */
 #include <fftw3.h>
 
 #include "fft.h"
 
 struct fft {
-	fftw_plan	plan;
+	fftw_plan plan;
 	double	*in;
-	double	*out;
+	fftw_complex *out;
 	size_t	n;
 	double	*window;
+	double	*sq;
 };
 
 static double *
 hamming(size_t n)
 {
-	double	*w;
+	double	*p;
 	int	i;
 
-	w = calloc(n, sizeof(double));
-	assert(w);
+	p = calloc(n, sizeof(double));
+	assert(p);
 
 	for (i = 0; i < n; i++)
-		w[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
+		p[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
 
-	return w;
+	return p;
+}
+
+static double *
+squares(size_t n)
+{
+	double	*p;
+	int	i;
+
+	p = calloc(n, sizeof(double));
+	assert(p);
+
+	for (i = 0; i < n; i++)
+		p[i] = sqrt(i + 1);
+
+	return p;
 }
 
 struct fft *
@@ -61,8 +78,9 @@ init_fft(size_t n)
 	assert(p->in && p->out);
 
 	p->window = hamming(p->n);
-	p->plan = fftw_plan_r2r_1d(p->n, p->in, p->out,
-		FFTW_R2HC, FFTW_MEASURE);
+	p->sq = squares(p->n);
+
+	p->plan = fftw_plan_dft_r2c_1d(p->n, p->in, p->out, FFTW_MEASURE);
 
 	return p;
 }
@@ -78,9 +96,8 @@ exec_fft(struct fft *p, int16_t *data, double *out, enum fft_chan chan)
 
 	fftw_execute(p->plan);
 
-	for (i = 1; i < p->n / 2; i++)
-		out[i - 1] = sqrt(i * (pow(p->out[i], 2)
-			+ pow(p->out[p->n - i], 2)));
+	for (i = 0; i < p->n / 2; i++)
+		out[i] = p->sq[i] * cabs(p->out[i]);
 
 	return 0;
 }
@@ -91,5 +108,6 @@ free_fft(struct fft *p)
 	fftw_free(p->in);
 	fftw_free(p->out);
 	free(p->window);
+	free(p->sq);
 	free(p);
 }
