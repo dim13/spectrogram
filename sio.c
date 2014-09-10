@@ -81,7 +81,7 @@ max_samples_sio(void)
 }
 
 int16_t *
-read_sio(unsigned int n)
+read_sio(size_t n)
 {
 	int done;
 	char *buffer = (char *)sio.buffer;
