@@ -18,6 +18,16 @@
 #ifndef __CMS_H
 #define __CMS_H
 
+/*
+struct hsl {
+	double h, s, l;
+};
+
+struct palette {
+	struct hsl from, to;
+};
+ */
+
 __BEGIN_DECLS
 void hsv2rgb(
 	unsigned short *r, unsigned short *g, unsigned short *b,

@@ -2,7 +2,7 @@
 
 VERSION=2.0
 PROG=	spectrogram
-SRCS=	spectrogram.c sio.c fft.c cms.c aux.c
+SRCS=	spectrogram.c sio.c fft.c cms.c aux.c widget.c
 BINDIR=	/usr/local/bin
 HEADERS=sio.h fft.h cms.h aux.h
 LIBS=	fftw3 x11
