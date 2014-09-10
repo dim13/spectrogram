@@ -26,8 +26,8 @@
 #include "fft.h"
 
 static fftw_plan plan;
-static double	*in;
 static fftw_complex *out;
+static double	*in;
 static size_t	sz;
 static double	*window;
 static double	*sq;
@@ -65,17 +65,16 @@ squares(size_t n)
 }
 
 int
-init_fft(size_t n)
+init_fft(size_t maxn, size_t n)
 {
-	sz = n;
-	in = fftw_malloc(sz * sizeof(double));
-	out = fftw_malloc(sz * sizeof(fftw_complex) / 2);
+	in = fftw_malloc(maxn * sizeof(double));
+	out = fftw_malloc(maxn * sizeof(fftw_complex) / 2);
 	assert(in && out);
 
-	window = hamming(sz);
-	sq = squares(sz);
-
-	plan = fftw_plan_dft_r2c_1d(sz, in, out, FFTW_MEASURE);
+	plan = fftw_plan_dft_r2c_1d(n, in, out, FFTW_MEASURE);
+	window = hamming(n);
+	sq = squares(n);
+	sz = n;
 
 	return 0;
 }
