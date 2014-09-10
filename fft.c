@@ -25,14 +25,12 @@
 
 #include "fft.h"
 
-struct fft {
-	fftw_plan plan;
-	double	*in;
-	fftw_complex *out;
-	size_t	n;
-	double	*window;
-	double	*sq;
-} fft;
+static fftw_plan plan;
+static double	*in;
+static fftw_complex *out;
+static size_t	sz;
+static double	*window;
+static double	*sq;
 
 static double *
 hamming(size_t n)
@@ -69,16 +67,15 @@ squares(size_t n)
 int
 init_fft(size_t n)
 {
-	fft.n = n;
-	fft.in = fftw_malloc(fft.n * sizeof(double));
-	fft.out = fftw_malloc(fft.n * sizeof(fftw_complex) / 2);
-	assert(fft.in && fft.out);
+	sz = n;
+	in = fftw_malloc(sz * sizeof(double));
+	out = fftw_malloc(sz * sizeof(fftw_complex) / 2);
+	assert(in && out);
 
-	fft.window = hamming(fft.n);
-	fft.sq = squares(fft.n);
+	window = hamming(sz);
+	sq = squares(sz);
 
-	fft.plan = fftw_plan_dft_r2c_1d(fft.n, fft.in, fft.out,
-		FFTW_MEASURE);
+	plan = fftw_plan_dft_r2c_1d(sz, in, out, FFTW_MEASURE);
 
 	return 0;
 }
@@ -88,13 +85,13 @@ exec_fft(double *io)
 {
 	int	i;
 
-	for (i = 0; i < fft.n; i++)
-		fft.in[i] = fft.window[i] * io[i];
+	for (i = 0; i < sz; i++)
+		in[i] = window[i] * io[i];
 
-	fftw_execute(fft.plan);
+	fftw_execute(plan);
 
-	for (i = 0; i < fft.n / 2; i++)
-		io[i] = fft.sq[i] * cabs(fft.out[i]);
+	for (i = 0; i < sz / 2; i++)
+		io[i] = sq[i] * cabs(out[i]);
 
 	return 0;
 }
@@ -102,8 +99,8 @@ exec_fft(double *io)
 void
 free_fft(void)
 {
-	fftw_free(fft.in);
-	fftw_free(fft.out);
-	free(fft.window);
-	free(fft.sq);
+	fftw_free(in);
+	fftw_free(out);
+	free(window);
+	free(sq);
 }
