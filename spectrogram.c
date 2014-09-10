@@ -87,9 +87,6 @@ struct palette p_spectr =    {{ 120.0, 100.0,  75.0 }, {   0.0, 100.0,  25.0 }};
 struct palette p_shadow =    {{ 120.0, 100.0,  10.0 }, {   0.0, 100.0,  10.0 }};
 struct palette p_waterfall = {{ 210.0,  75.0,   0.0 }, { 180.0, 100.0, 100.0 }};
 struct hsl hsl_gray = {0.0, 0.0, 20.0};
-unsigned long *sp_pal = NULL;
-unsigned long *sh_pal = NULL;
-unsigned long *wf_pal = NULL;
 
 unsigned long
 hslcolor(Display *d, struct hsl hsl)
@@ -299,6 +296,7 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 	int scr = DefaultScreen(d);
 	unsigned long white = WhitePixel(d, scr);
 	unsigned long gray = hslcolor(d, hsl_gray);
+	unsigned long *palette;
 	unsigned int maxval = r.height / 4;
 	XRectangle geo;
 
@@ -307,13 +305,6 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 
 	p->data = calloc(r.width, sizeof(double));
 	assert(p->data);
-
-	if (!sp_pal)
-		sp_pal = init_palette(d, p_spectr, maxval);
-	if (!sh_pal)
-		sh_pal = init_palette(d, p_shadow, maxval);
-	if (!wf_pal)
-		wf_pal = init_palette(d, p_waterfall, maxval);
 
 	/* main panel window */
 	p->win = XCreateSimpleWindow(d, win,
@@ -328,12 +319,16 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 	p->sp = init_subwin(d, p->win, geo);
 
 	p->bg = init_background(d, p->sp->win, geo);
-	draw_background(d, p->bg->pix, p->sp->gc, p->bg->geo, sp_pal);
+	palette = init_palette(d, p_spectr, maxval);
+	draw_background(d, p->bg->pix, p->sp->gc, p->bg->geo, palette);
+	free(palette);
 
 	p->shadow = init_background(d, p->sp->win, geo);
-	draw_background(d, p->shadow->pix, p->sp->gc, p->shadow->geo, sh_pal);
+	palette = init_palette(d, p_shadow, maxval);
+	draw_background(d, p->shadow->pix, p->sp->gc, p->shadow->geo, palette);
+	free(palette);
 
-	p->palette = wf_pal;
+	p->palette = init_palette(d, p_waterfall, maxval);
 	p->maxval = maxval;
 	p->mirror = m;
 
@@ -375,6 +370,7 @@ free_panel(Display *d, struct panel *p)
 	free_subwin(d, p->wf);
 	XUnmapWindow(d, p->win);
 	XDestroyWindow(d, p->win);
+	free(p->palette);
 	free(p->data);
 	free(p);
 }
@@ -567,9 +563,6 @@ main(int argc, char **argv)
 	geo.height = height;
 	right = init_panel(dsp, container, geo, LTR);
 
-	free(sp_pal);
-	free(sh_pal);
-
 	XClearWindow(dsp, win);
 	XMapRaised(dsp, win);	/* XMapWindow */
 
@@ -635,7 +628,6 @@ main(int argc, char **argv)
 	free_fft(fft);
 	free_panel(dsp, left);
 	free_panel(dsp, right);
-	free(wf_pal);
 
 	XDestroyWindow(dsp, win);
 	XCloseDisplay(dsp);
