@@ -57,10 +57,10 @@ squares(size_t n)
 	double	*p;
 	int	i;
 
-	p = calloc(n, sizeof(double));
+	p = calloc(n / 2, sizeof(double));
 	assert(p);
 
-	for (i = 0; i < n; i++)
+	for (i = 0; i < n / 2; i++)
 		p[i] = sqrt(i + 1);
 
 	return p;
