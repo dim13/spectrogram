@@ -26,12 +26,10 @@
 #define RATE	48000
 #define FPS	25
 
-struct alsa {
-	snd_pcm_t *hdl;
-	snd_pcm_hw_params_t *par;
-	int16_t *buffer;
-	unsigned int samples;
-} alsa;
+static snd_pcm_t *hdl;
+static snd_pcm_hw_params_t *par;
+static int16_t *buffer;
+static unsigned int samples;
 
 int
 init_sio(void)
@@ -40,34 +38,34 @@ init_sio(void)
 	unsigned int rate;
 	int rc;
 
-	rc = snd_pcm_open(&alsa.hdl, "default", SND_PCM_STREAM_CAPTURE, 0);
+	rc = snd_pcm_open(&hdl, "default", SND_PCM_STREAM_CAPTURE, 0);
 	if (rc < 0)
 		errx(1, "unable to open pcm device: %s", snd_strerror(rc));
 
-	snd_pcm_hw_params_malloc(&alsa.par);
-	snd_pcm_hw_params_any(alsa.hdl, alsa.par);
-	snd_pcm_hw_params_set_access(alsa.hdl, alsa.par,
+	snd_pcm_hw_params_malloc(&par);
+	snd_pcm_hw_params_any(hdl, par);
+	snd_pcm_hw_params_set_access(hdl, par,
 		SND_PCM_ACCESS_RW_INTERLEAVED);
-	snd_pcm_hw_params_set_format(alsa.hdl, alsa.par,
+	snd_pcm_hw_params_set_format(hdl, par,
 		SND_PCM_FORMAT_S16_LE);
-	snd_pcm_hw_params_set_channels(alsa.hdl, alsa.par, STEREO);
-	snd_pcm_hw_params_set_rate(alsa.hdl, alsa.par, RATE, 0);
+	snd_pcm_hw_params_set_channels(hdl, par, STEREO);
+	snd_pcm_hw_params_set_rate(hdl, par, RATE, 0);
 
-	rc = snd_pcm_hw_params(alsa.hdl, alsa.par);
+	rc = snd_pcm_hw_params(hdl, par);
 	if (rc < 0)
 		errx(1, "unable to set hw parameters: %s", snd_strerror(rc));
 	
-	snd_pcm_hw_params_get_period_size(alsa.par, &round, NULL);
-	snd_pcm_hw_params_get_rate(alsa.par, &rate, 0);
-	snd_pcm_hw_params_free(alsa.par);
-	snd_pcm_prepare(alsa.hdl);
+	snd_pcm_hw_params_get_period_size(par, &round, NULL);
+	snd_pcm_hw_params_get_rate(par, &rate, 0);
+	snd_pcm_hw_params_free(par);
+	snd_pcm_prepare(hdl);
 
-	alsa.samples = rate / FPS;
-	warnx("min samples: %d", alsa.samples);
-	alsa.samples -= alsa.samples % round - round;
-	warnx("max samples: %d", alsa.samples);
-	alsa.buffer = calloc(alsa.samples * STEREO, sizeof(int16_t));
-	assert(alsa.buffer);
+	samples = rate / FPS;
+	warnx("min samples: %d", samples);
+	samples -= samples % round - round;
+	warnx("max samples: %d", samples);
+	buffer = calloc(samples * STEREO, sizeof(int16_t));
+	assert(buffer);
 
 	return 0;
 }
@@ -75,7 +73,7 @@ init_sio(void)
 unsigned int
 max_samples_sio(void)
 {
-	return alsa.samples;
+	return samples;
 }
 
 int16_t *
@@ -83,23 +81,23 @@ read_sio(size_t n)
 {
 	snd_pcm_sframes_t rc;
 
-	if (n > alsa.samples)
-		n = alsa.samples;
+	if (n > samples)
+		n = samples;
 
-	rc = snd_pcm_readi(alsa.hdl, alsa.buffer, alsa.samples);
-	if (rc != alsa.samples) {
+	rc = snd_pcm_readi(hdl, buffer, samples);
+	if (rc != samples) {
 		warnx("audio read error: %s", snd_strerror(rc));
 		if (rc == -EPIPE)
-			snd_pcm_prepare(alsa.hdl);
+			snd_pcm_prepare(hdl);
 	}
 
-	return alsa.buffer + alsa.samples - n;
+	return buffer + samples - n;
 }
 
 void
 free_sio(void)
 {
-	snd_pcm_drain(alsa.hdl);
-	snd_pcm_close(alsa.hdl);
-	free(alsa.buffer);
+	snd_pcm_drain(hdl);
+	snd_pcm_close(hdl);
+	free(buffer);
 }
