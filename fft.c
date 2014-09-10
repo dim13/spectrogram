@@ -76,7 +76,7 @@ init_fft(size_t n)
 
 	p->n = n;
 	p->in = fftw_malloc(p->n * sizeof(double));
-	p->out = fftw_malloc(p->n * sizeof(double));
+	p->out = fftw_malloc(p->n * sizeof(fftw_complex) / 2);
 	assert(p->in && p->out);
 
 	p->window = hamming(p->n);
