@@ -55,10 +55,10 @@ squares(size_t n)
 	double	*p;
 	int	i;
 
-	p = calloc(n / 2, sizeof(double));
+	p = calloc(n, sizeof(double));
 	assert(p);
 
-	for (i = 0; i < n / 2; i++)
+	for (i = 0; i < n; i++)
 		p[i] = sqrt(i + 1);
 
 	return p;
@@ -73,7 +73,7 @@ init_fft(size_t maxn, size_t n)
 
 	plan = fftw_plan_dft_r2c_1d(n, in, out, FFTW_MEASURE);
 	window = hamming(n);
-	sq = squares(n);
+	sq = squares(n / 2);
 	sz = n;
 
 	return 0;

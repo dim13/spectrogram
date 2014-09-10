@@ -546,7 +546,7 @@ main(int argc, char **argv)
 		0, 0, width, height, 0, white, black);
 	XMapWindow(dsp, container);
 
-	init_fft(round);
+	init_fft(maxwidth, round);
 
 	geo.x = 0;
 	geo.y = 0;
