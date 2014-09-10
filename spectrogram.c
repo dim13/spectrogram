@@ -449,8 +449,6 @@ main(int argc, char **argv)
 	int		scr;
 
 	struct		panel *left, *right;
-	struct		sio *sio;
-	struct		fft *fft;
 	int16_t		*buffer;
 
 	int		dflag = 0;	/* daemonize */
@@ -491,8 +489,8 @@ main(int argc, char **argv)
 	if (dflag)
 		daemon(0, 0);
 
-	sio = init_sio();
-	maxwidth = max_samples_sio(sio);
+	init_sio();
+	maxwidth = max_samples_sio();
 	maxheight = wa.height;
 		
 	dsp = XOpenDisplay(NULL);
@@ -549,7 +547,7 @@ main(int argc, char **argv)
 		0, 0, width, height, 0, white, black);
 	XMapWindow(dsp, container);
 
-	fft = init_fft(round);
+	init_fft(round);
 
 	geo.x = 0;
 	geo.y = 0;
@@ -609,10 +607,10 @@ main(int argc, char **argv)
 			}
 		}
 
-		buffer = read_sio(sio, round);
+		buffer = read_sio(round);
 
-		exec_fft(fft, buffer, left->data, FFT_LEFT);
-		exec_fft(fft, buffer, right->data, FFT_RIGHT);
+		exec_fft(buffer, left->data, FFT_LEFT);
+		exec_fft(buffer, right->data, FFT_RIGHT);
 
 		draw_panel(dsp, left);
 		draw_panel(dsp, right);
@@ -624,8 +622,8 @@ main(int argc, char **argv)
 			XResetScreenSaver(dsp);
 	}
 
-	free_sio(sio);
-	free_fft(fft);
+	free_sio();
+	free_fft();
 	free_panel(dsp, left);
 	free_panel(dsp, right);
 
