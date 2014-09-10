@@ -221,11 +221,11 @@ main(int argc, char **argv)
 		exec_fft(ldata);
 		exec_fft(rdata);
 
-		draw_panel(dsp, left);
-		draw_panel(dsp, right);
+		draw_panel(left);
+		draw_panel(right);
 
-		flip_panel(dsp, left);
-		flip_panel(dsp, right);
+		flip_panel(left);
+		flip_panel(right);
 
 		if (fflag)
 			XResetScreenSaver(dsp);
@@ -233,8 +233,8 @@ main(int argc, char **argv)
 
 	free_sio();
 	free_fft();
-	free_panel(dsp, left);
-	free_panel(dsp, right);
+	free_panel(left);
+	free_panel(right);
 
 	XDestroyWindow(dsp, win);
 	XCloseDisplay(dsp);

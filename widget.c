@@ -49,19 +49,19 @@ copy(Display *d, Drawable from, Drawable to, GC gc, XRectangle r, Drawable mask)
 }
 
 void
-draw_panel(Display *d, struct panel *p)
+draw_panel(struct panel *p)
 {
 	int i, v, x;
 
 	/* blit waterfall */
-	blit(d, p->wf->pix, p->wf->gc, p->wf->geo);
+	blit(p->dsp, p->wf->pix, p->wf->gc, p->wf->geo);
 	/* blit shadow mask */
-	blit(d, p->shadow->mask, p->shadow->gc, p->shadow->geo);
+	blit(p->dsp, p->shadow->mask, p->shadow->gc, p->shadow->geo);
 
 	/* clear spectrogram */
-	clear(d, p->sp->pix, p->sp->gc, p->sp->geo);
+	clear(p->dsp, p->sp->pix, p->sp->gc, p->sp->geo);
 	/* clear mask */
-	clear(d, p->bg->mask, p->bg->gc, p->bg->geo);
+	clear(p->dsp, p->bg->mask, p->bg->gc, p->bg->geo);
 
 	for (i = 0; i < p->sp->geo.width; i++) {
 		/* limit maxval */
@@ -69,24 +69,24 @@ draw_panel(Display *d, struct panel *p)
 		x = p->mirror ? p->sp->geo.width - i - 1 : i;
 
 		/* draw waterfall */
-		XSetForeground(d, p->wf->gc, p->palette[v]);
-		XDrawPoint(d, p->wf->pix, p->wf->gc, x, 0);
+		XSetForeground(p->dsp, p->wf->gc, p->palette[v]);
+		XDrawPoint(p->dsp, p->wf->pix, p->wf->gc, x, 0);
 
 		/* draw spectrogram */
-		XSetForeground(d, p->bg->gc, 1);
-		XDrawLine(d, p->bg->mask, p->bg->gc,
+		XSetForeground(p->dsp, p->bg->gc, 1);
+		XDrawLine(p->dsp, p->bg->mask, p->bg->gc,
 			x, p->bg->geo.height - v,
 			x, p->bg->geo.height);
 	}
 
 	/* copy mask to shadow mask */
-	copy(d, p->bg->mask, p->shadow->mask, p->shadow->gc, p->shadow->geo,
-		p->bg->mask);
+	copy(p->dsp, p->bg->mask, p->shadow->mask, p->shadow->gc,
+		p->shadow->geo, p->bg->mask);
 	/* shadow to buffer */
-	copy(d, p->shadow->pix, p->sp->pix, p->sp->gc, p->sp->geo,
+	copy(p->dsp, p->shadow->pix, p->sp->pix, p->sp->gc, p->sp->geo,
 		p->shadow->mask);
 	/* spectrogram to buffer */
-	copy(d, p->bg->pix, p->sp->pix, p->sp->gc, p->sp->geo,
+	copy(p->dsp, p->bg->pix, p->sp->pix, p->sp->gc, p->sp->geo,
 		p->bg->mask);
 }
 
@@ -98,12 +98,12 @@ flip(Display *d, struct subwin *p)
 }
 
 void
-flip_panel(Display *d, struct panel *p)
+flip_panel(struct panel *p)
 {
 	/* flip spectrogram */
-	flip(d, p->sp);
+	flip(p->dsp, p->sp);
 	/* flip waterfall */
-	flip(d, p->wf);
+	flip(p->dsp, p->wf);
 }
 
 static void
@@ -184,6 +184,7 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 	p = malloc(sizeof(struct panel));
 	assert(p);
 
+	p->dsp = d;
 	p->data = calloc(2 * r.width, sizeof(double));
 	assert(p->data);
 
@@ -243,14 +244,14 @@ free_subwin(Display *d, struct subwin *p)
 }
 
 void
-free_panel(Display *d, struct panel *p)
+free_panel(struct panel *p)
 {
-	free_background(d, p->bg);
-	free_background(d, p->shadow);
-	free_subwin(d, p->sp);
-	free_subwin(d, p->wf);
-	XUnmapWindow(d, p->win);
-	XDestroyWindow(d, p->win);
+	free_background(p->dsp, p->bg);
+	free_background(p->dsp, p->shadow);
+	free_subwin(p->dsp, p->sp);
+	free_subwin(p->dsp, p->wf);
+	XUnmapWindow(p->dsp, p->win);
+	XDestroyWindow(p->dsp, p->win);
 	free(p->palette);
 	free(p->data);
 	free(p);

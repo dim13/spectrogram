@@ -36,6 +36,7 @@ struct subwin {
 };
 
 struct panel {
+	Display *dsp;
 	Window	win;		/* container */
 	struct subwin *wf;
 	struct subwin *sp;
@@ -50,10 +51,10 @@ struct panel {
 enum mirror { LTR, RTL };
 
 __BEGIN_DECLS
-void draw_panel(Display *, struct panel *);
-void flip_panel(Display *, struct panel *);
 struct panel *init_panel(Display *, Window, XRectangle, enum mirror);
-void free_panel(Display *, struct panel *);
+void draw_panel(struct panel *);
+void flip_panel(struct panel *);
+void free_panel(struct panel *);
 void toggle_mirror(struct panel *);
 double *dataptr(struct panel *);
 __END_DECLS
