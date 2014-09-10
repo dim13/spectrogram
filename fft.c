@@ -43,8 +43,10 @@ hamming(size_t n)
 	p = calloc(n, sizeof(double));
 	assert(p);
 
-	for (i = 0; i < n; i++)
+	for (i = 0; i < n; i++) {
 		p[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
+		p[i] /= INT16_MAX;
+	}
 
 	return p;
 }
@@ -91,8 +93,7 @@ exec_fft(struct fft *p, int16_t *data, double *out, enum fft_chan chan)
 	int	i;
 
 	for (i = 0; i < p->n; i++)
-		p->in[i] = p->window[i] * data[2 * i + chan]
-			/ (double)INT16_MAX;
+		p->in[i] = p->window[i] * data[2 * i + chan];
 
 	fftw_execute(p->plan);
 
