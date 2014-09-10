@@ -23,6 +23,33 @@
 #include "widget.h"
 #include "cms.h"
 
+struct background {
+	Pixmap	pix;
+	Pixmap	mask;
+	GC	gc;
+	XRectangle geo;
+};
+
+struct subwin {
+	Window	win;
+	Pixmap	pix;		/* buffer */
+	GC	gc;
+	XRectangle geo;
+};
+
+struct panel {
+	Display *dsp;
+	Window	win;		/* container */
+	struct subwin *wf;
+	struct subwin *sp;
+	struct background *bg;
+	struct background *shadow;
+	int	mirror;
+	int	maxval;
+	double	*data;
+	unsigned long *palette;
+};
+
 struct palette p_spectr =    {{ 120.0, 100.0,  75.0 }, {   0.0, 100.0,  25.0 }};
 struct palette p_shadow =    {{ 120.0, 100.0,  10.0 }, {   0.0, 100.0,  10.0 }};
 struct palette p_waterfall = {{ 210.0,  75.0,   0.0 }, { 180.0, 100.0, 100.0 }};

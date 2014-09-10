@@ -21,34 +21,8 @@
 #define	HGAP	4
 #define	VGAP	1
 
-struct background {
-	Pixmap	pix;
-	Pixmap	mask;
-	GC	gc;
-	XRectangle geo;
-};
-
-struct subwin {
-	Window	win;
-	Pixmap	pix;		/* buffer */
-	GC	gc;
-	XRectangle geo;
-};
-
-struct panel {
-	Display *dsp;
-	Window	win;		/* container */
-	struct subwin *wf;
-	struct subwin *sp;
-	struct background *bg;
-	struct background *shadow;
-	int	mirror;
-	int	maxval;
-	double	*data;
-	unsigned long *palette;
-};
-
 enum mirror { LTR, RTL };
+struct panel;
 
 __BEGIN_DECLS
 struct panel *init_panel(Display *, Window, XRectangle, enum mirror);
