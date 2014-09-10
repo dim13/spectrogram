@@ -94,3 +94,24 @@ restrictsize(Display *d, Window win, int minw, int minh, int maxw, int maxh)
 	XSetWMSizeHints(d, win, hints, nhints);
 	XFree(hints);
 }
+
+void
+blit(Display *d, Drawable p, GC gc, XRectangle r)
+{
+	XCopyArea(d, p, p, gc, 0, 0, r.width, r.height - 1, 0, 1);
+}
+
+void
+clear(Display *d, Drawable p, GC gc, XRectangle r)
+{
+	XSetForeground(d, gc, BlackPixel(d, DefaultScreen(d)));
+	XFillRectangle(d, p, gc, 0, 0, r.width, r.height);
+}
+
+void
+copy(Display *d, Drawable from, Drawable to, GC gc, XRectangle r, Drawable mask)
+{
+	XSetClipMask(d, gc, mask);
+	XCopyArea(d, from, to, gc, 0, 0, r.width, r.height, 0, 0);
+	XSetClipMask(d, gc, None);
+}

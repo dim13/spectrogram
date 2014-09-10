@@ -23,6 +23,9 @@ void fullscreen(Display *, Window);
 void hide_ptr(Display *, Window);
 void move(Display *, Window, Window);
 void restrictsize(Display *, Window, int, int, int, int);
+void blit(Display *, Drawable, GC, XRectangle);
+void clear(Display *, Drawable, GC, XRectangle);
+void copy(Display *, Drawable, Drawable, GC, XRectangle, Drawable);
 __END_DECLS
 
 #endif

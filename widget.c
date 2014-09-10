@@ -20,8 +20,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "widget.h"
+#include "aux.h"
 #include "cms.h"
+#include "widget.h"
 
 struct background {
 	Pixmap	pix;
@@ -53,27 +54,6 @@ struct panel {
 struct palette p_spectr =    {{ 120.0, 100.0,  75.0 }, {   0.0, 100.0,  25.0 }};
 struct palette p_shadow =    {{ 120.0, 100.0,  10.0 }, {   0.0, 100.0,  10.0 }};
 struct palette p_waterfall = {{ 210.0,  75.0,   0.0 }, { 180.0, 100.0, 100.0 }};
-
-static void
-blit(Display *d, Drawable p, GC gc, XRectangle r)
-{
-	XCopyArea(d, p, p, gc, 0, 0, r.width, r.height - 1, 0, 1);
-}
-
-static void
-clear(Display *d, Drawable p, GC gc, XRectangle r)
-{
-	XSetForeground(d, gc, BlackPixel(d, DefaultScreen(d)));
-	XFillRectangle(d, p, gc, 0, 0, r.width, r.height);
-}
-
-static void
-copy(Display *d, Drawable from, Drawable to, GC gc, XRectangle r, Drawable mask)
-{
-	XSetClipMask(d, gc, mask);
-	XCopyArea(d, from, to, gc, 0, 0, r.width, r.height, 0, 0);
-	XSetClipMask(d, gc, None);
-}
 
 void
 draw_panel(struct panel *p)
@@ -117,20 +97,13 @@ draw_panel(struct panel *p)
 		p->bg->mask);
 }
 
-static void
-flip(Display *d, struct subwin *p)
-{
-	XCopyArea(d, p->pix, p->win, p->gc,
-		0, 0, p->geo.width, p->geo.height, 0, 0);
-}
-
 void
 flip_panel(struct panel *p)
 {
 	/* flip spectrogram */
-	flip(p->dsp, p->sp);
+	copy(p->dsp, p->sp->pix, p->sp->win, p->sp->gc, p->sp->geo, None);
 	/* flip waterfall */
-	flip(p->dsp, p->wf);
+	copy(p->dsp, p->wf->pix, p->wf->win, p->wf->gc, p->wf->geo, None);
 }
 
 static void
