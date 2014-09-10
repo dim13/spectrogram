@@ -47,19 +47,9 @@ struct panel {
 	unsigned long *palette;
 };
 
-struct hsl {
-	float h, s, l;
-};
-
-struct palette {
-	struct hsl from, to;
-};
-
 enum mirror { LTR, RTL };
 
 __BEGIN_DECLS
-unsigned long hslcolor(Display *, struct hsl);
-unsigned long *init_palette(Display *, struct palette, int);
 void draw_panel(Display *, struct panel *);
 void flip_panel(Display *, struct panel *);
 struct panel *init_panel(Display *, Window, XRectangle, enum mirror);

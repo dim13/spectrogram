@@ -18,7 +18,6 @@
 #ifndef __CMS_H
 #define __CMS_H
 
-/*
 struct hsl {
 	double h, s, l;
 };
@@ -26,17 +25,10 @@ struct hsl {
 struct palette {
 	struct hsl from, to;
 };
- */
 
 __BEGIN_DECLS
-void hsv2rgb(
-	unsigned short *r, unsigned short *g, unsigned short *b,
-	double h, double s, double v
-);
-void hsl2rgb(
-	unsigned short *r, unsigned short *g, unsigned short *b,
-	double h, double s, double l
-);
+unsigned long *init_palette(Display *, struct palette, int);
+unsigned long hslcolor(Display *, double h, double s, double l);
 __END_DECLS
 
 #endif

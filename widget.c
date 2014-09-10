@@ -27,48 +27,6 @@ struct palette p_spectr =    {{ 120.0, 100.0,  75.0 }, {   0.0, 100.0,  25.0 }};
 struct palette p_shadow =    {{ 120.0, 100.0,  10.0 }, {   0.0, 100.0,  10.0 }};
 struct palette p_waterfall = {{ 210.0,  75.0,   0.0 }, { 180.0, 100.0, 100.0 }};
 
-struct hsl hsl_gray = {0.0, 0.0, 20.0};
-
-unsigned long
-hslcolor(Display *d, struct hsl hsl)
-{
-	int scr = DefaultScreen(d);
-	Colormap cmap = DefaultColormap(d, scr);
-	XColor c;
-
-	hsl2rgb(&c.red, &c.green, &c.blue, hsl.h, hsl.s, hsl.l);
-	c.flags = DoRed|DoGreen|DoBlue;
-
-	XAllocColor(d, cmap, &c);
-
-	return c.pixel;
-}
-
-unsigned long *
-init_palette(Display *d, struct palette pal, int n)
-{
-	unsigned long *p;
-	float	hstep, sstep, lstep;
-	int	i;
-
-	p = calloc(n, sizeof(unsigned long));
-	assert(p);
-
-	hstep = (pal.to.h - pal.from.h) / (n - 1);
-	sstep = (pal.to.s - pal.from.s) / (n - 1);
-	lstep = (pal.to.l - pal.from.l) / (n - 1);
-
-	for (i = 0; i < n; i++) {
-		p[i] = hslcolor(d, pal.from);
-		pal.from.h += hstep;
-		pal.from.s += sstep;
-		pal.from.l += lstep;
-	}
-
-	return p;
-}
-
-
 static void
 blit(Display *d, Drawable p, GC gc, XRectangle r)
 {
@@ -217,7 +175,8 @@ init_panel(Display *d, Window win, XRectangle r, enum mirror m)
 	struct panel *p;
 	int scr = DefaultScreen(d);
 	unsigned long white = WhitePixel(d, scr);
-	unsigned long gray = hslcolor(d, hsl_gray);
+	unsigned long gray = hslcolor(d, 0.0, 0.0, 20.0);
+
 	unsigned long *palette;
 	unsigned int maxval = r.height / 4;
 	XRectangle geo;

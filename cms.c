@@ -20,11 +20,16 @@
  * output: R, G, B 0..65535
  */
 
+#include <X11/Xlib.h>
+
+#include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "cms.h"
 
-void
+#if 0
+static void
 hsv2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	double h, double s, double v)
 {
@@ -65,13 +70,14 @@ hsv2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 		*r = *g = *b = UINT16_MAX * v;
 	}
 }
+#endif
 
 /*
  * input: H 0..360, S 0..100, L 0..100
  * output: R, G, B 0..65535
  */
 
-void
+static void
 hsl2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	double h, double s, double l)
 {
@@ -113,4 +119,43 @@ hsl2rgb(unsigned short *r, unsigned short *g, unsigned short *b,
 	} else {
 		*r = *g = *b = UINT16_MAX * l;
 	}
+}
+
+unsigned long
+hslcolor(Display *d, double h, double s, double l)
+{
+	int scr = DefaultScreen(d);
+	Colormap cmap = DefaultColormap(d, scr);
+	XColor c;
+
+	hsl2rgb(&c.red, &c.green, &c.blue, h, s, l);
+	c.flags = DoRed|DoGreen|DoBlue;
+
+	XAllocColor(d, cmap, &c);
+
+	return c.pixel;
+}
+
+unsigned long *
+init_palette(Display *d, struct palette pal, int n)
+{
+	unsigned long *p;
+	float	hstep, sstep, lstep;
+	int	i;
+
+	p = calloc(n, sizeof(unsigned long));
+	assert(p);
+
+	hstep = (pal.to.h - pal.from.h) / (n - 1);
+	sstep = (pal.to.s - pal.from.s) / (n - 1);
+	lstep = (pal.to.l - pal.from.l) / (n - 1);
+
+	for (i = 0; i < n; i++) {
+		p[i] = hslcolor(d, pal.from.h, pal.from.s, pal.from.l);
+		pal.from.h += hstep;
+		pal.from.s += sstep;
+		pal.from.l += lstep;
+	}
+
+	return p;
 }
