@@ -112,7 +112,7 @@ read_sio(double *left, double *right, size_t n)
 }
 
 void
-free_sio(struct sio *sio)
+free_sio(void)
 {
 	sio_stop(hdl);
 	sio_close(hdl);
