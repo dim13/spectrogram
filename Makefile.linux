@@ -1,9 +1,8 @@
 # $Id$
 
 PROG=	spectrogram
-SRCS=	spectrogram.c alsa.c fft.c cms.c
+SRCS=	spectrogram.c alsa.c fft.c cms.c aux.c
 BINDIR=	/usr/local/bin
-HEADERS=fft.h cms.h
 LIBS=	fftw3 x11 alsa
 PCCF!=	pkg-config --cflags ${LIBS}
 PCLA!=	pkg-config --libs ${LIBS}

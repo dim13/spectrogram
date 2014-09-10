@@ -32,6 +32,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "aux.h"
 #include "cms.h"
 #include "fft.h"
 #include "sio.h"
@@ -394,47 +395,6 @@ move(Display *dsp, Window win, Window container)
 	return 0;
 }
 
-void
-gofullscreen(Display *d, Window win)
-{
-	XClientMessageEvent cm;
-
-	bzero(&cm, sizeof(cm));
-	cm.type = ClientMessage;
-	cm.send_event = True;
-	cm.message_type = XInternAtom(d, "_NET_WM_STATE", False);
-	cm.window = win;
-	cm.format = 32;
-	cm.data.l[0] = 1;	/* _NET_WM_STATE_ADD */
-	cm.data.l[1] = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
-	cm.data.l[2] = 0;	/* no secondary property */
-	cm.data.l[3] = 1;	/* normal application */
-
-	XSendEvent(d, DefaultRootWindow(d), False, NoEventMask, (XEvent *)&cm);
-	XMoveWindow(d, win, 0, 0);
-}
-
-void
-hide_ptr(Display *d, Window win)
-{
-	Pixmap		bm;
-	Cursor		ptr;
-	Colormap	cmap;
-	XColor		black, dummy;
-	static char empty[] = {0, 0, 0, 0, 0, 0, 0, 0};
-
-	cmap = DefaultColormap(d, DefaultScreen(d));
-	XAllocNamedColor(d, cmap, "black", &black, &dummy);
-	bm = XCreateBitmapFromData(d, win, empty, 8, 8);
-	ptr = XCreatePixmapCursor(d, bm, bm, &black, &black, 0, 0);
-
-	XDefineCursor(d, win, ptr);
-	XFreeCursor(d, ptr);
-	if (bm != None)
-		XFreePixmap(d, bm);
-	XFreeColors(d, cmap, &black.pixel, 1, 0);
-}
-
 int 
 main(int argc, char **argv)
 {
@@ -564,7 +524,7 @@ main(int argc, char **argv)
 	XMapRaised(dsp, win);	/* XMapWindow */
 
 	if (fflag) {
-		gofullscreen(dsp, win);
+		fullscreen(dsp, win);
 		if (pflag)
 			hide_ptr(dsp, win);
 	}
