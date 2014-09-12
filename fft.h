@@ -18,13 +18,10 @@
 #ifndef __FFT_H
 #define __FFT_H
 
-struct fft;
-enum fft_chan { FFT_LEFT, FFT_RIGHT };
-
 __BEGIN_DECLS
-struct fft *init_fft(size_t);
-int exec_fft(struct fft *, int16_t *, double *, enum fft_chan);
-void free_fft(struct fft *);
+int init_fft(size_t, size_t);
+int exec_fft(double *);
+void free_fft(void);
 __END_DECLS
 
 #endif

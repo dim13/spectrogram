@@ -1,15 +1,27 @@
 # $Id$
 
-VERSION=2.0
+VERSION=3.0
 PROG=	spectrogram
-SRCS=	spectrogram.c sio.c fft.c cms.c Spectrogram.c
-BINDIR=	/usr/local/bin
-HEADERS=sio.h fft.h cms.h Spectrogram.h SpectrogramP.h
+
+SRCS=	spectrogram.c fft.c cms.c aux.c widget.c Spectrogram.c
 LIBS=	fftw3 x11 xaw7
+BINDIR=	/usr/local/bin
+
+UNAME!=	uname
+.ifdef ${UNAME} == Linux
+SRCS+=	alsa.c
+LIBS+=	alsa
+.else
+SRCS+=	sio.c
+LDADD+=	-lsndio
+.endif
+
 PCCF!=	pkg-config --cflags ${LIBS}
-PCLA!=	pkg-config --libs ${LIBS}
 CFLAGS+=${PCCF}
-LDADD+=	${PCLA} -lsndio
+
+PCLA!=	pkg-config --libs ${LIBS}
+LDADD+=	${PCLA}
+
 DEBUG+=	-Wall
 NOMAN=
 DIR=	${PROG}-${VERSION}

@@ -17,118 +17,20 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <X11/keysym.h>
 
-#include <sys/types.h>
-#include <sys/time.h>
-
-#include <assert.h>
 #include <err.h>
-#include <math.h>
 #include <signal.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
-#include "cms.h"
+#include "aux.h"
 #include "fft.h"
 #include "sio.h"
-
-#define	HGAP	4
-#define	VGAP	1
+#include "widget.h"
 
 extern	char *__progname;
 int	die = 0;
-
-struct pixmap {
-	Pixmap	pix;
-	GC	gc;
-};
-
-struct background {
-	Pixmap	pix;
-	Pixmap	mask;
-	GC	gc;
-	XRectangle geo;
-};
-
-struct subwin {
-	Window	win;
-	Pixmap	pix;		/* buffer */
-	GC	gc;
-	XRectangle geo;
-};
-
-struct	panel {
-	Window	win;		/* container */
-	struct subwin *wf;
-	struct subwin *sp;
-	struct background *bg;
-	struct background *shadow;
-	int	mirror;
-	int	maxval;
-	double	*data;
-	unsigned long *palette;
-};
-
-struct hsl {
-	float h, s, l;
-};
-
-struct palette {
-	struct hsl from, to;
-};
-
-enum mirror { LTR, RTL };
-
-struct palette p_spectr =    {{ 120.0, 100.0,  75.0 }, {   0.0, 100.0,  25.0 }};
-struct palette p_shadow =    {{ 120.0, 100.0,  10.0 }, {   0.0, 100.0,  10.0 }};
-struct palette p_waterfall = {{ 210.0,  75.0,   0.0 }, { 180.0, 100.0, 100.0 }};
-struct hsl hsl_gray = {0.0, 0.0, 20.0};
-unsigned long *sp_pal = NULL;
-unsigned long *sh_pal = NULL;
-unsigned long *wf_pal = NULL;
-
-unsigned long
-hslcolor(Display *d, struct hsl hsl)
-{
-	int scr = DefaultScreen(d);
-	Colormap cmap = DefaultColormap(d, scr);
-	XColor c;
-
-	hsl2rgb(&c.red, &c.green, &c.blue, hsl.h, hsl.s, hsl.l);
-	c.flags = DoRed|DoGreen|DoBlue;
-
-	XAllocColor(d, cmap, &c);
-
-	return c.pixel;
-}
-
-unsigned long *
-init_palette(Display *d, struct palette pal, int n)
-{
-	unsigned long *p;
-	float	hstep, sstep, lstep;
-	int	i;
-
-	p = calloc(n, sizeof(unsigned long));
-	assert(p);
-
-	hstep = (pal.to.h - pal.from.h) / (n - 1);
-	sstep = (pal.to.s - pal.from.s) / (n - 1);
-	lstep = (pal.to.l - pal.from.l) / (n - 1);
-
-	for (i = 0; i < n; i++) {
-		p[i] = hslcolor(d, pal.from);
-		pal.from.h += hstep;
-		pal.from.s += sstep;
-		pal.from.l += lstep;
-	}
-
-	return p;
-}
 
 void
 catch(int notused)
@@ -150,312 +52,19 @@ usage(void)
 	exit(0);
 }
 
-void
-blit(Display *d, Drawable p, GC gc, XRectangle r)
-{
-	XCopyArea(d, p, p, gc, 0, 0, r.width, r.height - 1, 0, 1);
-}
-
-void
-clear(Display *d, Drawable p, GC gc, XRectangle r)
-{
-	XSetForeground(d, gc, BlackPixel(d, DefaultScreen(d)));
-	XFillRectangle(d, p, gc, 0, 0, r.width, r.height);
-}
-
-void
-copy(Display *d, Drawable from, Drawable to, GC gc, XRectangle r, Drawable mask)
-{
-	XSetClipMask(d, gc, mask);
-	XCopyArea(d, from, to, gc, 0, 0, r.width, r.height, 0, 0);
-	XSetClipMask(d, gc, None);
-}
-
-void
-draw_panel(Display *d, struct panel *p)
-{
-	int i, v, x;
-
-	/* blit waterfall */
-	blit(d, p->wf->pix, p->wf->gc, p->wf->geo);
-	/* blit shadow mask */
-	blit(d, p->shadow->mask, p->shadow->gc, p->shadow->geo);
-
-	/* clear spectrogram */
-	clear(d, p->sp->pix, p->sp->gc, p->sp->geo);
-	/* clear mask */
-	clear(d, p->bg->mask, p->bg->gc, p->bg->geo);
-
-	for (i = 0; i < p->sp->geo.width; i++) {
-		/* limit maxval */
-		v = p->data[i] >= p->maxval ? p->maxval - 1 : p->data[i];
-		x = p->mirror ? p->sp->geo.width - i - 1 : i;
-
-		/* draw waterfall */
-		XSetForeground(d, p->wf->gc, p->palette[v]);
-		XDrawPoint(d, p->wf->pix, p->wf->gc, x, 0);
-
-		/* draw spectrogram */
-		XSetForeground(d, p->bg->gc, 1);
-		XDrawLine(d, p->bg->mask, p->bg->gc,
-			x, p->bg->geo.height - v,
-			x, p->bg->geo.height);
-	}
-
-	/* copy mask to shadow mask */
-	copy(d, p->bg->mask, p->shadow->mask, p->shadow->gc, p->shadow->geo,
-		p->bg->mask);
-	/* shadow to buffer */
-	copy(d, p->shadow->pix, p->sp->pix, p->sp->gc, p->sp->geo,
-		p->shadow->mask);
-	/* spectrogram to buffer */
-	copy(d, p->bg->pix, p->sp->pix, p->sp->gc, p->sp->geo,
-		p->bg->mask);
-}
-
-void
-flip(Display *d, struct subwin *p)
-{
-	XCopyArea(d, p->pix, p->win, p->gc,
-		0, 0, p->geo.width, p->geo.height, 0, 0);
-}
-
-void
-flip_panel(Display *d, struct panel *p)
-{
-	/* flip spectrogram */
-	flip(d, p->sp);
-	/* flip waterfall */
-	flip(d, p->wf);
-}
-
-void
-draw_background(Display *d, Pixmap pix, GC gc, XRectangle r, unsigned long *pal)
-{
-	int i, x, y;
-
-	x = r.width - 1;
-	for (i = 0; i < r.height; i++) {
-		y = r.height - i - 1;
-		XSetForeground(d, gc, pal[i]);
-		XDrawLine(d, pix, gc, 0, y, x, y);
-	}
-}
-
-struct background *
-init_background(Display *d, Drawable parent, XRectangle r)
-{
-	struct background *p;
-	int scr = DefaultScreen(d);
-	int planes = DisplayPlanes(d, scr);
-	int black = BlackPixel(d, scr);
-
-	p = malloc(sizeof(struct subwin));
-	assert(p);
-
-	p->pix = XCreatePixmap(d, parent, r.width, r.height, planes);
-	p->mask = XCreatePixmap(d, parent, r.width, r.height, 1);
-	p->gc = XCreateGC(d, p->mask, 0, NULL);	
-	p->geo = r;
-
-	/* clear */
-	XSetForeground(d, p->gc, black);
-	XFillRectangle(d, p->mask, p->gc, 0, 0, r.width, r.height);
-
-	return p;
-}
-
-struct subwin *
-init_subwin(Display *d, Drawable parent, XRectangle r)
-{
-	struct subwin *p;
-	int scr = DefaultScreen(d);
-	int white = WhitePixel(d, scr);
-	int black = BlackPixel(d, scr);
-	int planes = DisplayPlanes(d, scr);
-
-	p = malloc(sizeof(struct subwin));
-	assert(p);
-
-	p->win = XCreateSimpleWindow(d, parent, r.x, r.y,
-		r.width, r.height, 0, white, black);
-	p->pix = XCreatePixmap(d, p->win, r.width, r.height, planes);
-	p->gc = XCreateGC(d, p->pix, 0, NULL);	
-	p->geo = r;
-
-	/* clear */
-	XSetForeground(d, p->gc, black);
-	XFillRectangle(d, p->pix, p->gc, 0, 0, r.width, r.height);
-
-	XMapWindow(d, p->win);
-	
-	return p;
-}
-
-struct panel *
-init_panel(Display *d, Window win, XRectangle r, enum mirror m)
-{
-	struct panel *p;
-	int scr = DefaultScreen(d);
-	unsigned long white = WhitePixel(d, scr);
-	unsigned long gray = hslcolor(d, hsl_gray);
-	unsigned int maxval = r.height / 4;
-	XRectangle geo;
-
-	p = malloc(sizeof(struct panel));
-	assert(p);
-
-	p->data = calloc(r.width, sizeof(double));
-	assert(p->data);
-
-	if (!sp_pal)
-		sp_pal = init_palette(d, p_spectr, maxval);
-	if (!sh_pal)
-		sh_pal = init_palette(d, p_shadow, maxval);
-	if (!wf_pal)
-		wf_pal = init_palette(d, p_waterfall, maxval);
-
-	/* main panel window */
-	p->win = XCreateSimpleWindow(d, win,
-		r.x, r.y, r.width, r.height,
-		0, white, gray);
-
-	/* sperctrogram window and its bitmasks */
-	geo.x = 0;
-	geo.y = 0;
-	geo.width = r.width;
-	geo.height = maxval;
-	p->sp = init_subwin(d, p->win, geo);
-
-	p->bg = init_background(d, p->sp->win, geo);
-	draw_background(d, p->bg->pix, p->sp->gc, p->bg->geo, sp_pal);
-
-	p->shadow = init_background(d, p->sp->win, geo);
-	draw_background(d, p->shadow->pix, p->sp->gc, p->shadow->geo, sh_pal);
-
-	p->palette = wf_pal;
-	p->maxval = maxval;
-	p->mirror = m;
-
-	/* waterfall window and double buffer */
-	geo.x = 0;
-	geo.y = p->sp->geo.height + VGAP;
-	geo.width = r.width;
-	geo.height = r.height - maxval;
-	p->wf = init_subwin(d, p->win, geo);
-
-	XMapWindow(d, p->win);
-	
-	return p;
-}
-
-void
-free_background(Display *d, struct background *p)
-{
-	XFreePixmap(d, p->pix);
-	XFreePixmap(d, p->mask);
-	XFreeGC(d, p->gc);
-}
-
-void
-free_subwin(Display *d, struct subwin *p)
-{
-	XFreePixmap(d, p->pix);
-	XFreeGC(d, p->gc);
-	XUnmapWindow(d, p->win);
-	XDestroyWindow(d, p->win);
-}
-
-void
-free_panel(Display *d, struct panel *p)
-{
-	free_background(d, p->bg);
-	free_background(d, p->shadow);
-	free_subwin(d, p->sp);
-	free_subwin(d, p->wf);
-	XUnmapWindow(d, p->win);
-	XDestroyWindow(d, p->win);
-	free(p->data);
-	free(p);
-}
-
-int
-move(Display *dsp, Window win, Window container)
-{
-	int dx, dy;
-	XWindowAttributes wa, wac;
-
-	XGetWindowAttributes(dsp, win, &wa);
-	XGetWindowAttributes(dsp, container, &wac);
-
-	dx = (wa.width - wac.width) / 2;
-	dy = (wa.height - wac.height) / 2;
-	if (dy < 0)
-		dy = 0;
-
-	XMoveWindow(dsp, container, dx, dy);
-
-	return 0;
-}
-
-void
-gofullscreen(Display *d, Window win)
-{
-	XClientMessageEvent cm;
-
-	bzero(&cm, sizeof(cm));
-	cm.type = ClientMessage;
-	cm.send_event = True;
-	cm.message_type = XInternAtom(d, "_NET_WM_STATE", False);
-	cm.window = win;
-	cm.format = 32;
-	cm.data.l[0] = 1;	/* _NET_WM_STATE_ADD */
-	cm.data.l[1] = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
-	cm.data.l[2] = 0;	/* no secondary property */
-	cm.data.l[3] = 1;	/* normal application */
-
-	XSendEvent(d, DefaultRootWindow(d), False, NoEventMask, (XEvent *)&cm);
-	XMoveWindow(d, win, 0, 0);
-}
-
-void
-hide_ptr(Display *d, Window win)
-{
-	Pixmap		bm;
-	Cursor		ptr;
-	Colormap	cmap;
-	XColor		black, dummy;
-	static char empty[] = {0, 0, 0, 0, 0, 0, 0, 0};
-
-	cmap = DefaultColormap(d, DefaultScreen(d));
-	XAllocNamedColor(d, cmap, "black", &black, &dummy);
-	bm = XCreateBitmapFromData(d, win, empty, 8, 8);
-	ptr = XCreatePixmapCursor(d, bm, bm, &black, &black, 0, 0);
-
-	XDefineCursor(d, win, ptr);
-	XFreeCursor(d, ptr);
-	if (bm != None)
-		XFreePixmap(d, bm);
-	XFreeColors(d, cmap, &black.pixel, 1, 0);
-}
-
 int 
 main(int argc, char **argv)
 {
 	Display		*dsp;
 	Window		win, container;
 	Atom		delwin;
-	Atom		nhints;
-	XSizeHints	*hints;
 	XClassHint	*class;
 	XWindowAttributes wa;
 	XRectangle	geo;
 	int		scr;
 
 	struct		panel *left, *right;
-	struct		sio *sio;
-	struct		fft *fft;
-	int16_t		*buffer;
+	double		*ldata, *rdata;
 
 	int		dflag = 0;	/* daemonize */
 	int		fflag = 0;	/* fullscreen */
@@ -495,8 +104,8 @@ main(int argc, char **argv)
 	if (dflag)
 		daemon(0, 0);
 
-	sio = init_sio();
-	maxwidth = max_samples_sio(sio);
+	init_sio();
+	maxwidth = max_samples_sio();
 	maxheight = wa.height;
 		
 	dsp = XOpenDisplay(NULL);
@@ -539,42 +148,33 @@ main(int argc, char **argv)
 	XSetWMProtocols(dsp, win, &delwin, 1);
 
 	/* set minimal size */
-	nhints = XInternAtom(dsp, "WM_NORMAL_HINTS", 0);
-	hints = XAllocSizeHints();
-	hints->flags = PMinSize|PMaxSize;
-	hints->min_width = width;
-	hints->min_height = height;
-	hints->max_width = maxwidth;
-	hints->max_height = maxheight;
-	XSetWMSizeHints(dsp, win, hints, nhints);
-	XFree(hints);
+	restrictsize(dsp, win, width, height, maxwidth, maxheight);
 
 	container = XCreateSimpleWindow(dsp, win,
 		0, 0, width, height, 0, white, black);
 	XMapWindow(dsp, container);
 
-	fft = init_fft(round);
+	init_fft(maxwidth, round);
 
 	geo.x = 0;
 	geo.y = 0;
 	geo.width = round / 2;
 	geo.height = height;
 	left = init_panel(dsp, container, geo, RTL);
+	ldata = dataptr(left);
 
 	geo.x = round / 2 + HGAP;
 	geo.y = 0;
 	geo.width = round / 2;
 	geo.height = height;
 	right = init_panel(dsp, container, geo, LTR);
-
-	free(sp_pal);
-	free(sh_pal);
+	rdata = dataptr(right);
 
 	XClearWindow(dsp, win);
 	XMapRaised(dsp, win);	/* XMapWindow */
 
 	if (fflag) {
-		gofullscreen(dsp, win);
+		fullscreen(dsp, win);
 		if (pflag)
 			hide_ptr(dsp, win);
 	}
@@ -592,14 +192,14 @@ main(int argc, char **argv)
 					die = 1;
 					break;
 				case XK_1:
-					left->mirror ^= 1;
+					toggle_mirror(left);
 					break;
 				case XK_2:
-					right->mirror ^= 1;
+					toggle_mirror(right);
 					break;
 				case XK_3:
-					left->mirror ^= 1;
-					right->mirror ^= 1;
+					toggle_mirror(left);
+					toggle_mirror(right);
 					break;
 				default:
 					break;
@@ -616,26 +216,25 @@ main(int argc, char **argv)
 			}
 		}
 
-		buffer = read_sio(sio, round);
+		read_sio(ldata, rdata, round);
 
-		exec_fft(fft, buffer, left->data, FFT_LEFT);
-		exec_fft(fft, buffer, right->data, FFT_RIGHT);
+		exec_fft(ldata);
+		exec_fft(rdata);
 
-		draw_panel(dsp, left);
-		draw_panel(dsp, right);
+		draw_panel(left);
+		draw_panel(right);
 
-		flip_panel(dsp, left);
-		flip_panel(dsp, right);
+		flip_panel(left);
+		flip_panel(right);
 
 		if (fflag)
 			XResetScreenSaver(dsp);
 	}
 
-	free_sio(sio);
-	free_fft(fft);
-	free_panel(dsp, left);
-	free_panel(dsp, right);
-	free(wf_pal);
+	free_sio();
+	free_fft();
+	free_panel(left);
+	free_panel(right);
 
 	XDestroyWindow(dsp, win);
 	XCloseDisplay(dsp);

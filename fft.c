@@ -20,76 +20,88 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <complex.h>		/* must be prior fftw3 */
 #include <fftw3.h>
 
 #include "fft.h"
 
-struct fft {
-	fftw_plan	plan;
-	double	*in;
-	double	*out;
-	size_t	n;
-	double	*window;
-};
+static fftw_plan plan;
+static fftw_complex *out;
+static double	*in;
+static size_t	sz;
+static double	*window;
+static double	*sq;
 
 static double *
 hamming(size_t n)
 {
-	double	*w;
+	double	alpha = 0.53836;
+	double	beta = 1.0 - alpha;
+	double	*p;
 	int	i;
 
-	w = calloc(n, sizeof(double));
-	assert(w);
-
-	for (i = 0; i < n; i++)
-		w[i] = 0.54 - 0.46 * cos((2 * M_PI * i) / (n - 1));
-
-	return w;
-}
-
-struct fft *
-init_fft(size_t n)
-{
-	struct	fft *p;
-
-	p = malloc(sizeof(struct fft));
+	p = calloc(n, sizeof(double));
 	assert(p);
 
-	p->n = n;
-	p->in = fftw_malloc(p->n * sizeof(double));
-	p->out = fftw_malloc(p->n * sizeof(double));
-	assert(p->in && p->out);
+	for (i = 0; i < n; i++) {
+		p[i] = alpha - beta * cos(2 * M_PI * i / (n - 1));
+		p[i] /= INT16_MAX;
+	}
 
-	p->window = hamming(p->n);
-	p->plan = fftw_plan_r2r_1d(p->n, p->in, p->out,
-		FFTW_R2HC, FFTW_MEASURE);
+	return p;
+}
+
+static double *
+squares(size_t n)
+{
+	double	*p;
+	int	i;
+
+	p = calloc(n, sizeof(double));
+	assert(p);
+
+	for (i = 0; i < n; i++)
+		p[i] = sqrt(i + 1);
 
 	return p;
 }
 
 int
-exec_fft(struct fft *p, int16_t *data, double *out, enum fft_chan chan)
+init_fft(size_t maxn, size_t n)
+{
+	in = fftw_malloc(maxn * sizeof(double));
+	out = fftw_malloc(maxn * sizeof(fftw_complex) / 2);
+	assert(in && out);
+
+	plan = fftw_plan_dft_r2c_1d(n, in, out, FFTW_MEASURE);
+	window = hamming(n);
+	sq = squares(n / 2);
+	sz = n;
+
+	return 0;
+}
+
+int
+exec_fft(double *io)
 {
 	int	i;
 
-	for (i = 0; i < p->n; i++)
-		p->in[i] = p->window[i] * data[2 * i + chan]
-			/ (double)INT16_MAX;
+	for (i = 0; i < sz; i++)
+		in[i] = window[i] * io[i];
 
-	fftw_execute(p->plan);
+	fftw_execute(plan);
 
-	for (i = 1; i < p->n / 2; i++)
-		out[i - 1] = sqrt(i * (pow(p->out[i], 2)
-			+ pow(p->out[p->n - i], 2)));
+	for (i = 0; i < sz / 2; i++)
+		io[i] = sq[i] * cabs(out[i]);
 
 	return 0;
 }
 
 void
-free_fft(struct fft *p)
+free_fft(void)
 {
-	fftw_free(p->in);
-	fftw_free(p->out);
-	free(p->window);
-	free(p);
+	fftw_free(in);
+	fftw_free(out);
+	free(window);
+	free(sq);
 }

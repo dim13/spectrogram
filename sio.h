@@ -18,13 +18,11 @@
 #ifndef __SIO_H
 #define __SIO_H
 
-struct sio;
-
 __BEGIN_DECLS
-struct sio *init_sio(void);
-int16_t *read_sio(struct sio *, unsigned int);
-unsigned int max_samples_sio(struct sio *);
-void free_sio(struct sio *);
+int init_sio(void);
+void read_sio(double *, double *, size_t);
+unsigned int max_samples_sio(void);
+void free_sio(void);
 __END_DECLS
 
 #endif

@@ -27,80 +27,75 @@
 #define SIGNED	1
 #define FPS	25
 
-struct sio {
-	struct	sio_hdl *sio;
-	struct	sio_par par;
-	int16_t	*buffer;
-	unsigned int samples;
+static struct	sio_hdl *hdl;
+static struct	sio_par par;
+static int16_t	*buffer;
+static unsigned int samples;
+
+struct data {
+	int16_t left;
+	int16_t right;
 };
 
-struct sio *
+int
 init_sio(void)
 {
-	struct sio *sio;
-
-	sio = malloc(sizeof(struct sio));
-	assert(sio);
-
-	sio->sio = sio_open(SIO_DEVANY, SIO_REC, 0);
-	if (!sio->sio)
+	hdl = sio_open(SIO_DEVANY, SIO_REC, 0);
+	if (!hdl)
 		errx(1, "cannot connect to sound server, is it running?");
 
-	sio_initpar(&sio->par);
+	sio_initpar(&par);
 
-	sio->par.rchan = STEREO;
-	sio->par.bits = BITS;
-	sio->par.le = SIO_LE_NATIVE;
-	sio->par.sig = SIGNED;
+	par.rchan = STEREO;
+	par.bits = BITS;
+	par.le = SIO_LE_NATIVE;
+	par.sig = SIGNED;
 
-	if (!sio_setpar(sio->sio, &sio->par))
+	if (!sio_setpar(hdl, &par))
 		errx(1, "SIO set params failed");
-	if (!sio_getpar(sio->sio, &sio->par))
+	if (!sio_getpar(hdl, &par))
 		errx(1, "SIO get params failed");
 
-	if (sio->par.rchan != STEREO ||
-	    sio->par.bits != BITS ||
-	    sio->par.le != SIO_LE_NATIVE ||
-	    sio->par.sig != SIGNED)
+	if (par.rchan != STEREO ||
+	    par.bits != BITS ||
+	    par.le != SIO_LE_NATIVE ||
+	    par.sig != SIGNED)
 		errx(1, "unsupported audio params");
 
-	sio->samples = sio->par.rate / FPS;
-	warnx("min samples: %d", sio->samples);
-	sio->samples -= sio->samples % sio->par.round - sio->par.round;
-	warnx("max samples: %d", sio->samples);
-	sio->buffer = calloc(sio->samples * sio->par.rchan, sizeof(int16_t));
-	assert(sio->buffer);
+	samples = par.rate / FPS;
+	samples -= samples % par.round - par.round;
+	buffer = calloc(samples * par.rchan, sizeof(int16_t));
+	assert(buffer);
 
-	sio_start(sio->sio);
-
-	return sio;
+	return sio_start(hdl);
 }
 
 unsigned int
-max_samples_sio(struct sio *sio)
+max_samples_sio(void)
 {
 	/*
 	 * maximal number of samples we're willing to provide
 	 * with 1920 at 25 fps and 48000 Hz or
 	 * with 1764 at 25 fps and 44100 Hz it shall fit on most screens
 	 */
-	return sio->samples;
+	return samples;
 }
 
-int16_t *
-read_sio(struct sio *sio, unsigned int n)
+void
+read_sio(double *left, double *right, size_t n)
 {
-	int done;
-	char *buffer = (char *)sio->buffer;
-	size_t bufsz = sio->samples * sio->par.rchan * sizeof(int16_t);
-	size_t rndsz = n * sio->par.rchan * sizeof(int16_t);
+	int done, i;
+	char *p = (char *)buffer;
+	size_t bufsz = samples * par.rchan * sizeof(int16_t);
+	size_t rndsz = n * par.rchan * sizeof(int16_t);
+	struct data *data;
 
 	if (rndsz > bufsz)
 		rndsz = bufsz;
 
-	for (done = 0; bufsz > 0; buffer += done, bufsz -= done) {
-		done = sio_read(sio->sio, buffer, bufsz);
-		if (sio_eof(sio->sio))
+	for (done = 0; bufsz > 0; p += done, bufsz -= done) {
+		done = sio_read(hdl, p, bufsz);
+		if (sio_eof(hdl))
 			errx(1, "SIO EOF");
 	}
 
@@ -108,14 +103,18 @@ read_sio(struct sio *sio, unsigned int n)
 	 * return a pointer to the latest ROUND samples (the most recent
 	 * ones) to minimize latency between picture and sound
 	 */
-	return (int16_t *)(buffer - rndsz);
+	data = (struct data *)(p - rndsz);
+
+	for (i = 0; i < n; i++) {
+		left[i] = data[i].left;
+		right[i] = data[i].right;
+	}
 }
 
 void
-free_sio(struct sio *sio)
+free_sio(void)
 {
-	sio_stop(sio->sio);
-	sio_close(sio->sio);
-	free(sio->buffer);
-	free(sio);
+	sio_stop(hdl);
+	sio_close(hdl);
+	free(buffer);
 }
