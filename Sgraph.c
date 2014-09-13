@@ -114,6 +114,11 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 static void
 Resize(Widget w)
 {
+	if (!XtIsREalized(w))
+		return;
+
+	winwidth = w->core.width;
+	winheight = w->core.height;
 }
 
 static void
