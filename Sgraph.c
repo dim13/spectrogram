@@ -20,39 +20,45 @@
 #include <X11/StringDefs.h>
 #include "SgraphP.h"
 
-/* Class Methods */
-static void Initialize(Widget, Widget, ArgList, Cardinal *);
+static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
+static void Realize(Widget w, XtValueMask *valueMask, XSetWindowAttributes *attrs);
+static void Action(Widget w, XEvent *event, String *params, Cardinal *num_params);
+static void Resize(Widget w);
 
-/* Prototypes */
-static Bool Function(SgraphWidget, int, int, Bool);
+#define BORDER		2
+#define SGRAPH_WIDTH	1024
+#define SGRAPH_HEIGHT	768
 
-/* Actions */
-static void Action(Widget, XEvent *, String *, Cardinal *);
+static Dimension winwidth = SGRAPH_WIDTH;
+static Dimension winheight = SGRAPH_HEIGHT;
 
 /* Initialization */
 #define offset(field) XtOffsetOf(SgraphRec, sgraph.field)
 static XtResource resources[] = {
-	{
-		XtNsgraphResource,		/* name */
-		XtCSgraphResource,		/* class */
-		XtRSgraphResource,		/* type */
-		sizeof(char *),			/* size */
-		offset(resource),		/* offset */
-		XtRString,			/* default_type */
-		(XtPointer) "default"		/* default_addr */
-	},
+	{ XtNwidth, XtCWidth, XtRDimension,
+		sizeof(Dimension), XtOffset(Widget, core.width),
+		XtRDimension, &winwidth },
+	{ XtNheight, XtCHeight, XtRDimension,
+		sizeof(Dimension), XtOffset(Widget, core.height),
+		XtRDimension, &winheight },
+	{ XtNforeground, XtCForeground, XtRPixel,
+		sizeof(Pixel), XtOffset(SgraphWidget, sgraph.foreground),
+		XtRString, "white" },
+	{ XtNbackground, XtCBackground, XtRPixel,
+		sizeof(Pixel), XtOffset(SgraphWidget, sgraph.background),
+		XtRString, "black" },
+	{ XtNmirror, XtCBoolean, XtRBoolean,
+		sizeof(Boolean), XtOffset(SgraphWidget, sgraph.mirror),
+		XtRBoolean, False },
 };
 #undef offset
 
-static XtActionsRec actions[] =
-{
-	{
-		"sgraph",			/* name */
-		Action				/* procedure */
-	},
+static XtActionsRec actions[] = {
+	{ "sgraph", Action },
 };
 
 static char translations[] = "<Key>:" "sgraph()\n";
+
 
 #define Superclass (&widgetClassRec)
 SgraphClassRec sgraphClassRec = {
@@ -66,7 +72,7 @@ SgraphClassRec sgraphClassRec = {
 		False,				/* class_inited */
 		Initialize,			/* initialize */
 		NULL,				/* initialize_hook */
-		XtInheritRealize,		/* realize */
+		Realize,			/* realize */
 		actions,			/* actions */
 		XtNumber(actions),		/* num_actions */
 		resources,			/* resources */
@@ -77,7 +83,7 @@ SgraphClassRec sgraphClassRec = {
 		True,				/* compress_enterleave */
 		False,				/* visible_interest */
 		NULL,				/* destroy */
-		NULL,				/* resize */
+		Resize,				/* resize */
 		NULL,				/* expose */
 		NULL,				/* set_values */
 		NULL,				/* set_values_hook */
@@ -96,70 +102,27 @@ SgraphClassRec sgraphClassRec = {
 		NULL,				/* extension */
 	}
 };
-
 WidgetClass sgraphWidgetClass = (WidgetClass)&sgraphClassRec;
 
 /* Implementation */
 
-/*
- * Function:
- *	Initialize
- *
- * Parameters:
- *	request - requested widget
- *	w	- the widget
- *	args	- arguments
- *	num_args - number of arguments
- *
- * Description:
- *	Initializes widget instance.
- */
-/* ARGSUSED */
 static void
-Initialize(Widget request, Widget w, ArgList args, Cardinal *num_args)
+Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 {
-	SgraphWidget 	sw = (SgraphWidget)w;
-
-	sw->sgraph.private = NULL;
+//	Display *dpy = XtDisplay(w);
 }
 
-/*
- * Function:
- *	Function
- *
- * Parameters:
- *	sw    - sgraph widget
- *	x     - x coordinate
- *	y     - y coordinate
- *	force - force action
- *
- * Description:
- *	This function does nothing.
- *
- * Return:
- *	Parameter force
- */
-/* ARGSUSED */
-static 		Bool
-Function(SgraphWidget sw, int x, int y, Bool force)
+static void
+Realize(Widget w, XtValueMask *valueMask, XSetWindowAttributes *attrs)
 {
-	return (force);
+	XtCreateWindow(w, InputOutput, CopyFromParent, *valueMask, attrs);
 }
 
-/*
- * Function:
- *	Action
- *
- * Parameters:
- *	w	   - sgraph widget
- *	event	   - event that caused this action
- *	params	   - parameters
- *	num_params - number of parameters
- *
- * Description:
- *	This function does nothing.
- */
-/* ARGSUSED */
+static void
+Resize(Widget w)
+{
+}
+
 static void
 Action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
