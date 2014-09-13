@@ -17,6 +17,8 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Intrinsic.h>
+#include "Sgraph.h"
 
 #include <err.h>
 #include <signal.h>
@@ -52,6 +54,45 @@ usage(void)
 	exit(0);
 }
 
+static XrmOptionDescRec options[] = {
+	{"-mirror",	"*Sgraph.mirror",	XrmoptionNoArg, "TRUE" },
+	{"-nomirror",	"*Sgprah.mirror",	XrmoptionNoArg, "FALSE" },
+};
+
+static void
+quit()
+{
+	exit(0);
+}
+
+static XtActionsRec actionsList[] = {
+	{ "quit", quit },
+};
+
+int
+main(int argc, char **argv)
+{
+	Widget	toplevel, sgraph;
+
+	toplevel = XtInitialize(__progname, "Spectrograph",
+		options, XtNumber(options), &argc, argv);
+	XtAddActions(actionsList, 1);
+
+	if (argc != 1)
+		usage();
+
+	sgraph = XtCreateManagedWidget(__progname, sgraphWidgetClass,
+		toplevel, NULL, 0);
+	XtOverrideTranslations(sgraph,
+		XtParseTranslationTable("<Key>q: quit()"));
+
+	XtRealizeWidget(toplevel);
+	XtMainLoop();
+
+	return 0;
+}
+
+#if 0
 int 
 main(int argc, char **argv)
 {
@@ -241,3 +282,4 @@ main(int argc, char **argv)
 
 	return 0;
 }
+#endif
