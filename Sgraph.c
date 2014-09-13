@@ -21,7 +21,6 @@
 #include "SgraphP.h"
 
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
-static void Realize(Widget w, XtValueMask *valueMask, XSetWindowAttributes *attrs);
 static void Action(Widget w, XEvent *event, String *params, Cardinal *num_params);
 static void Resize(Widget w);
 
@@ -72,7 +71,7 @@ SgraphClassRec sgraphClassRec = {
 		False,				/* class_inited */
 		Initialize,			/* initialize */
 		NULL,				/* initialize_hook */
-		Realize,			/* realize */
+		XtInheritRealize,		/* realize */
 		actions,			/* actions */
 		XtNumber(actions),		/* num_actions */
 		resources,			/* resources */
@@ -110,12 +109,6 @@ static void
 Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 {
 //	Display *dpy = XtDisplay(w);
-}
-
-static void
-Realize(Widget w, XtValueMask *valueMask, XSetWindowAttributes *attrs)
-{
-	XtCreateWindow(w, InputOutput, CopyFromParent, *valueMask, attrs);
 }
 
 static void
