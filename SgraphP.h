@@ -15,36 +15,36 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _SpectrogramP_h
-#define _SpectrogramP_h
+#ifndef _SgraphP_h
+#define _SgraphP_h
 
-#include "Spectrogram.h"
+#include "Sgraph.h"
 
 /* include superclass private header file */
 #include <X11/CoreP.h>
 
 /* define unique representation types not found in <X11/StringDefs.h> */
-#define XtRSpectrogramResource "SpectrogramResource"
+#define XtRSgraphResource "SgraphResource"
 
 typedef struct {
 	XtPointer extension;
-} SpectrogramClassPart;
+} SgraphClassPart;
 
-typedef struct _SpectrogramClassRec {
+typedef struct _SgraphClassRec {
 	CoreClassPart		core_class;
-	SpectrogramClassPart	spectrogram_class;
-} SpectrogramClassRec;
+	SgraphClassPart	sgraph_class;
+} SgraphClassRec;
 
-extern SpectrogramClassRec spectrogramClassRec;
+extern SgraphClassRec sgraphClassRec;
 
 typedef struct {
 	char			*resource;
 	char			*private;
-} SpectrogramPart;
+} SgraphPart;
 
-typedef struct _SpectrogramRec {
+typedef struct _SgraphRec {
 	CorePart		core;
-	SpectrogramPart		spectrogram;
-} SpectrogramRec;
+	SgraphPart		sgraph;
+} SgraphRec;
 
 #endif

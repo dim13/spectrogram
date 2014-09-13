@@ -15,14 +15,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _Spectrogram_h
-#define _Spectrogram_h
+#ifndef _Sgraph_h
+#define _Sgraph_h
 
 #include <X11/Intrinsic.h>
 
 /****************************************************************
  *
- * Spectrogram widget
+ * Sgraph widget
  *
  ****************************************************************/
 
@@ -44,14 +44,14 @@
 */
 
 /* define any special resource names here that are not in <X11/StringDefs.h> */
-#define XtNspectrogramResource "spectrogramResource"
-#define XtCSpectrogramResource "SpectrogramResource"
+#define XtNsgraphResource "sgraphResource"
+#define XtCSgraphResource "SgraphResource"
 
-/* declare specific SpectrogramWidget class and instance datatypes */
-typedef struct _SpectrogramClassRec *SpectrogramWidgetClass;
-typedef struct _SpectrogramRec *SpectrogramWidget;
+/* declare specific SgraphWidget class and instance datatypes */
+typedef struct _SgraphClassRec *SgraphWidgetClass;
+typedef struct _SgraphRec *SgraphWidget;
 
 /* declare the class constant */
-extern WidgetClass spectrogramWidgetClass;
+extern WidgetClass sgraphWidgetClass;
 
 #endif

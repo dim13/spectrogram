@@ -18,24 +18,24 @@
 
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
-#include "SpectrogramP.h"
+#include "SgraphP.h"
 
 /* Class Methods */
 static void Initialize(Widget, Widget, ArgList, Cardinal *);
 
 /* Prototypes */
-static Bool Function(SpectrogramWidget, int, int, Bool);
+static Bool Function(SgraphWidget, int, int, Bool);
 
 /* Actions */
 static void Action(Widget, XEvent *, String *, Cardinal *);
 
 /* Initialization */
-#define offset(field) XtOffsetOf(SpectrogramRec, spectrogram.field)
+#define offset(field) XtOffsetOf(SgraphRec, sgraph.field)
 static XtResource resources[] = {
 	{
-		XtNspectrogramResource,		/* name */
-		XtCSpectrogramResource,		/* class */
-		XtRSpectrogramResource,		/* type */
+		XtNsgraphResource,		/* name */
+		XtCSgraphResource,		/* class */
+		XtRSgraphResource,		/* type */
 		sizeof(char *),			/* size */
 		offset(resource),		/* offset */
 		XtRString,			/* default_type */
@@ -47,20 +47,20 @@ static XtResource resources[] = {
 static XtActionsRec actions[] =
 {
 	{
-		"spectrogram",			/* name */
+		"sgraph",			/* name */
 		Action				/* procedure */
 	},
 };
 
-static char translations[] = "<Key>:" "spectrogram()\n";
+static char translations[] = "<Key>:" "sgraph()\n";
 
 #define Superclass (&widgetClassRec)
-SpectrogramClassRec spectrogramClassRec = {
+SgraphClassRec sgraphClassRec = {
 	/* core */
 	{
 		(WidgetClass) Superclass,	/* superclass */
-		"Spectrogram",			/* class_name */
-		sizeof(SpectrogramRec),		/* widget_size */
+		"Sgraph",			/* class_name */
+		sizeof(SgraphRec),		/* widget_size */
 		NULL,				/* class_initialize */
 		NULL,				/* class_part_initialize */
 		False,				/* class_inited */
@@ -91,13 +91,13 @@ SpectrogramClassRec spectrogramClassRec = {
 		XtInheritDisplayAccelerator,	/* display_accelerator */
 		NULL,				/* extension */
 	},
-	/* spectrogram */
+	/* sgraph */
 	{
 		NULL,				/* extension */
 	}
 };
 
-WidgetClass spectrogramWidgetClass = (WidgetClass)&spectrogramClassRec;
+WidgetClass sgraphWidgetClass = (WidgetClass)&sgraphClassRec;
 
 /* Implementation */
 
@@ -118,9 +118,9 @@ WidgetClass spectrogramWidgetClass = (WidgetClass)&spectrogramClassRec;
 static void
 Initialize(Widget request, Widget w, ArgList args, Cardinal *num_args)
 {
-	SpectrogramWidget 	sw = (SpectrogramWidget)w;
+	SgraphWidget 	sw = (SgraphWidget)w;
 
-	sw->spectrogram.private = NULL;
+	sw->sgraph.private = NULL;
 }
 
 /*
@@ -128,7 +128,7 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *num_args)
  *	Function
  *
  * Parameters:
- *	sw    - spectrogram widget
+ *	sw    - sgraph widget
  *	x     - x coordinate
  *	y     - y coordinate
  *	force - force action
@@ -141,7 +141,7 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *num_args)
  */
 /* ARGSUSED */
 static 		Bool
-Function(SpectrogramWidget sw, int x, int y, Bool force)
+Function(SgraphWidget sw, int x, int y, Bool force)
 {
 	return (force);
 }
@@ -151,7 +151,7 @@ Function(SpectrogramWidget sw, int x, int y, Bool force)
  *	Action
  *
  * Parameters:
- *	w	   - spectrogram widget
+ *	w	   - sgraph widget
  *	event	   - event that caused this action
  *	params	   - parameters
  *	num_params - number of parameters

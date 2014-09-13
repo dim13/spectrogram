@@ -3,7 +3,7 @@
 VERSION=3.0
 PROG=	spectrogram
 
-SRCS=	spectrogram.c fft.c cms.c aux.c widget.c Spectrogram.c
+SRCS=	spectrogram.c fft.c cms.c aux.c widget.c Sgraph.c
 LIBS=	fftw3 x11 xaw7
 BINDIR=	/usr/local/bin
 
