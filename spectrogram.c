@@ -74,7 +74,7 @@ static Boolean
 worker(XtPointer client_data)
 {
 	warnx("Worker");
-	return True;
+	return True;	/* remove the work procedure from the list */
 }
 
 int
