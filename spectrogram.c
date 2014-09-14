@@ -19,7 +19,6 @@
 #include <X11/Xutil.h>
 
 #include <X11/Intrinsic.h>
-#include <X11/Shell.h>
 #include "Sgraph.h"
 
 #include <err.h>
@@ -80,14 +79,12 @@ worker(XtPointer client_data)
 int
 main(int argc, char **argv)
 {
-	XtAppContext	app;
 	Widget	toplevel, sgraph;
 
-	toplevel = XtOpenApplication(&app, "Spectrograph",
-		options, XtNumber(options), &argc, argv, NULL,
-		sessionShellWidgetClass, NULL, 0);
-	XtAppAddActions(app, actionsList, XtNumber(actionsList));
-	XtAppAddWorkProc(app, worker, NULL);
+	toplevel = XtInitialize(__progname, "Spectrograph",
+		options, XtNumber(options), &argc, argv);
+	XtAddActions(actionsList, XtNumber(actionsList));
+	XtAddWorkProc(worker, NULL);
 
 	if (argc != 1)
 		usage();
