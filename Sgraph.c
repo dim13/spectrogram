@@ -49,6 +49,9 @@ static XtResource resources[] = {
 	{ XtNbackground, XtCBackground, XtRPixel,
 		sizeof(Pixel), XtOffset(SgraphWidget, sgraph.background),
 		XtRString, "black" },
+	{ XtNbackground, XtCBackground, XtRPixel,
+		sizeof(Pixel), XtOffset(Widget, core.background_pixel),
+		XtRString, "dark slate gray" },
 	{ XtNmirror, XtCBoolean, XtRBoolean,
 		sizeof(Boolean), XtOffset(SgraphWidget, sgraph.mirror),
 		XtRBoolean, False },
@@ -135,7 +138,6 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 static void
 Resize(Widget w)
 {
-	SgraphWidget	sw = (SgraphWidget)w;
 	Dimension	width, height;
 
 	if (!XtIsRealized(w))
@@ -151,21 +153,28 @@ Resize(Widget w)
 	warnx("win: %dx%d", winwidth, winheight);
 	warnx("sub: %dx%d", width, height);
 
+}
+
+static void
+Redisplay(Widget w, XEvent *event, Region r)
+{
+	SgraphWidget	sw = (SgraphWidget)w;
+	Dimension	width = winwidth / 2;
+	Dimension	height = winheight;
+
+	if (!XtIsRealized(w))
+		return;
+
+	warnx("Redisplay");
+
+	Resize(w);
+
 	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
 		BORDER, BORDER,
 		width - 2 * BORDER, height - 2 * BORDER);
 	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
 		width + BORDER, BORDER,
 		width - 2 * BORDER, height - 2 * BORDER);
-}
-
-static void
-Redisplay(Widget w, XEvent *event, Region r)
-{
-	if (!XtIsRealized(w))
-		return;
-	warnx("Redisplay");
-	Resize(w);
 }
 
 static void
