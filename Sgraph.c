@@ -23,6 +23,7 @@
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
 static void Action(Widget w, XEvent *event, String *params, Cardinal *num_params);
 static void Resize(Widget w);
+static void Redisplay(Widget w);
 
 #define BORDER		2
 #define SGRAPH_WIDTH	1024
@@ -83,7 +84,7 @@ SgraphClassRec sgraphClassRec = {
 		False,				/* visible_interest */
 		NULL,				/* destroy */
 		Resize,				/* resize */
-		NULL,				/* expose */
+		Redisplay,			/* expose */
 		NULL,				/* set_values */
 		NULL,				/* set_values_hook */
 		XtInheritSetValuesAlmost,	/* set_values_almost */
@@ -114,11 +115,18 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 static void
 Resize(Widget w)
 {
-	if (!XtIsREalized(w))
+	if (!XtIsRealized(w))
 		return;
 
 	winwidth = w->core.width;
 	winheight = w->core.height;
+}
+
+static void
+Redisplay(Widget w)
+{
+	if (!XtIsRealized(w))
+		return;
 }
 
 static void
