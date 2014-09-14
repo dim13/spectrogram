@@ -17,7 +17,9 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+
 #include <X11/Intrinsic.h>
+#include <X11/Shell.h>
 #include "Sgraph.h"
 
 #include <err.h>
@@ -60,7 +62,7 @@ static XrmOptionDescRec options[] = {
 };
 
 static void
-quit()
+quit(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
 	exit(0);
 }
@@ -69,14 +71,23 @@ static XtActionsRec actionsList[] = {
 	{ "quit", quit },
 };
 
+static Boolean
+worker(XtPointer client_data)
+{
+	return True;
+}
+
 int
 main(int argc, char **argv)
 {
+	XtAppContext	app;
 	Widget	toplevel, sgraph;
 
-	toplevel = XtInitialize(__progname, "Spectrograph",
-		options, XtNumber(options), &argc, argv);
-	XtAddActions(actionsList, 1);
+	toplevel = XtOpenApplication(&app, "Spectrograph",
+		options, XtNumber(options), &argc, argv, NULL,
+		sessionShellWidgetClass, NULL, 0);
+	XtAppAddActions(app, actionsList, XtNumber(actionsList));
+	XtAppAddWorkProc(app, worker, NULL);
 
 	if (argc != 1)
 		usage();
