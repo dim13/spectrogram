@@ -73,6 +73,7 @@ static XtActionsRec actionsList[] = {
 static Boolean
 worker(XtPointer client_data)
 {
+	warnx("Worker");
 	return True;
 }
 

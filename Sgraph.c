@@ -20,6 +20,8 @@
 #include <X11/StringDefs.h>
 #include "SgraphP.h"
 
+#include <err.h>
+
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
 static void Action(Widget w, XEvent *event, String *params, Cardinal *num_params);
 static void Resize(Widget w);
@@ -110,6 +112,7 @@ static void
 Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 {
 //	Display *dpy = XtDisplay(w);
+	warnx("Initialize");
 }
 
 static void
@@ -117,6 +120,7 @@ Resize(Widget w)
 {
 	if (!XtIsRealized(w))
 		return;
+	warnx("Resize");
 
 	winwidth = w->core.width;
 	winheight = w->core.height;
@@ -127,6 +131,7 @@ Redisplay(Widget w)
 {
 	if (!XtIsRealized(w))
 		return;
+	warnx("Redisplay");
 }
 
 static void
