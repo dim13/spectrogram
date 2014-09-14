@@ -25,9 +25,9 @@
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
 static void Action(Widget w, XEvent *event, String *params, Cardinal *num_params);
 static void Resize(Widget w);
-static void Redisplay(Widget w);
+static void Redisplay(Widget w, XEvent *event, Region r);
 
-#define BORDER		2
+#define BORDER		1
 #define SGRAPH_WIDTH	1024
 #define SGRAPH_HEIGHT	768
 
@@ -109,29 +109,63 @@ WidgetClass sgraphWidgetClass = (WidgetClass)&sgraphClassRec;
 /* Implementation */
 
 static void
+GetGC(Widget w)
+{
+	SgraphWidget	sw = (SgraphWidget)w;
+	XGCValues	xgcv;
+	XtGCMask	gc_mask = GCForeground|GCBackground;
+
+	xgcv.background = sw->core.background_pixel;
+	xgcv.foreground = sw->sgraph.foreground;
+	sw->sgraph.foreGC = XtGetGC(w, gc_mask, &xgcv);
+
+	xgcv.background = sw->core.background_pixel;
+	xgcv.foreground = sw->sgraph.background;
+	sw->sgraph.backGC = XtGetGC(w, gc_mask, &xgcv);
+}
+
+static void
 Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 {
-//	Display *dpy = XtDisplay(w);
+
 	warnx("Initialize");
+	GetGC(w);
 }
 
 static void
 Resize(Widget w)
 {
+	SgraphWidget	sw = (SgraphWidget)w;
+	Dimension	width, height;
+
 	if (!XtIsRealized(w))
 		return;
+
 	warnx("Resize");
 
 	winwidth = w->core.width;
 	winheight = w->core.height;
+
+	width = winwidth / 2;
+	height = winheight;
+	warnx("win: %dx%d", winwidth, winheight);
+	warnx("sub: %dx%d", width, height);
+
+	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
+		BORDER, BORDER,
+		width - 2 * BORDER, height - 2 * BORDER);
+	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
+		width + BORDER, BORDER,
+		width - 2 * BORDER, height - 2 * BORDER);
 }
 
 static void
-Redisplay(Widget w)
+Redisplay(Widget w, XEvent *event, Region r)
 {
 	if (!XtIsRealized(w))
 		return;
 	warnx("Redisplay");
+	Resize(w);
 }
 
 static void

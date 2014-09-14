@@ -41,6 +41,9 @@ typedef struct {
 	Pixel	foreground;
 	Pixel	background;
 	Boolean	mirror;
+
+	GC	foreGC;
+	GC	backGC;
 } SgraphPart;
 
 typedef struct _SgraphRec {
