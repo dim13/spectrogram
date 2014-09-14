@@ -194,11 +194,12 @@ Redisplay(Widget w, XEvent *event, Region r)
 	SgraphWidget	sw = (SgraphWidget)w;
 	Dimension	width = winwidth / 2;
 	Dimension	height = winheight;
+	static Dimension n;
 
 	if (!XtIsRealized(w))
 		return;
 
-	warnx("Redisplay");
+	//warnx("Redisplay");
 
 	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
 		BORDER, BORDER,
@@ -206,8 +207,9 @@ Redisplay(Widget w, XEvent *event, Region r)
 	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
 		width + BORDER, BORDER,
 		width - 2 * BORDER, height - 2 * BORDER);
+	n = (n + 1) % width;
 	XCopyArea(XtDisplay(sw), sw->sgraph.bg, XtWindow(sw), sw->sgraph.foreGC,
-		0, 0, width, height / 4, BORDER, BORDER);
+		0, 0, width, height / 4, BORDER + n, BORDER);
 }
 
 static void

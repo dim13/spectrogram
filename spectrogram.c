@@ -71,10 +71,18 @@ static XtActionsRec actionsList[] = {
 };
 
 static Boolean
-worker(XtPointer client_data)
+worker(XtPointer data)
 {
-	warnx("Worker");
-	return True;	/* remove the work procedure from the list */
+	XEvent event;
+
+	memset(&event, 0, sizeof(XEvent));
+	event.type = Expose;
+	event.xexpose.window = XtWindow(data);
+	XSendEvent(XtDisplay(data), XtWindow(data), False, ExposureMask, &event);
+	XFlush(XtDisplay(data));
+	usleep(200);
+
+	return False; 	/* don't remove the work procedure from the list */
 }
 
 int
@@ -85,7 +93,6 @@ main(int argc, char **argv)
 	toplevel = XtInitialize(__progname, "Spectrograph",
 		options, XtNumber(options), &argc, argv);
 	XtAddActions(actionsList, XtNumber(actionsList));
-	XtAddWorkProc(worker, NULL);
 
 	if (argc != 1)
 		usage();
@@ -94,6 +101,7 @@ main(int argc, char **argv)
 		toplevel, NULL, 0);
 	XtOverrideTranslations(sgraph,
 		XtParseTranslationTable("<Key>q: quit()"));
+	XtAddWorkProc(worker, sgraph);
 
 	XtRealizeWidget(toplevel);
 	XtMainLoop();
