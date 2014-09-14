@@ -73,15 +73,9 @@ static XtActionsRec actionsList[] = {
 static Boolean
 worker(XtPointer data)
 {
-	XEvent event;
+	redisplay(XtDisplay(data), XtWindow(data));
 
-	memset(&event, 0, sizeof(XEvent));
-	event.type = Expose;
-	event.xexpose.window = XtWindow(data);
-	XSendEvent(XtDisplay(data), XtWindow(data), False, ExposureMask, &event);
-	XFlush(XtDisplay(data));
 	usleep(200);
-
 	return False; 	/* don't remove the work procedure from the list */
 }
 

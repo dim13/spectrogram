@@ -115,3 +115,16 @@ copy(Display *d, Drawable from, Drawable to, GC gc, XRectangle r, Drawable mask)
 	XCopyArea(d, from, to, gc, 0, 0, r.width, r.height, 0, 0);
 	XSetClipMask(d, gc, None);
 }
+
+void
+redisplay(Display *d, Window w)
+{
+	XEvent event;
+
+	memset(&event, 0, sizeof(XEvent));
+	event.type = Expose;
+	event.xexpose.window = w;
+	XSendEvent(d, w, False, ExposureMask, &event);
+
+	XFlush(d);
+}

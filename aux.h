@@ -26,6 +26,7 @@ void restrictsize(Display *, Window, int, int, int, int);
 void blit(Display *, Drawable, GC, XRectangle);
 void clear(Display *, Drawable, GC, XRectangle);
 void copy(Display *, Drawable, Drawable, GC, XRectangle, Drawable);
+void redisplay(Display *, Window);
 __END_DECLS
 
 #endif

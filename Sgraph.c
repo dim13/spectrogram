@@ -201,12 +201,15 @@ Redisplay(Widget w, XEvent *event, Region r)
 
 	//warnx("Redisplay");
 
+	/*
 	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
 		BORDER, BORDER,
 		width - 2 * BORDER, height - 2 * BORDER);
 	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
 		width + BORDER, BORDER,
 		width - 2 * BORDER, height - 2 * BORDER);
+	 */
+	XClearWindow(XtDisplay(sw), XtWindow(sw));
 	n = (n + 1) % width;
 	XCopyArea(XtDisplay(sw), sw->sgraph.bg, XtWindow(sw), sw->sgraph.foreGC,
 		0, 0, width, height / 4, BORDER + n, BORDER);
