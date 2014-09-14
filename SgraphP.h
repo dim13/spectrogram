@@ -44,6 +44,11 @@ typedef struct {
 
 	GC	foreGC;
 	GC	backGC;
+	GC	maskGC;
+	GC	clipGC;
+	Pixmap	bg;
+	Pixmap	mask;
+	Pixmap	waterfall;
 } SgraphPart;
 
 typedef struct _SgraphRec {

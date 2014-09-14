@@ -116,15 +116,26 @@ GetGC(Widget w)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 	XGCValues	xgcv;
-	XtGCMask	gc_mask = GCForeground|GCBackground;
+	XtGCMask	gc_mask = GCForeground|GCBackground|GCPlaneMask;
 
+	xgcv.plane_mask = AllPlanes;
 	xgcv.background = sw->core.background_pixel;
+
+	xgcv.foreground = sw->sgraph.background;
+	sw->sgraph.backGC = XtGetGC(w, gc_mask, &xgcv);
+
 	xgcv.foreground = sw->sgraph.foreground;
 	sw->sgraph.foreGC = XtGetGC(w, gc_mask, &xgcv);
 
-	xgcv.background = sw->core.background_pixel;
-	xgcv.foreground = sw->sgraph.background;
-	sw->sgraph.backGC = XtGetGC(w, gc_mask, &xgcv);
+	/*
+	gc_mask |= GCClipMask;
+	xgcv.clip_mask = sw->sgraph.mask;
+	sw->sgraph.clipGC = XtGetGC(w, gc_mask, &xgcv);
+
+	gc_mask ^= ~GCClipMask;
+	 */
+	xgcv.plane_mask = 1;
+	sw->sgraph.maskGC = XtGetGC(w, gc_mask, &xgcv);
 }
 
 static void
@@ -138,6 +149,7 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 static void
 Resize(Widget w)
 {
+	SgraphWidget	sw = (SgraphWidget)w;
 	Dimension	width, height;
 
 	if (!XtIsRealized(w))
@@ -152,6 +164,19 @@ Resize(Widget w)
 	height = winheight;
 	warnx("win: %dx%d", winwidth, winheight);
 	warnx("sub: %dx%d", width, height);
+
+	if (sw->sgraph.bg != None)
+		XFreePixmap(XtDisplay(sw), sw->sgraph.bg);
+	sw->sgraph.bg = XCreatePixmap(XtDisplay(sw), XtWindow(sw),
+		width, height / 4, DefaultDepthOfScreen(XtScreen(sw)));
+	XSetForeground(XtDisplay(sw), sw->sgraph.foreGC, 0xFF0000);
+	XFillRectangle(XtDisplay(sw), sw->sgraph.bg, sw->sgraph.foreGC,
+		0, 0, width, height / 4);
+
+	if (sw->sgraph.mask != None)
+		XFreePixmap(XtDisplay(sw), sw->sgraph.mask);
+	sw->sgraph.mask = XCreatePixmap(XtDisplay(sw), XtWindow(sw),
+		width, height / 4, 1);
 
 }
 
@@ -175,6 +200,8 @@ Redisplay(Widget w, XEvent *event, Region r)
 	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
 		width + BORDER, BORDER,
 		width - 2 * BORDER, height - 2 * BORDER);
+	XCopyArea(XtDisplay(sw), sw->sgraph.bg, XtWindow(sw), sw->sgraph.foreGC,
+		0, 0, width, height / 4, BORDER, BORDER);
 }
 
 static void
