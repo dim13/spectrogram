@@ -23,6 +23,7 @@
 #include <err.h>
 
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
+static void Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr);
 static void Action(Widget w, XEvent *event, String *params, Cardinal *num_params);
 static void Resize(Widget w);
 static void Redisplay(Widget w, XEvent *event, Region r);
@@ -77,7 +78,7 @@ SgraphClassRec sgraphClassRec = {
 		False,				/* class_inited */
 		Initialize,			/* initialize */
 		NULL,				/* initialize_hook */
-		XtInheritRealize,		/* realize */
+		Realize,			/* realize */
 		actions,			/* actions */
 		XtNumber(actions),		/* num_actions */
 		resources,			/* resources */
@@ -147,6 +148,13 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 }
 
 static void
+Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr)
+{
+	XtCreateWindow(w, InputOutput, CopyFromParent, *mask, attr);
+	Resize(w);
+}
+
+static void
 Resize(Widget w)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
@@ -191,8 +199,6 @@ Redisplay(Widget w, XEvent *event, Region r)
 		return;
 
 	warnx("Redisplay");
-
-	Resize(w);
 
 	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
 		BORDER, BORDER,
