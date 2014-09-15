@@ -213,7 +213,7 @@ Redisplay(Widget w, XEvent *event, Region r)
 		width - 2 * BORDER, height - 2 * BORDER);
 	 */
 	if (sw->sgraph.data != NULL)
-		warnx("%d", *sw->sgraph.data);
+		warnx("%d", *(int *)sw->sgraph.data);
 
 	XClearWindow(XtDisplay(sw), XtWindow(sw));
 	n = (n + 1) % width;
