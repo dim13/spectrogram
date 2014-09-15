@@ -73,9 +73,11 @@ static XtActionsRec actionsList[] = {
 static Boolean
 worker(XtPointer data)
 {
+	Arg	arg[10];
 	redisplay(XtDisplay(data), XtWindow(data));
+	//XtSetValues(data, arg, 0);
 
-	usleep(200);
+	usleep(40);	/* emulate 25 Hz */
 	return False; 	/* don't remove the work procedure from the list */
 }
 

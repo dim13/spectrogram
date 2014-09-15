@@ -27,6 +27,7 @@ static void Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr);
 static void Action(Widget w, XEvent *event, String *params, Cardinal *num_params);
 static void Resize(Widget w);
 static void Redisplay(Widget w, XEvent *event, Region r);
+static Boolean SetValues(Widget old, Widget reference, Widget new, ArgList args, Cardinal *num_args);
 
 #define BORDER		1
 #define SGRAPH_WIDTH	1024
@@ -91,7 +92,7 @@ SgraphClassRec sgraphClassRec = {
 		NULL,				/* destroy */
 		Resize,				/* resize */
 		Redisplay,			/* expose */
-		NULL,				/* set_values */
+		SetValues,			/* set_values */
 		NULL,				/* set_values_hook */
 		XtInheritSetValuesAlmost,	/* set_values_almost */
 		NULL,				/* get_values_hook */
@@ -219,6 +220,12 @@ Redisplay(Widget w, XEvent *event, Region r)
 	n = (n + 1) % width;
 	XCopyArea(XtDisplay(sw), sw->sgraph.bg, XtWindow(sw), sw->sgraph.foreGC,
 		0, 0, width, height / 4, BORDER + n, BORDER);
+}
+
+static Boolean
+SetValues(Widget old, Widget reference, Widget new, ArgList args, Cardinal *num_args)
+{
+	return True;
 }
 
 static void
