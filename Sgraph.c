@@ -142,7 +142,10 @@ GetGC(Widget w)
 static void
 Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 {
+	SgraphWidget	sw = (SgraphWidget)w;
 
+	sw->sgraph.data = NULL;
+	
 	warnx("Initialize");
 	GetGC(w);
 }
@@ -209,6 +212,9 @@ Redisplay(Widget w, XEvent *event, Region r)
 		width + BORDER, BORDER,
 		width - 2 * BORDER, height - 2 * BORDER);
 	 */
+	if (sw->sgraph.data != NULL)
+		warnx("%d", *sw->sgraph.data);
+
 	XClearWindow(XtDisplay(sw), XtWindow(sw));
 	n = (n + 1) % width;
 	XCopyArea(XtDisplay(sw), sw->sgraph.bg, XtWindow(sw), sw->sgraph.foreGC,

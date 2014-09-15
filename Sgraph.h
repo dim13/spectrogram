@@ -45,6 +45,8 @@
 
 /* define any special resource names here that are not in <X11/StringDefs.h> */
 #define XtNmirror	"mirror"
+#define XtNdata		"data"
+#define XtNdataSize	"dataSize"
 
 #define XtNsgraphResource "sgraphResource"
 #define XtCSgraphResource "SgraphResource"
