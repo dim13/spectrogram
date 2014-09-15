@@ -27,11 +27,11 @@
 #define XtRSgraphResource "SgraphResource"
 
 typedef struct {
-	XtPointer extension;
+	XtPointer dummy;
 } SgraphClassPart;
 
 typedef struct _SgraphClassRec {
-	CoreClassPart		core_class;
+	CoreClassPart	core_class;
 	SgraphClassPart	sgraph_class;
 } SgraphClassRec;
 
