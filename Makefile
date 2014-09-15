@@ -1,4 +1,5 @@
 # $Id$
+# Debian user, please use `pmake'
 
 VERSION=3.0
 PROG=	spectrogram
