@@ -66,12 +66,10 @@ static XtActionsRec actions[] = {
 
 static char translations[] = "<Key>:" "sgraph()\n";
 
-
-#define Superclass (&widgetClassRec)
 SgraphClassRec sgraphClassRec = {
 	/* core */
 	{
-		(WidgetClass) Superclass,	/* superclass */
+		&widgetClassRec,		/* superclass */
 		"Sgraph",			/* class_name */
 		sizeof(SgraphRec),		/* widget_size */
 		NULL,				/* class_initialize */
