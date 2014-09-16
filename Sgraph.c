@@ -143,7 +143,8 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 
-	sw->sgraph.data = NULL;
+	sw->sgraph.leftData = XtCalloc(sw->sgraph.sizeData, sizeof(double));
+	sw->sgraph.rightData = XtCalloc(sw->sgraph.sizeData, sizeof(double));
 	
 	warnx("Initialize");
 	GetGC(w);
@@ -211,8 +212,6 @@ Redisplay(Widget w, XEvent *event, Region r)
 		width + BORDER, BORDER,
 		width - 2 * BORDER, height - 2 * BORDER);
 	 */
-	if (sw->sgraph.data != NULL)
-		warnx("%d", *(int *)sw->sgraph.data);
 
 	XClearWindow(XtDisplay(sw), XtWindow(sw));
 	n = (n + 1) % width;

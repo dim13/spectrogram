@@ -41,7 +41,9 @@ typedef struct {
 	Pixel	foreground;
 	Pixel	background;
 	Boolean	mirror;
-	XtPointer data;
+	XtPointer leftData;
+	XtPointer rightData;
+	Cardinal sizeData;
 
 	GC	foreGC;
 	GC	backGC;
