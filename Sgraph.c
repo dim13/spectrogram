@@ -63,9 +63,12 @@ static XtResource resources[] = {
 	{ XtNrightData, XtCParameter, XtRPointer,
 		sizeof(XtPointer), XtOffset(SgraphWidget, sgraph.rightData),
 		XtRPointer, NULL },
-	{ XtNsizeData, XtCsizeData, XtRInt,
-		sizeof(int), XtOffset(SgraphWidget, sgraph.sizeData),
+	{ XtNsize, XtCsize, XtRInt,
+		sizeof(int), XtOffset(SgraphWidget, sgraph.size),
 		XtRImmediate, (XtPointer)2048 },
+	{ XtNsamples, XtCsamples, XtRInt,
+		sizeof(int), XtOffset(SgraphWidget, sgraph.samples),
+		XtRImmediate, (XtPointer)0 },
 };
 #undef offset
 
@@ -152,8 +155,8 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 
-	sw->sgraph.leftData = XtCalloc(sw->sgraph.sizeData, sizeof(double));
-	sw->sgraph.rightData = XtCalloc(sw->sgraph.sizeData, sizeof(double));
+	sw->sgraph.leftData = (double *)XtCalloc(sw->sgraph.size, sizeof(double));
+	sw->sgraph.rightData = (double *)XtCalloc(sw->sgraph.size, sizeof(double));
 	
 	warnx("Initialize");
 	GetGC(w);
@@ -184,7 +187,8 @@ Resize(Widget w)
 	height = winheight;
 	warnx("win: %dx%d", winwidth, winheight);
 	warnx("sub: %dx%d", width, height);
-	warnx("size: %d", sw->sgraph.sizeData);
+	warnx("size: %d", sw->sgraph.size);
+	warnx("samples: %d", sw->sgraph.samples);
 
 	if (sw->sgraph.bg != None)
 		XFreePixmap(XtDisplay(sw), sw->sgraph.bg);
@@ -222,6 +226,8 @@ Redisplay(Widget w, XEvent *event, Region r)
 		width + BORDER, BORDER,
 		width - 2 * BORDER, height - 2 * BORDER);
 	 */
+
+	warnx("%lf : %lf" , sw->sgraph.leftData[0], sw->sgraph.rightData[0]);
 
 	XClearWindow(XtDisplay(sw), XtWindow(sw));
 	n = (n + 1) % width;

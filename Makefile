@@ -5,7 +5,7 @@ VERSION=3.0
 PROG=	spectrogram
 
 SRCS=	spectrogram.c fft.c cms.c aux.c widget.c Sgraph.c
-LIBS=	fftw3 x11 xaw7
+LIBS=	fftw3 xt
 BINDIR=	/usr/local/bin
 
 UNAME!=	uname
@@ -23,7 +23,7 @@ CFLAGS+=${PCCF}
 PCLA!=	pkg-config --libs ${LIBS}
 LDADD+=	${PCLA}
 
-DEBUG+=	-Wall
+DEBUG+=	-Wall -ggdb
 NOMAN=
 DIR=	${PROG}-${VERSION}
 

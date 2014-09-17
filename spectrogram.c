@@ -74,8 +74,23 @@ static Boolean
 worker(XtPointer data)
 {
 	Arg	arg[10];
-	redisplay(XtDisplay(data), XtWindow(data));
-	//XtSetValues(data, arg, 0);
+	int	n, size, samples;
+	double	*left, *right;
+
+	n = 0;
+	XtSetArg(arg[n], XtNsize, &size);	n++;
+	XtSetArg(arg[n], XtNsamples, &samples);	n++;
+	XtSetArg(arg[n], XtNleftData, &left);	n++;
+	XtSetArg(arg[n], XtNrightData, &right);	n++;
+	XtGetValues(data, arg, n);
+
+	size = read_sio(left, right, size);
+	//warnx("samples: %d, size: %d, %d", samples, size, n);
+	//warnx("l/r: %p (%lf) / %p (%lf)", left, *left, right, *right);
+
+	n = 0;
+	XtSetArg(arg[n], XtNsize, size);	n++;
+	XtSetValues(data, arg, n);	/* trigger expose */
 
 	usleep(40);	/* emulate 25 Hz */
 	return False; 	/* don't remove the work procedure from the list */
@@ -85,6 +100,8 @@ int
 main(int argc, char **argv)
 {
 	Widget	toplevel, sgraph;
+	int	n, samples;
+	Arg	args[10];
 
 	toplevel = XtInitialize(__progname, "Spectrograph",
 		options, XtNumber(options), &argc, argv);
@@ -93,8 +110,14 @@ main(int argc, char **argv)
 	if (argc != 1)
 		usage();
 
+	samples = init_sio();
+	warnx("samples: %d", samples);
+
+	n = 0;
+	XtSetArg(args[n], XtNsamples, samples);	n++;
 	sgraph = XtCreateManagedWidget(__progname, sgraphWidgetClass,
-		toplevel, NULL, 0);
+		toplevel, args, n);
+
 	XtOverrideTranslations(sgraph,
 		XtParseTranslationTable("<Key>q: quit()"));
 	XtAddWorkProc(worker, sgraph);

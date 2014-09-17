@@ -63,25 +63,18 @@ init_sio(void)
 		errx(1, "unsupported audio params");
 
 	samples = par.rate / FPS;
-	samples -= samples % par.round - par.round;
+	samples -= samples % par.round;
 	buffer = calloc(samples * par.rchan, sizeof(int16_t));
 	assert(buffer);
 
-	return sio_start(hdl);
-}
+	warnx("%d, %d, %d", samples, par.rate, par.round);
 
-unsigned int
-max_samples_sio(void)
-{
-	/*
-	 * maximal number of samples we're willing to provide
-	 * with 1920 at 25 fps and 48000 Hz or
-	 * with 1764 at 25 fps and 44100 Hz it shall fit on most screens
-	 */
+	sio_start(hdl);
+
 	return samples;
 }
 
-void
+size_t
 read_sio(double *left, double *right, size_t n)
 {
 	int done, i;
@@ -109,6 +102,8 @@ read_sio(double *left, double *right, size_t n)
 		left[i] = data[i].left;
 		right[i] = data[i].right;
 	}
+
+	return n;
 }
 
 void

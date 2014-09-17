@@ -45,14 +45,15 @@
 
 /* define any special resource names here that are not in <X11/StringDefs.h> */
 #define XtNmirror	"mirror"
-#define XtNdata		"data"
+
 #define XtNleftData	"leftData"
 #define XtNrightData	"rightData"
-#define XtNsizeData	"sizeData"
-#define XtCsizeData	"SizeData"
 
-#define XtNsgraphResource "sgraphResource"
-#define XtCSgraphResource "SgraphResource"
+#define XtNsamples	"samples"
+#define XtCsamples	"Samples"
+
+#define XtNsize		"size"
+#define XtCsize		"Size"
 
 /* declare specific SgraphWidget class and instance datatypes */
 typedef struct _SgraphClassRec *SgraphWidgetClass;

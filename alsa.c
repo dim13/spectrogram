@@ -66,16 +66,10 @@ init_sio(void)
 	snd_pcm_prepare(hdl);
 
 	samples = rate / FPS;
-	samples -= samples % round - round;
+	samples -= samples % round;
 	buffer = calloc(samples * STEREO, sizeof(int16_t));
 	assert(buffer);
 
-	return 0;
-}
-
-unsigned int
-max_samples_sio(void)
-{
 	return samples;
 }
 
