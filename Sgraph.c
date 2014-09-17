@@ -184,6 +184,7 @@ Resize(Widget w)
 	height = winheight;
 	warnx("win: %dx%d", winwidth, winheight);
 	warnx("sub: %dx%d", width, height);
+	warnx("size: %d", sw->sgraph.sizeData);
 
 	if (sw->sgraph.bg != None)
 		XFreePixmap(XtDisplay(sw), sw->sgraph.bg);
