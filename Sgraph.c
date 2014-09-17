@@ -35,7 +35,6 @@ static Boolean SetValues(Widget old, Widget reference, Widget new, ArgList args,
 
 static Dimension winwidth = SGRAPH_WIDTH;
 static Dimension winheight = SGRAPH_HEIGHT;
-static Cardinal dataSize = 2048;
 
 /* Initialization */
 #define offset(field) XtOffsetOf(SgraphRec, sgraph.field)
@@ -64,9 +63,9 @@ static XtResource resources[] = {
 	{ XtNrightData, XtCParameter, XtRPointer,
 		sizeof(XtPointer), XtOffset(SgraphWidget, sgraph.rightData),
 		XtRPointer, NULL },
-	{ XtNsizeData, XtCLength, XtRCardinal,
-		sizeof(Cardinal), XtOffset(SgraphWidget, sgraph.sizeData),
-		XtRCardinal, &dataSize },
+	{ XtNsizeData, XtCsizeData, XtRInt,
+		sizeof(int), XtOffset(SgraphWidget, sgraph.sizeData),
+		XtRImmediate, (XtPointer)2048 },
 };
 #undef offset
 

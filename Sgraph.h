@@ -49,6 +49,7 @@
 #define XtNleftData	"leftData"
 #define XtNrightData	"rightData"
 #define XtNsizeData	"sizeData"
+#define XtCsizeData	"SizeData"
 
 #define XtNsgraphResource "sgraphResource"
 #define XtCSgraphResource "SgraphResource"

@@ -43,7 +43,7 @@ typedef struct {
 	Boolean	mirror;
 	XtPointer leftData;
 	XtPointer rightData;
-	Cardinal sizeData;
+	int	sizeData;
 
 	GC	foreGC;
 	GC	backGC;
