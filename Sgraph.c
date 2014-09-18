@@ -250,12 +250,6 @@ Redisplay(Widget w, XEvent *event, Region r)
 		0, 0, width, height);
 	 */
 
-	/*
-	XDrawLine(XtDisplay(sw), sw->sgraph.backBuf, sw->sgraph.foreGC,
-		0, height / 2, 2 * width, height / 2);
-	XDrawLine(XtDisplay(sw), sw->sgraph.backBuf, sw->sgraph.foreGC,
-		0, height / 2 + height, 2 * width, height / 2 + height);
-	 */
 	for (x = 0; x < sw->sgraph.size; x++) {
 		if (x > width)
 			yl = sw->sgraph.leftData[x] * height / 2;
