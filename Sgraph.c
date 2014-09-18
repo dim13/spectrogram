@@ -21,6 +21,7 @@
 #include "SgraphP.h"
 
 #include <err.h>
+#include <stdint.h>
 
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
 static void Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr);
@@ -184,7 +185,7 @@ Resize(Widget w)
 	winheight = w->core.height;
 
 	width = winwidth / 2;
-	height = winheight;
+	height = winheight / 4;
 	warnx("win: %dx%d", winwidth, winheight);
 	warnx("sub: %dx%d", width, height);
 	warnx("size: %d", sw->sgraph.size);
@@ -193,15 +194,12 @@ Resize(Widget w)
 	if (sw->sgraph.bg != None)
 		XFreePixmap(XtDisplay(sw), sw->sgraph.bg);
 	sw->sgraph.bg = XCreatePixmap(XtDisplay(sw), XtWindow(sw),
-		width, height / 4, DefaultDepthOfScreen(XtScreen(sw)));
-	XSetForeground(XtDisplay(sw), sw->sgraph.foreGC, 0xFF0000);
-	XFillRectangle(XtDisplay(sw), sw->sgraph.bg, sw->sgraph.foreGC,
-		0, 0, width, height / 4);
+		width, height, DefaultDepthOfScreen(XtScreen(sw)));
 
 	if (sw->sgraph.mask != None)
 		XFreePixmap(XtDisplay(sw), sw->sgraph.mask);
 	sw->sgraph.mask = XCreatePixmap(XtDisplay(sw), XtWindow(sw),
-		width, height / 4, 1);
+		width, height, 1);
 
 }
 
@@ -210,7 +208,8 @@ Redisplay(Widget w, XEvent *event, Region r)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 	Dimension	width = winwidth / 2;
-	Dimension	height = winheight;
+	Dimension	height = winheight / 4;
+	Dimension	x, y;
 	static Dimension n;
 
 	if (!XtIsRealized(w))
@@ -227,12 +226,20 @@ Redisplay(Widget w, XEvent *event, Region r)
 		width - 2 * BORDER, height - 2 * BORDER);
 	 */
 
-	warnx("%lf : %lf" , sw->sgraph.leftData[0], sw->sgraph.rightData[0]);
+	//warnx("%lf : %lf" , sw->sgraph.leftData[0], sw->sgraph.rightData[0]);
 
-	XClearWindow(XtDisplay(sw), XtWindow(sw));
-	n = (n + 1) % width;
+	XFillRectangle(XtDisplay(sw), sw->sgraph.bg, sw->sgraph.backGC,
+		0, 0, width, height);
+
+	for (x = 0; x < sw->sgraph.size; x++) {
+		y = sw->sgraph.leftData[x] / (2 * height) + height / 2;
+		XDrawPoint(XtDisplay(sw), sw->sgraph.bg, sw->sgraph.foreGC,
+			x, y);
+	}
+
+	//XClearWindow(XtDisplay(sw), XtWindow(sw));
 	XCopyArea(XtDisplay(sw), sw->sgraph.bg, XtWindow(sw), sw->sgraph.foreGC,
-		0, 0, width, height / 4, BORDER + n, BORDER);
+		0, 0, width, height, BORDER, BORDER);
 }
 
 static Boolean

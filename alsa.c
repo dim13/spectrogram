@@ -73,7 +73,7 @@ init_sio(void)
 	return samples;
 }
 
-void
+size_t
 read_sio(double *left, double *right, size_t n)
 {
 	snd_pcm_sframes_t rc;
@@ -96,6 +96,8 @@ read_sio(double *left, double *right, size_t n)
 		left[i] = data[i].left;
 		right[i] = data[i].right;
 	}
+
+	return n;
 }
 
 void
