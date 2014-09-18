@@ -251,29 +251,19 @@ Redisplay(Widget w, XEvent *event, Region r)
 		0, 0, width, height);
 	 */
 
-	for (x = 0; x < sw->sgraph.size; x++) {
-		if (x > width)
-			yl = sw->sgraph.leftData[x] * height / 2;
-		else
-			yl = sw->sgraph.leftData[x];
-		yl += height / 2;
-
-		yr = sw->sgraph.rightData[x] * height / 2;
-		yr += height / 2;
-		yr += height;
+	for (x = 0; x < sw->sgraph.size / 2; x++) {
+		yl = sw->sgraph.leftData[x];
+		yr = sw->sgraph.rightData[x];
 
 		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC,
-			x, height / 2, x, yl);
-		/*
-		XDrawPoint(XtDisplay(sw), sw->sgraph.backBuf,
-			sw->sgraph.foreGC, x, yr);
-		 */
+			width - x, height,
+			width - x, height - yl);
+		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
+			sw->sgraph.foreGC,
+			width + x, height,
+			width + x, height - yr);
 	}
-
-	/* flicker test */
-	XFillRectangle(XtDisplay(sw), sw->sgraph.backBuf, sw->sgraph.foreGC,
-		width / 2, 2 * height, width, 3 * height);
 
 	swap.swap_window = XtWindow(sw);
 	swap.swap_action = XdbeBackground;
