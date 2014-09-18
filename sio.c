@@ -65,6 +65,8 @@ init_sio(void)
 
 	samples = par.rate / FPS;
 	samples -= samples % par.round;
+	if (samples < par.rate / FPS)
+		samples += round;
 	buffer = calloc(samples * par.rchan, sizeof(int16_t));
 	assert(buffer);
 

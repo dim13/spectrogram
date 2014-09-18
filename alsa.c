@@ -68,6 +68,9 @@ init_sio(void)
 
 	samples = rate / FPS;
 	samples -= samples % round;
+	if (samples < rate / FPS)
+		samples += round;
+	warnx("alsa round/rate/samples: %d/%d/%d", round, rate, samples);
 	buffer = calloc(samples * STEREO, sizeof(int16_t));
 	assert(buffer);
 
