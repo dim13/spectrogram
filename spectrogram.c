@@ -91,7 +91,6 @@ worker(XtPointer data)
 	n = 0;
 	XtSetArg(arg[n], XtNsize, size);	n++;
 	XtSetValues(data, arg, n);	/* trigger expose */
-	//redisplay(XtDisplay(data), XtWindow(data));
 
 	usleep(40);	/* emulate 25 Hz */
 	return False; 	/* don't remove the work procedure from the list */

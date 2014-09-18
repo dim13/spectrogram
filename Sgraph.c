@@ -271,7 +271,18 @@ Redisplay(Widget w, XEvent *event, Region r)
 static Boolean
 SetValues(Widget old, Widget reference, Widget new, ArgList args, Cardinal *num_args)
 {
-	return True;
+	XExposeEvent xeev;
+
+	xeev.type = Expose;
+	xeev.display = XtDisplay(new);
+	xeev.window = XtWindow(new);
+	xeev.x = 0;
+	xeev.y = 0;
+	xeev.width = new->core.width;
+	xeev.height = new->core.height;
+	Redisplay(new, (XEvent *)&xeev, NULL);
+
+	return False;
 }
 
 static void
