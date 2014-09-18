@@ -55,7 +55,7 @@ static XtResource resources[] = {
 		XtRString, "black" },
 	{ XtNbackground, XtCBackground, XtRPixel,
 		sizeof(Pixel), XtOffset(Widget, core.background_pixel),
-		XtRString, "dark slate gray" },
+		XtRString, "navy blue" },
 	{ XtNmirror, XtCBoolean, XtRBoolean,
 		sizeof(Boolean), XtOffset(SgraphWidget, sgraph.mirror),
 		XtRBoolean, False },
@@ -228,6 +228,7 @@ Redisplay(Widget w, XEvent *event, Region r)
 	Dimension	width = winwidth / 2;
 	Dimension	height = winheight / 4;
 	Dimension	x, yl, yr;
+	Dimension	bottom;
 	XdbeSwapInfo	swap;
 
 	if (!XtIsRealized(w))
@@ -251,18 +252,20 @@ Redisplay(Widget w, XEvent *event, Region r)
 		0, 0, width, height);
 	 */
 
+	bottom = sw->core.height;
+
 	for (x = 0; x < sw->sgraph.size / 2; x++) {
 		yl = sw->sgraph.leftData[x];
 		yr = sw->sgraph.rightData[x];
 
 		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC,
-			width - x, height,
-			width - x, height - yl);
+			width - x, bottom,
+			width - x, bottom - yl);
 		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC,
-			width + x, height,
-			width + x, height - yr);
+			width + x, bottom,
+			width + x, bottom - yr);
 	}
 
 	swap.swap_window = XtWindow(sw);
