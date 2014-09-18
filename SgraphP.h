@@ -46,6 +46,7 @@ typedef struct {
 	int	size;
 	int	samples;
 
+	XdbeBackBuffer backBuf;
 	GC	foreGC;
 	GC	backGC;
 	GC	maskGC;

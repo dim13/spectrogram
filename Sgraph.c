@@ -18,6 +18,7 @@
 
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
+#include <X11/extensions/Xdbe.h>
 #include "SgraphP.h"
 
 #include <err.h>
@@ -166,7 +167,11 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 static void
 Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr)
 {
+	SgraphWidget	sw = (SgraphWidget)w;
+
 	XtCreateWindow(w, InputOutput, CopyFromParent, *mask, attr);
+	sw->sgraph.backBuf = XdbeAllocateBackBufferName(XtDisplay(w),
+		XtWindow(w), XdbeBackground);
 	Resize(w);
 }
 
@@ -209,8 +214,8 @@ Redisplay(Widget w, XEvent *event, Region r)
 	SgraphWidget	sw = (SgraphWidget)w;
 	Dimension	width = winwidth / 2;
 	Dimension	height = winheight / 4;
-	Dimension	x, y;
-	static Dimension n;
+	Dimension	x, yl, yr;
+	XdbeSwapInfo	swap;
 
 	if (!XtIsRealized(w))
 		return;
@@ -228,18 +233,25 @@ Redisplay(Widget w, XEvent *event, Region r)
 
 	//warnx("%lf : %lf" , sw->sgraph.leftData[0], sw->sgraph.rightData[0]);
 
+	/*
 	XFillRectangle(XtDisplay(sw), sw->sgraph.bg, sw->sgraph.backGC,
 		0, 0, width, height);
+	 */
 
 	for (x = 0; x < sw->sgraph.size; x++) {
-		y = sw->sgraph.leftData[x] / (2 * height) + height / 2;
-		XDrawPoint(XtDisplay(sw), sw->sgraph.bg, sw->sgraph.foreGC,
-			x, y);
+		yl = sw->sgraph.leftData[x] / (2 * height) + height / 2;
+		yr = sw->sgraph.leftData[x] / (2 * height) + height / 2
+			+ height;
+		XDrawPoint(XtDisplay(sw), sw->sgraph.backBuf,
+			sw->sgraph.foreGC, x, yl);
+		XDrawPoint(XtDisplay(sw), sw->sgraph.backBuf,
+			sw->sgraph.foreGC, x, yr);
 	}
 
-	//XClearWindow(XtDisplay(sw), XtWindow(sw));
-	XCopyArea(XtDisplay(sw), sw->sgraph.bg, XtWindow(sw), sw->sgraph.foreGC,
-		0, 0, width, height, BORDER, BORDER);
+	swap.swap_window = XtWindow(sw);
+	swap.swap_action = XdbeBackground;
+
+	XdbeSwapBuffers(XtDisplay(sw), &swap, 1);
 }
 
 static Boolean
