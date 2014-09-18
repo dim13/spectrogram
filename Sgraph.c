@@ -177,7 +177,7 @@ Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr)
 
 	XtCreateWindow(w, InputOutput, CopyFromParent, *mask, attr);
 	sw->sgraph.backBuf = XdbeAllocateBackBufferName(XtDisplay(w),
-		XtWindow(w), XdbeUndefined);
+		XtWindow(w), XdbeBackground);
 	Resize(w);
 }
 
@@ -244,6 +244,10 @@ Redisplay(Widget w, XEvent *event, Region r)
 		0, 0, width, height);
 	 */
 
+	XDrawLine(XtDisplay(sw), sw->sgraph.backBuf, sw->sgraph.foreGC,
+		0, height / 2, 2 * width, height / 2);
+	XDrawLine(XtDisplay(sw), sw->sgraph.backBuf, sw->sgraph.foreGC,
+		0, height / 2 + height, 2 * width, height / 2 + height);
 	for (x = 0; x < sw->sgraph.size; x++) {
 		yl = sw->sgraph.leftData[x] / (2 * height) + height / 2;
 		yr = sw->sgraph.rightData[x] / (2 * height) + height / 2;
@@ -254,8 +258,12 @@ Redisplay(Widget w, XEvent *event, Region r)
 			sw->sgraph.foreGC, x, yr);
 	}
 
+	/* flicker test */
+	XFillRectangle(XtDisplay(sw), sw->sgraph.backBuf, sw->sgraph.foreGC,
+		width / 2, 2 * height, width, 3 * height);
+
 	swap.swap_window = XtWindow(sw);
-	swap.swap_action = XdbeUntouched;
+	swap.swap_action = XdbeBackground;
 
 	XdbeSwapBuffers(XtDisplay(sw), &swap, 1);
 }
