@@ -79,12 +79,14 @@ read_sio(double *left, double *right, size_t n)
 {
 	int done, i;
 	char *p = (char *)buffer;
-	size_t bufsz = samples * par.rchan * sizeof(int16_t);
-	size_t rndsz = n * par.rchan * sizeof(int16_t);
+	size_t bufsz, rndsz;
 	struct data *data;
 
-	if (rndsz > bufsz)
-		rndsz = bufsz;
+	if (n > samples)
+		n = samples;
+
+	bufsz = samples * par.rchan * sizeof(int16_t);
+	rndsz = n * par.rchan * sizeof(int16_t);
 
 	for (done = 0; bufsz > 0; p += done, bufsz -= done) {
 		done = sio_read(hdl, p, bufsz);
