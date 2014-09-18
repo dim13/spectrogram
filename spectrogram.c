@@ -25,7 +25,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #include "aux.h"
 #include "fft.h"
@@ -92,7 +91,6 @@ worker(XtPointer data)
 	XtSetArg(arg[n], XtNsize, size);	n++;
 	XtSetValues(data, arg, n);	/* trigger expose */
 
-	usleep(40);	/* emulate 25 Hz */
 	return False; 	/* don't remove the work procedure from the list */
 }
 
