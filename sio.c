@@ -17,7 +17,7 @@
 
 #include <assert.h>
 #include <err.h>
-#include <sndint.h>
+#include <stdint.h>
 #include <sndio.h>
 #include <stdlib.h>
 
@@ -66,7 +66,7 @@ init_sio(void)
 	samples = par.rate / FPS;
 	samples -= samples % par.round;
 	if (samples < par.rate / FPS)
-		samples += round;
+		samples += par.round;
 	buffer = calloc(samples * par.rchan, sizeof(int16_t));
 	assert(buffer);
 
