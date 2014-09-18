@@ -156,6 +156,12 @@ static void
 Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
+	int major, minor;
+	Status ret;
+
+	ret = XdbeQueryExtension(XtDisplay(w), &major, &minor);
+	if (!ret)
+		errx(1, "Xdbe %d.%d error %d", major, minor, ret);
 
 	sw->sgraph.leftData = (double *)XtCalloc(sw->sgraph.size, sizeof(double));
 	sw->sgraph.rightData = (double *)XtCalloc(sw->sgraph.size, sizeof(double));
