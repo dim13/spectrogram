@@ -17,6 +17,7 @@
 
 #include <assert.h>
 #include <err.h>
+#include <sndint.h>
 #include <sndio.h>
 #include <stdlib.h>
 
@@ -100,9 +101,10 @@ read_sio(double *left, double *right, size_t n)
 	 */
 	data = (struct data *)(p - rndsz);
 
+	/* split and normalize */
 	for (i = 0; i < n; i++) {
-		left[i] = data[i].left;
-		right[i] = data[i].right;
+		left[i] = data[i].left / (double)INT16_MAX;
+		right[i] = data[i].right / (double)INT16_MAX;
 	}
 
 	return n;

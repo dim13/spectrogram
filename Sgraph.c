@@ -249,9 +249,13 @@ Redisplay(Widget w, XEvent *event, Region r)
 	XDrawLine(XtDisplay(sw), sw->sgraph.backBuf, sw->sgraph.foreGC,
 		0, height / 2 + height, 2 * width, height / 2 + height);
 	for (x = 0; x < sw->sgraph.size; x++) {
-		yl = sw->sgraph.leftData[x] / (2 * height) + height / 2;
-		yr = sw->sgraph.rightData[x] / (2 * height) + height / 2;
+		yl = sw->sgraph.leftData[x] * height / 2;
+		yl += height / 2;
+
+		yr = sw->sgraph.rightData[x] * height / 2;
+		yr += height / 2;
 		yr += height;
+
 		XDrawPoint(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC, x, yl);
 		XDrawPoint(XtDisplay(sw), sw->sgraph.backBuf,

@@ -17,6 +17,7 @@
 
 #include <assert.h>
 #include <err.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <alsa/asoundlib.h>
 
@@ -92,9 +93,10 @@ read_sio(double *left, double *right, size_t n)
 
 	data = (struct data *)&buffer[samples - n];
 
+	/* split and normalize */
 	for (i = 0; i < n; i++) {
-		left[i] = data[i].left;
-		right[i] = data[i].right;
+		left[i] = data[i].left / (double)INT16_MAX;
+		right[i] = data[i].right / (double)INT16_MAX;
 	}
 
 	return n;
