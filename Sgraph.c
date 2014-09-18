@@ -240,8 +240,8 @@ Redisplay(Widget w, XEvent *event, Region r)
 
 	for (x = 0; x < sw->sgraph.size; x++) {
 		yl = sw->sgraph.leftData[x] / (2 * height) + height / 2;
-		yr = sw->sgraph.leftData[x] / (2 * height) + height / 2
-			+ height;
+		yr = sw->sgraph.rightData[x] / (2 * height) + height / 2;
+		yr += height;
 		XDrawPoint(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC, x, yl);
 		XDrawPoint(XtDisplay(sw), sw->sgraph.backBuf,
