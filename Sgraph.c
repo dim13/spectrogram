@@ -171,7 +171,7 @@ Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr)
 
 	XtCreateWindow(w, InputOutput, CopyFromParent, *mask, attr);
 	sw->sgraph.backBuf = XdbeAllocateBackBufferName(XtDisplay(w),
-		XtWindow(w), XdbeBackground);
+		XtWindow(w), XdbeUndefined);
 	Resize(w);
 }
 
@@ -249,7 +249,7 @@ Redisplay(Widget w, XEvent *event, Region r)
 	}
 
 	swap.swap_window = XtWindow(sw);
-	swap.swap_action = XdbeBackground;
+	swap.swap_action = XdbeUntouched;
 
 	XdbeSwapBuffers(XtDisplay(sw), &swap, 1);
 }
