@@ -84,6 +84,8 @@ worker(XtPointer data)
 	XtGetValues(data, arg, n);
 
 	size = read_sio(left, right, size);
+	exec_fft(left);
+	exec_fft(right);
 	//warnx("samples: %d, size: %d, %d", samples, size, n);
 	//warnx("l/r: %p (%lf) / %p (%lf)", left, *left, right, *right);
 
@@ -109,6 +111,7 @@ main(int argc, char **argv)
 		usage();
 
 	samples = init_sio();
+	init_fft(samples);
 	warnx("samples: %d", samples);
 
 	n = 0;

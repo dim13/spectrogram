@@ -43,10 +43,8 @@ hamming(size_t n)
 	p = calloc(n, sizeof(double));
 	assert(p);
 
-	for (i = 0; i < n; i++) {
+	for (i = 0; i < n; i++)
 		p[i] = alpha - beta * cos(2 * M_PI * i / (n - 1));
-		p[i] /= INT16_MAX;
-	}
 
 	return p;
 }
@@ -67,10 +65,10 @@ squares(size_t n)
 }
 
 int
-init_fft(size_t maxn, size_t n)
+init_fft(size_t n)
 {
-	in = fftw_malloc(maxn * sizeof(double));
-	out = fftw_malloc(maxn * sizeof(fftw_complex) / 2);
+	in = fftw_malloc(n * sizeof(double));
+	out = fftw_malloc(n * sizeof(fftw_complex) / 2);
 	assert(in && out);
 
 	plan = fftw_plan_dft_r2c_1d(n, in, out, FFTW_MEASURE);

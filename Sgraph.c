@@ -250,22 +250,30 @@ Redisplay(Widget w, XEvent *event, Region r)
 		0, 0, width, height);
 	 */
 
+	/*
 	XDrawLine(XtDisplay(sw), sw->sgraph.backBuf, sw->sgraph.foreGC,
 		0, height / 2, 2 * width, height / 2);
 	XDrawLine(XtDisplay(sw), sw->sgraph.backBuf, sw->sgraph.foreGC,
 		0, height / 2 + height, 2 * width, height / 2 + height);
+	 */
 	for (x = 0; x < sw->sgraph.size; x++) {
-		yl = sw->sgraph.leftData[x] * height / 2;
+		if (x > width)
+			yl = sw->sgraph.leftData[x] * height / 2;
+		else
+			yl = sw->sgraph.leftData[x];
 		yl += height / 2;
 
 		yr = sw->sgraph.rightData[x] * height / 2;
 		yr += height / 2;
 		yr += height;
 
-		XDrawPoint(XtDisplay(sw), sw->sgraph.backBuf,
-			sw->sgraph.foreGC, x, yl);
+		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
+			sw->sgraph.foreGC,
+			x, height / 2, x, yl);
+		/*
 		XDrawPoint(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC, x, yr);
+		 */
 	}
 
 	/* flicker test */
