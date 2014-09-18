@@ -203,6 +203,7 @@ Resize(Widget w)
 
 	width = winwidth / 2;
 	height = winheight / 4;
+	sw->sgraph.size = winwidth;
 	warnx("win: %dx%d", winwidth, winheight);
 	warnx("sub: %dx%d", width, height);
 	warnx("size: %d", sw->sgraph.size);

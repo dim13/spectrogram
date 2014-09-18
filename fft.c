@@ -80,7 +80,7 @@ init_fft(size_t n)
 }
 
 int
-exec_fft(double *io)
+exec_fft(double *io, size_t n)
 {
 	int	i;
 
