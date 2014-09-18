@@ -71,6 +71,12 @@ static XtResource resources[] = {
 	{ XtNsamples, XtCsamples, XtRInt,
 		sizeof(int), XtOffset(SgraphWidget, sgraph.samples),
 		XtRImmediate, (XtPointer)0 },
+	{ XtNdataCallback, XtCCallback, XtRCallback,
+		sizeof(XtCallbackProc), XtOffset(SgraphWidget, sgraph.data),
+		XtRCallback, NULL },
+	{ XtNfftCallback, XtCCallback, XtRCallback,
+		sizeof(XtCallbackProc), XtOffset(SgraphWidget, sgraph.fft),
+		XtRCallback, NULL },
 };
 #undef offset
 

@@ -45,6 +45,8 @@ typedef struct {
 	double *rightData;
 	int	size;
 	int	samples;
+	XtCallbackProc	data;
+	XtCallbackProc	fft;
 
 	XdbeBackBuffer backBuf;
 	GC	foreGC;

@@ -55,6 +55,9 @@
 #define XtNsize		"size"
 #define XtCsize		"Size"
 
+#define XtNdataCallback	"dataCallback"
+#define XtNfftCallback	"fftCallback"
+
 /* declare specific SgraphWidget class and instance datatypes */
 typedef struct _SgraphClassRec *SgraphWidgetClass;
 typedef struct _SgraphRec *SgraphWidget;
