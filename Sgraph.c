@@ -234,24 +234,6 @@ Redisplay(Widget w, XEvent *event, Region r)
 	if (!XtIsRealized(w))
 		return;
 
-	//warnx("Redisplay");
-
-	/*
-	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
-		BORDER, BORDER,
-		width - 2 * BORDER, height - 2 * BORDER);
-	XFillRectangle(XtDisplay(sw), XtWindow(sw), sw->sgraph.backGC,
-		width + BORDER, BORDER,
-		width - 2 * BORDER, height - 2 * BORDER);
-	 */
-
-	//warnx("%lf : %lf" , sw->sgraph.leftData[0], sw->sgraph.rightData[0]);
-
-	/*
-	XFillRectangle(XtDisplay(sw), sw->sgraph.bg, sw->sgraph.backGC,
-		0, 0, width, height);
-	 */
-
 	bottom = sw->core.height;
 
 	for (x = 0; x < sw->sgraph.size / 2; x++) {
