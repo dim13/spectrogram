@@ -187,6 +187,9 @@ Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 
+	if (XtIsRealized(w))
+		return;
+
 	XtCreateWindow(w, InputOutput, CopyFromParent, *mask, attr);
 	sw->sgraph.backBuf = XdbeAllocateBackBufferName(XtDisplay(w),
 		XtWindow(w), XdbeBackground);
