@@ -41,44 +41,46 @@ static Dimension winheight = SGRAPH_HEIGHT;
 
 /* Initialization */
 #define offset(field) XtOffsetOf(SgraphRec, sgraph.field)
+#define goffset(field) XtOffsetOf(CoreRec, core.field)
 static XtResource resources[] = {
 	{ XtNwidth, XtCWidth, XtRDimension,
-		sizeof(Dimension), XtOffset(Widget, core.width),
+		sizeof(Dimension), goffset(width),
 		XtRDimension, &winwidth },
 	{ XtNheight, XtCHeight, XtRDimension,
-		sizeof(Dimension), XtOffset(Widget, core.height),
+		sizeof(Dimension), goffset(height),
 		XtRDimension, &winheight },
 	{ XtNforeground, XtCForeground, XtRPixel,
-		sizeof(Pixel), XtOffset(SgraphWidget, sgraph.foreground),
+		sizeof(Pixel), offset(foreground),
 		XtRString, "white" },
 	{ XtNbackground, XtCBackground, XtRPixel,
-		sizeof(Pixel), XtOffset(SgraphWidget, sgraph.background),
+		sizeof(Pixel), offset(background),
 		XtRString, "black" },
 	{ XtNbackground, XtCBackground, XtRPixel,
-		sizeof(Pixel), XtOffset(Widget, core.background_pixel),
+		sizeof(Pixel), goffset(background_pixel),
 		XtRString, "navy blue" },
 	{ XtNmirror, XtCBoolean, XtRBoolean,
-		sizeof(Boolean), XtOffset(SgraphWidget, sgraph.mirror),
+		sizeof(Boolean), offset(mirror),
 		XtRBoolean, False },
 	{ XtNleftData, XtCParameter, XtRPointer,
-		sizeof(XtPointer), XtOffset(SgraphWidget, sgraph.leftData),
+		sizeof(XtPointer), offset(leftData),
 		XtRPointer, NULL },
 	{ XtNrightData, XtCParameter, XtRPointer,
-		sizeof(XtPointer), XtOffset(SgraphWidget, sgraph.rightData),
+		sizeof(XtPointer), offset(rightData),
 		XtRPointer, NULL },
 	{ XtNsize, XtCsize, XtRInt,
-		sizeof(int), XtOffset(SgraphWidget, sgraph.size),
+		sizeof(int), offset(size),
 		XtRImmediate, (XtPointer)2048 },
 	{ XtNsamples, XtCsamples, XtRInt,
-		sizeof(int), XtOffset(SgraphWidget, sgraph.samples),
+		sizeof(int), offset(samples),
 		XtRImmediate, (XtPointer)0 },
 	{ XtNdataCallback, XtCCallback, XtRCallback,
-		sizeof(XtCallbackProc), XtOffset(SgraphWidget, sgraph.data),
+		sizeof(XtCallbackProc), offset(data),
 		XtRCallback, NULL },
 	{ XtNfftCallback, XtCCallback, XtRCallback,
-		sizeof(XtCallbackProc), XtOffset(SgraphWidget, sgraph.fft),
+		sizeof(XtCallbackProc), offset(fft),
 		XtRCallback, NULL },
 };
+#undef goffset
 #undef offset
 
 static XtActionsRec actions[] = {
