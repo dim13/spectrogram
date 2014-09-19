@@ -19,8 +19,8 @@
 #define __FFT_H
 
 __BEGIN_DECLS
-int init_fft(size_t);
-int exec_fft(double *, size_t);
+void init_fft(size_t);
+void exec_fft(double *, size_t);
 void free_fft(void);
 __END_DECLS
 

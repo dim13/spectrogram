@@ -19,6 +19,7 @@
 #define _Sgraph_h
 
 #include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
 
 /****************************************************************
  *

@@ -64,25 +64,40 @@ squares(size_t n)
 	return p;
 }
 
-int
-init_fft(size_t n)
+void
+resize_fft(size_t n)
 {
-	in = fftw_malloc(n * sizeof(double));
-	out = fftw_malloc(n * sizeof(fftw_complex) / 2);
-	assert(in && out);
+	fftw_plan oldplan = plan;
+	double *oldwindow = window;
+	double *oldsq = sq;
 
 	plan = fftw_plan_dft_r2c_1d(n, in, out, FFTW_MEASURE);
 	window = hamming(n);
 	sq = squares(n / 2);
 	sz = n;
 
-	return 0;
+	fftw_destroy_plan(oldplan);
+	free(oldwindow);
+	free(oldsq);
 }
 
-int
+void
+init_fft(size_t n)
+{
+	in = fftw_malloc(n * sizeof(double));
+	out = fftw_malloc(n * sizeof(fftw_complex) / 2);
+	assert(in && out);
+
+	resize_fft(n);
+}
+
+void
 exec_fft(double *io, size_t n)
 {
 	int	i;
+	
+	if (n != sz)
+		resize_fft(n);
 
 	for (i = 0; i < sz; i++)
 		in[i] = window[i] * io[i];
@@ -91,13 +106,12 @@ exec_fft(double *io, size_t n)
 
 	for (i = 0; i < sz / 2; i++)
 		io[i] = sq[i] * cabs(out[i]);
-
-	return 0;
 }
 
 void
 free_fft(void)
 {
+	fftw_destroy_plan(plan);
 	fftw_free(in);
 	fftw_free(out);
 	free(window);

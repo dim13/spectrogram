@@ -234,7 +234,7 @@ Redisplay(Widget w, XEvent *event, Region r)
 	if (!XtIsRealized(w))
 		return;
 
-	bottom = sw->core.height;
+	bottom = sw->core.height - 10;
 
 	for (x = 0; x < sw->sgraph.size / 2; x++) {
 		yl = sw->sgraph.leftData[x];

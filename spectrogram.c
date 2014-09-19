@@ -77,7 +77,7 @@ worker(XtPointer data)
 	double	*left, *right;
 
 	n = 0;
-	XtSetArg(arg[n], XtNsize, &size);	n++;
+	XtSetArg(arg[n], XtNwidth, &size);	n++;
 	XtSetArg(arg[n], XtNsamples, &samples);	n++;
 	XtSetArg(arg[n], XtNleftData, &left);	n++;
 	XtSetArg(arg[n], XtNrightData, &right);	n++;
@@ -86,8 +86,6 @@ worker(XtPointer data)
 	size = read_sio(left, right, size);
 	exec_fft(left, size);
 	exec_fft(right, size);
-	//warnx("samples: %d, size: %d, %d", samples, size, n);
-	//warnx("l/r: %p (%lf) / %p (%lf)", left, *left, right, *right);
 
 	n = 0;
 	XtSetArg(arg[n], XtNsize, size);	n++;
