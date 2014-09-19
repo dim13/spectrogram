@@ -240,18 +240,18 @@ Redisplay(Widget w, XEvent *event, Region r)
 
 	bottom = sw->core.height - 10;
 
-	for (x = 0; x < sw->sgraph.size / 2; x++) {
+	for (x = 0; x < sw->sgraph.size / 2 - 1; x++) {
 		yl = sw->sgraph.leftData[x];
 		yr = sw->sgraph.rightData[x];
 
 		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC,
-			width - x, bottom,
-			width - x, bottom - yl);
+			width - x - 2, bottom,
+			width - x - 2, bottom - yl);
 		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC,
-			width + x, bottom,
-			width + x, bottom - yr);
+			width + x + 1, bottom,
+			width + x + 1, bottom - yr);
 	}
 
 	swap.swap_window = XtWindow(sw);
