@@ -94,16 +94,24 @@ worker(XtPointer data)
 	return False; 	/* don't remove the work procedure from the list */
 }
 
+String fallback[] = {
+	"*foreground:	gold",
+	"*background:	navy",
+	NULL,
+};
+
 int
 main(int argc, char **argv)
 {
+	XtAppContext	app;
 	Widget	toplevel, sgraph;
 	int	n, samples;
 	Arg	args[10];
 
-	toplevel = XtInitialize(__progname, "Spectrograph",
-		options, XtNumber(options), &argc, argv);
-	XtAddActions(actionsList, XtNumber(actionsList));
+	toplevel = XtAppInitialize(&app, "Spectrograph",
+		options, XtNumber(options), &argc, argv,
+		fallback, NULL, 0);
+	XtAppAddActions(app, actionsList, XtNumber(actionsList));
 
 	if (argc != 1)
 		usage();
@@ -114,17 +122,15 @@ main(int argc, char **argv)
 
 	n = 0;
 	XtSetArg(args[n], XtNsamples, samples);		n++;
-	//XtSetArg(args[n], XtNforeground, "gold");	n++;
-	//XtSetArg(args[n], XtNbackground, "navy");	n++;
-	sgraph = XtCreateManagedWidget(__progname, sgraphWidgetClass,
+	sgraph = XtCreateManagedWidget("SGraph", sgraphWidgetClass,
 		toplevel, args, n);
 
 	XtOverrideTranslations(sgraph,
 		XtParseTranslationTable("<Key>q: quit()"));
-	XtAddWorkProc(worker, sgraph);
+	XtAppAddWorkProc(app, worker, sgraph);
 
 	XtRealizeWidget(toplevel);
-	XtMainLoop();
+	XtAppMainLoop(app);
 
 	return 0;
 }
