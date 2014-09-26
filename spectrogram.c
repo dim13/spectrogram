@@ -19,6 +19,7 @@
 #include <X11/Xutil.h>
 
 #include <X11/Intrinsic.h>
+#include "Display.h"
 #include "Sgraph.h"
 
 #include <err.h>
@@ -104,7 +105,7 @@ int
 main(int argc, char **argv)
 {
 	XtAppContext	app;
-	Widget	toplevel, sgraph;
+	Widget	toplevel, display, sgraph;
 	int	n, samples;
 	Arg	args[10];
 
@@ -120,10 +121,13 @@ main(int argc, char **argv)
 	init_fft(samples);
 	warnx("samples: %d", samples);
 
+	display = XtCreateManagedWidget("Display", displayWidgetClass,
+		toplevel, NULL, 0);
+
 	n = 0;
 	XtSetArg(args[n], XtNsamples, samples);		n++;
 	sgraph = XtCreateManagedWidget("SGraph", sgraphWidgetClass,
-		toplevel, args, n);
+		display, args, n);
 
 	XtOverrideTranslations(sgraph,
 		XtParseTranslationTable("<Key>q: quit()"));
