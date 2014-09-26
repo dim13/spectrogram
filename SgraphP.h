@@ -38,8 +38,8 @@ typedef struct _SgraphClassRec {
 extern SgraphClassRec sgraphClassRec;
 
 typedef struct {
-	Pixel	foreground;
 	Pixel	background;
+	Pixel	foreground;
 	Boolean	mirror;
 	double *leftData;
 	double *rightData;

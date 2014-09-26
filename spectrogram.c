@@ -113,7 +113,10 @@ main(int argc, char **argv)
 	warnx("samples: %d", samples);
 
 	n = 0;
-	XtSetArg(args[n], XtNsamples, samples);	n++;
+	XtSetArg(args[n], XtNsamples, samples);		n++;
+	//XtSetArg(args[n], XtNforeground, "gold");	n++;
+	//XtSetArg(args[n], XtNbackground, "navy");	n++;
+	XtSetArg(args[n], XtNbackground, "red");	n++;
 	sgraph = XtCreateManagedWidget(__progname, sgraphWidgetClass,
 		toplevel, args, n);
 

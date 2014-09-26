@@ -32,53 +32,32 @@ static void Resize(Widget w);
 static void Redisplay(Widget w, XEvent *event, Region r);
 static Boolean SetValues(Widget old, Widget reference, Widget new, ArgList args, Cardinal *num_args);
 
-#define BORDER		1
-#define SGRAPH_WIDTH	1024
-#define SGRAPH_HEIGHT	768
-
-static Dimension winwidth = SGRAPH_WIDTH;
-static Dimension winheight = SGRAPH_HEIGHT;
-
 /* Initialization */
 #define offset(field) XtOffsetOf(SgraphRec, sgraph.field)
 #define goffset(field) XtOffsetOf(CoreRec, core.field)
 static XtResource resources[] = {
-	{ XtNwidth, XtCWidth, XtRDimension,
-		sizeof(Dimension), goffset(width),
-		XtRDimension, &winwidth },
-	{ XtNheight, XtCHeight, XtRDimension,
-		sizeof(Dimension), goffset(height),
-		XtRDimension, &winheight },
-	{ XtNforeground, XtCForeground, XtRPixel,
-		sizeof(Pixel), offset(foreground),
-		XtRString, "white" },
-	{ XtNbackground, XtCBackground, XtRPixel,
-		sizeof(Pixel), offset(background),
-		XtRString, "black" },
-	{ XtNbackground, XtCBackground, XtRPixel,
-		sizeof(Pixel), goffset(background_pixel),
-		XtRString, "navy blue" },
-	{ XtNmirror, XtCBoolean, XtRBoolean,
-		sizeof(Boolean), offset(mirror),
-		XtRBoolean, False },
-	{ XtNleftData, XtCParameter, XtRPointer,
-		sizeof(XtPointer), offset(leftData),
-		XtRPointer, NULL },
-	{ XtNrightData, XtCParameter, XtRPointer,
-		sizeof(XtPointer), offset(rightData),
-		XtRPointer, NULL },
-	{ XtNsize, XtCsize, XtRInt,
-		sizeof(int), offset(size),
-		XtRImmediate, (XtPointer)2048 },
-	{ XtNsamples, XtCsamples, XtRInt,
-		sizeof(int), offset(samples),
-		XtRImmediate, (XtPointer)0 },
-	{ XtNdataCallback, XtCCallback, XtRCallback,
-		sizeof(XtCallbackProc), offset(data),
-		XtRCallback, NULL },
-	{ XtNfftCallback, XtCCallback, XtRCallback,
-		sizeof(XtCallbackProc), offset(fft),
-		XtRCallback, NULL },
+	{ XtNwidth, XtCWidth, XtRDimension, sizeof(Dimension),
+		goffset(width), XtRImmediate, (XtPointer) 1024 },
+	{ XtNheight, XtCHeight, XtRDimension, sizeof(Dimension),
+		goffset(height), XtRImmediate, (XtPointer) 768 },
+	{ XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
+		offset(foreground), XtRString, XtDefaultForeground },
+	{ XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
+		offset(background), XtRString, XtDefaultBackground },
+	{ XtNmirror, XtCBoolean, XtRBoolean, sizeof(Boolean),
+		offset(mirror), XtRBoolean, False },
+	{ XtNleftData, XtCParameter, XtRPointer, sizeof(XtPointer),
+		offset(leftData), XtRPointer, NULL },
+	{ XtNrightData, XtCParameter, XtRPointer, sizeof(XtPointer),
+		offset(rightData), XtRPointer, NULL },
+	{ XtNsize, XtCsize, XtRInt, sizeof(int),
+		offset(size), XtRImmediate, (XtPointer)2048 },
+	{ XtNsamples, XtCsamples, XtRInt, sizeof(int),
+		offset(samples), XtRImmediate, (XtPointer)0 },
+	{ XtNdataCallback, XtCCallback, XtRCallback, sizeof(XtCallbackProc),
+		offset(data), XtRCallback, NULL },
+	{ XtNfftCallback, XtCCallback, XtRCallback, sizeof(XtCallbackProc),
+		offset(fft), XtRCallback, NULL },
 };
 #undef goffset
 #undef offset
@@ -142,7 +121,7 @@ GetGC(Widget w)
 	XtGCMask	gc_mask = GCForeground|GCBackground|GCPlaneMask;
 
 	xgcv.plane_mask = AllPlanes;
-	xgcv.background = sw->core.background_pixel;
+	xgcv.background = sw->sgraph.background;
 
 	xgcv.foreground = sw->sgraph.background;
 	sw->sgraph.backGC = XtGetGC(w, gc_mask, &xgcv);
@@ -207,13 +186,10 @@ Resize(Widget w)
 
 	warnx("Resize");
 
-	winwidth = w->core.width;
-	winheight = w->core.height;
-
-	width = winwidth / 2;
-	height = winheight / 4;
-	sw->sgraph.size = winwidth;
-	warnx("win: %dx%d", winwidth, winheight);
+	width = w->core.width / 2;
+	height = w->core.height / 4;
+	sw->sgraph.size = w->core.width;
+	warnx("win: %dx%d", w->core.width, w->core.height);
 	warnx("sub: %dx%d", width, height);
 	warnx("size: %d", sw->sgraph.size);
 	warnx("samples: %d", sw->sgraph.samples);
@@ -234,8 +210,8 @@ static void
 Redisplay(Widget w, XEvent *event, Region r)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
-	Dimension	width = winwidth / 2;
-	Dimension	height = winheight / 4;
+	Dimension	width = w->core.width / 2;
+	Dimension	height = w->core.height / 4;
 	Dimension	x, yl, yr;
 	Dimension	bottom;
 	XdbeSwapInfo	swap;
