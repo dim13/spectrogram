@@ -116,7 +116,6 @@ main(int argc, char **argv)
 	XtSetArg(args[n], XtNsamples, samples);		n++;
 	//XtSetArg(args[n], XtNforeground, "gold");	n++;
 	//XtSetArg(args[n], XtNbackground, "navy");	n++;
-	XtSetArg(args[n], XtNbackground, "red");	n++;
 	sgraph = XtCreateManagedWidget(__progname, sgraphWidgetClass,
 		toplevel, args, n);
 
