@@ -37,9 +37,9 @@ static Boolean SetValues(Widget old, Widget reference, Widget new, ArgList args,
 #define goffset(field) XtOffsetOf(CoreRec, core.field)
 static XtResource resources[] = {
 	{ XtNwidth, XtCWidth, XtRDimension, sizeof(Dimension),
-		goffset(width), XtRImmediate, (XtPointer) 1024 },
+		goffset(width), XtRImmediate, (XtPointer) 320 },
 	{ XtNheight, XtCHeight, XtRDimension, sizeof(Dimension),
-		goffset(height), XtRImmediate, (XtPointer) 768 },
+		goffset(height), XtRImmediate, (XtPointer) 200 },
 	{ XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
 		offset(foreground), XtRString, XtDefaultForeground },
 	{ XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
