@@ -4,6 +4,9 @@
 #include <X11/StringDefs.h>
 #include "DisplayP.h"
 
+//static ChangeManaged(Widget);
+//static XtGeometryResult GeometryManager(Widget, XtWidgetGeometry *, XtWidgetGeometry *);
+
 #define Offset(field) XtOffsetOf(DisplayRec, display.field)
 static XtResource resources[] = {
 };

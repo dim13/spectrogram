@@ -19,7 +19,8 @@
 #include <X11/Xutil.h>
 
 #include <X11/Intrinsic.h>
-#include "Display.h"
+//#include "Display.h"
+#include <X11/Xaw/Box.h>
 #include "Sgraph.h"
 
 #include <err.h>
@@ -121,11 +122,15 @@ main(int argc, char **argv)
 	init_fft(samples);
 	warnx("samples: %d", samples);
 
-	display = XtCreateManagedWidget("Display", displayWidgetClass,
-		toplevel, NULL, 0);
+	n = 0;
+	XtSetArg(args[n], XtNorientation, "horizontal");	n++;
+	display = XtCreateManagedWidget("Display", boxWidgetClass,
+		toplevel, args, n);
 
 	n = 0;
 	XtSetArg(args[n], XtNsamples, samples);		n++;
+	sgraph = XtCreateManagedWidget("SGraph", sgraphWidgetClass,
+		display, args, n);
 	sgraph = XtCreateManagedWidget("SGraph", sgraphWidgetClass,
 		display, args, n);
 

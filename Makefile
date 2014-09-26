@@ -5,7 +5,7 @@ VERSION=3.0
 PROG=	spectrogram
 
 SRCS=	spectrogram.c fft.c cms.c aux.c widget.c Sgraph.c Display.c
-LIBS=	fftw3 xt xext xrender
+LIBS=	fftw3 xaw7 xext xrender
 BINDIR=	/usr/local/bin
 
 UNAME!=	uname
