@@ -19,8 +19,7 @@
 #include <X11/Xutil.h>
 
 #include <X11/Intrinsic.h>
-//#include "Display.h"
-#include <X11/Xaw/Box.h>
+#include "Display.h"
 #include "Sgraph.h"
 
 #include <err.h>
@@ -99,6 +98,8 @@ worker(XtPointer data)
 String fallback[] = {
 	"*foreground:	Gold",
 	"*background:	RoyalBlue4",
+	"*borderColor:	Red",
+	"*borderWidth:	1",
 	NULL,
 };
 
@@ -124,7 +125,7 @@ main(int argc, char **argv)
 
 	n = 0;
 	XtSetArg(args[n], XtNorientation, "horizontal");	n++;
-	display = XtCreateManagedWidget("Display", boxWidgetClass,
+	display = XtCreateManagedWidget("Display", displayWidgetClass,
 		toplevel, args, n);
 
 	n = 0;

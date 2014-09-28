@@ -1,14 +1,23 @@
 /* $Id$ */
 
+#include <err.h>
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
 #include "DisplayP.h"
 
-//static ChangeManaged(Widget);
-//static XtGeometryResult GeometryManager(Widget, XtWidgetGeometry *, XtWidgetGeometry *);
+#define Printd(w, s) do {						\
+	warnx("Class %s: %s", XtClass(w)->core_class.class_name, s);	\
+} while (0)
+
+static void Initialize(Widget, Widget, ArgList, Cardinal *);
+static XtGeometryResult GeometryManager(Widget, XtWidgetGeometry *, XtWidgetGeometry *);
+static void ChangeManaged(Widget);
+static void Resize(Widget);
 
 #define Offset(field) XtOffsetOf(DisplayRec, display.field)
 static XtResource resources[] = {
+	{ XtNspace, XtCSpace, XtRDimension, sizeof(Dimension),
+		Offset(space), XtRImmediate, (XtPointer)2 },
 };
 
 #undef Offset
@@ -43,7 +52,7 @@ DisplayClassRec displayClassRec = {
 		.compress_enterleave	= True,
 		.visible_interest	= False,
 		.destroy		= NULL,
-		.resize			= XtInheritResize,
+		.resize			= Resize,
 		.expose			= XtInheritExpose,
 		.set_values		= NULL,
 		.set_values_hook	= NULL,
@@ -58,11 +67,11 @@ DisplayClassRec displayClassRec = {
 		.extension		= NULL,
 	},
 	.composite_class = {
-		.geometry_manager	= XtInheritGeometryManager,
-		.change_managed		= XtInheritChangeManaged,
+		.geometry_manager	= GeometryManager,
+		.change_managed		= ChangeManaged,
 		.insert_child		= XtInheritInsertChild,
 		.delete_child		= XtInheritDeleteChild,
-		.extension		= NULL,
+		.extension		= &compositeExtension,
 	},
 	.display_class = {
 		.extension		= NULL,
@@ -70,3 +79,71 @@ DisplayClassRec displayClassRec = {
 };
 
 WidgetClass displayWidgetClass = (WidgetClass) & displayClassRec;
+
+static void
+Initialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
+{
+	warnx("Display initialize");
+	new->core.width = 800;
+	new->core.height = 600;
+}
+
+static XtGeometryResult
+GeometryManager(Widget w, XtWidgetGeometry *request, XtWidgetGeometry *reply)
+{
+	warnx("Geometry Manager");
+	return XtGeometryYes;
+}
+
+static void
+ChangeManaged(Widget w)
+{
+	DisplayWidget dw = (DisplayWidget)w;
+	Dimension width, height;
+	Widget child;
+	int i;
+
+	warnx("Change Managed %s", XtClass(w)->core_class.class_name);
+
+	width = w->core.width;
+	height = w->core.height;
+
+	for (i = 0; i < dw->composite.num_children; i++) {
+		child = dw->composite.children[i];
+		XtMoveWidget(child,
+			width + dw->display.space, dw->display.space);
+		if (XtIsManaged(child)) {
+			width += child->core.width
+				+ 2 * child->core.border_width
+				+ 2 * dw->display.space;
+			height = child->core.height
+				+ 2 * child->core.border_width
+				+ 2 * dw->display.space;
+		}
+	}
+	w->core.width = width;
+	w->core.height = height;
+}
+
+static void
+Resize(Widget w)
+{
+	DisplayWidget dw = (DisplayWidget)w;
+	Dimension width, height, border;
+	Widget child;
+	int n = dw->composite.num_children;
+	int i;
+
+	width = (w->core.width - 2 * dw->display.space) / n;
+	height = (w->core.height - 2 * dw->display.space) / n;
+	Printd(w, "Resize");
+
+	for (i = 0; i < dw->composite.num_children; i++) {
+		child = dw->composite.children[i];
+		if (XtIsManaged(child)) {
+			border = child->core.border_width;
+			XtResizeWidget(child, width - 2 * border,
+				height - 2 * border, border);
+		}
+	}
+}

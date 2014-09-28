@@ -25,6 +25,10 @@
 #include <err.h>
 #include <stdint.h>
 
+#define Printd(w, s) do {						\
+	warnx("Class %s: %s", XtClass(w)->core_class.class_name, s);	\
+} while (0)
+
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
 static void Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr);
 static void Action(Widget w, XEvent *event, String *params, Cardinal *num_params);
@@ -150,14 +154,16 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 	ret = XdbeQueryExtension(XtDisplay(w), &major, &minor);
 	if (!ret)
 		errx(1, "Xdbe %d.%d error %d", major, minor, ret);
+	/*
 	ret = XRenderQueryVersion(XtDisplay(w), &major, &minor);
 	if (!ret)
 		errx(1, "XRender %d.%d error %d", major, minor, ret);
+	 */
 
 	sw->sgraph.leftData = (double *)XtCalloc(sw->sgraph.size, sizeof(double));
 	sw->sgraph.rightData = (double *)XtCalloc(sw->sgraph.size, sizeof(double));
 	
-	warnx("Initialize");
+	Printd(w, "Initialize");
 	GetGC(w);
 }
 
@@ -179,31 +185,27 @@ static void
 Resize(Widget w)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
-	Dimension	width, height;
 
 	if (!XtIsRealized(w))
 		return;
 
-	warnx("Resize");
+	Printd(w, "Resize");
 
-	width = w->core.width / 2;
-	height = w->core.height / 4;
 	sw->sgraph.size = w->core.width;
 	warnx("win: %dx%d", w->core.width, w->core.height);
-	warnx("sub: %dx%d", width, height);
 	warnx("size: %d", sw->sgraph.size);
 	warnx("samples: %d", sw->sgraph.samples);
 
 	if (sw->sgraph.bg != None)
 		XFreePixmap(XtDisplay(sw), sw->sgraph.bg);
 	sw->sgraph.bg = XCreatePixmap(XtDisplay(sw), XtWindow(sw),
-		width, height, DefaultDepthOfScreen(XtScreen(sw)));
+		w->core.width, w->core.height,
+		DefaultDepthOfScreen(XtScreen(sw)));
 
 	if (sw->sgraph.mask != None)
 		XFreePixmap(XtDisplay(sw), sw->sgraph.mask);
 	sw->sgraph.mask = XCreatePixmap(XtDisplay(sw), XtWindow(sw),
-		width, height, 1);
-
+		w->core.width, w->core.height, 1);
 }
 
 static void
