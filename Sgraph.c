@@ -34,6 +34,7 @@ static void Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr);
 static void Resize(Widget w);
 static void Redisplay(Widget w, XEvent *event, Region r);
 static Boolean SetValues(Widget old, Widget reference, Widget new, ArgList args, Cardinal *num_args);
+static void mirror(Widget, XEvent *, String *, Cardinal *);
 
 /* Initialization */
 #define Offset(field) XtOffsetOf(SgraphRec, sgraph.field)
@@ -53,6 +54,14 @@ static XtResource resources[] = {
 };
 #undef Offset
 
+static XtActionsRec actions[] = {
+	{ "mirror",	mirror },
+};
+
+static char translations[] = {
+	"<Key>m:	mirror()\n",
+};
+
 SgraphClassRec sgraphClassRec = {
 	.core_class = {
 		.superclass			= (WidgetClass)&widgetClassRec,
@@ -64,8 +73,8 @@ SgraphClassRec sgraphClassRec = {
 		.initialize			= Initialize,
 		.initialize_hook		= NULL,
 		.realize			= Realize,
-		.actions			= NULL,
-		.num_actions			= 0,
+		.actions			= actions,
+		.num_actions			= XtNumber(actions),
 		.resources			= resources,
 		.num_resources			= XtNumber(resources),
 		.xrm_class			= NULLQUARK,
@@ -83,7 +92,7 @@ SgraphClassRec sgraphClassRec = {
 		.accept_focus			= NULL,
 		.version			= XtVersion,
 		.callback_private		= NULL,
-		.tm_table			= XtInheritTranslations,
+		.tm_table			= translations,
 		.query_geometry			= XtInheritQueryGeometry,
 		.display_accelerator		= XtInheritDisplayAccelerator,
 		.extension			= NULL,
@@ -194,7 +203,7 @@ static void
 Redisplay(Widget w, XEvent *event, Region r)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
-	Dimension	x, y;
+	Dimension	i, x, y;
 	XdbeSwapInfo	swap;
 
 	//Trace(w);
@@ -202,8 +211,12 @@ Redisplay(Widget w, XEvent *event, Region r)
 	if (!XtIsRealized(w))
 		return;
 
-	for (x = 0; x < sw->sgraph.size - 1; x++) {
-		y = sw->sgraph.data[x];
+	for (i = 0; i < sw->sgraph.size - 1; i++) {
+		y = sw->sgraph.data[i];
+		if (sw->sgraph.mirror)
+			x = sw->core.width - i;
+		else
+			x = i;
 
 		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC,
@@ -215,4 +228,11 @@ Redisplay(Widget w, XEvent *event, Region r)
 	swap.swap_action = XdbeBackground;
 
 	XdbeSwapBuffers(XtDisplay(sw), &swap, 1);
+}
+
+static void
+mirror(Widget w, XEvent *event, String *param, Cardinal *n)
+{
+	SgraphWidget	sw = (SgraphWidget)w;
+	sw->sgraph.mirror ^= 1;
 }

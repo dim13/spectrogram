@@ -107,14 +107,14 @@ int
 main(int argc, char **argv)
 {
 	XtAppContext	app;
-	Widget	toplevel, display;
+	Widget	toplevel, display, sgraph;
 	int	n, samples;
 	Arg	args[10];
+	XtAccelerators acs;
 
 	toplevel = XtAppInitialize(&app, "Spectrograph",
 		options, XtNumber(options), &argc, argv,
 		fallback, NULL, 0);
-	XtAppAddActions(app, actionsList, XtNumber(actionsList));
 
 	if (argc != 1)
 		usage();
@@ -123,20 +123,29 @@ main(int argc, char **argv)
 	init_fft(samples);
 	warnx("samples: %d", samples);
 
+	XtAppAddActions(app, actionsList, XtNumber(actionsList));
+	acs = XtParseAcceleratorTable("<Key>q: quit()");
+
 	n = 0;
 	XtSetArg(args[n], XtNorientation, "horizontal");	n++;
+	XtSetArg(args[n], XtNaccelerators, acs);		n++;
 	display = XtCreateManagedWidget("Display", displayWidgetClass,
 		toplevel, args, n);
 
 	n = 0;
 	XtSetArg(args[n], XtNsamples, samples);		n++;
-	XtCreateManagedWidget("SGraph", sgraphWidgetClass,
+	XtSetArg(args[n], XtNmirror, True);		n++;
+	sgraph = XtCreateManagedWidget("SGraph", sgraphWidgetClass,
 		display, args, n);
-	XtCreateManagedWidget("SGraph", sgraphWidgetClass,
-		display, args, n);
+	XtInstallAccelerators(sgraph, display);
 
-	XtOverrideTranslations(display,
-		XtParseTranslationTable("<Key>q: quit()"));
+	n = 0;
+	XtSetArg(args[n], XtNsamples, samples);		n++;
+	XtSetArg(args[n], XtNmirror, False);		n++;
+	sgraph = XtCreateManagedWidget("SGraph", sgraphWidgetClass,
+		display, args, n);
+	XtInstallAccelerators(sgraph, display);
+
 	XtAppAddWorkProc(app, worker, display);
 
 	XtRealizeWidget(toplevel);
