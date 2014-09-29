@@ -27,7 +27,7 @@
 #define XtRSgraphResource "SgraphResource"
 
 typedef struct {
-	XtPointer dummy;
+	XtPointer	extension;
 } SgraphClassPart;
 
 typedef struct _SgraphClassRec {
@@ -38,30 +38,30 @@ typedef struct _SgraphClassRec {
 extern SgraphClassRec sgraphClassRec;
 
 typedef struct {
-	Pixel	background;
-	Pixel	foreground;
-	Boolean	mirror;
-	int	*data;
-	size_t	size;
-	size_t	samples;
+	Pixel		background;
+	Pixel		foreground;
+	Boolean		mirror;
+	int		*data;
+	size_t		size;
+	size_t		samples;
 	/*
 	XtCallbackProc	data;
 	XtCallbackProc	fft;
 	 */
 
 	XdbeBackBuffer backBuf;
-	GC	foreGC;
-	GC	backGC;
-	GC	maskGC;
-	GC	clipGC;
-	Pixmap	bg;
-	Pixmap	mask;
-	Pixmap	waterfall;
+	GC		foreGC;
+	GC		backGC;
+	GC		maskGC;
+	GC		clipGC;
+	Pixmap		bg;
+	Pixmap		mask;
+	Pixmap		waterfall;
 } SgraphPart;
 
 typedef struct _SgraphRec {
-	CorePart		core;
-	SgraphPart		sgraph;
+	CorePart	core;
+	SgraphPart	sgraph;
 } SgraphRec;
 
 #endif

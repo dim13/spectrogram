@@ -70,49 +70,45 @@ static XtResource resources[] = {
 #undef offset
 
 SgraphClassRec sgraphClassRec = {
-	/* core */
-	{
-		&widgetClassRec,		/* superclass */
-		"Sgraph",			/* class_name */
-		sizeof(SgraphRec),		/* widget_size */
-		NULL,				/* class_initialize */
-		NULL,				/* class_part_initialize */
-		False,				/* class_inited */
-		Initialize,			/* initialize */
-		NULL,				/* initialize_hook */
-		Realize,			/* realize */
-		NULL,				/* actions */
-		0,				/* num_actions */
-		resources,			/* resources */
-		XtNumber(resources),		/* num_resources */
-		NULLQUARK,			/* xrm_class */
-		True,				/* compress_motion */
-		True,				/* compress_exposure */
-		True,				/* compress_enterleave */
-		False,				/* visible_interest */
-		NULL,				/* destroy */
-		Resize,				/* resize */
-		Redisplay,			/* expose */
-		NULL,				/* set_values */
-		NULL,				/* set_values_hook */
-		XtInheritSetValuesAlmost,	/* set_values_almost */
-		NULL,				/* get_values_hook */
-		NULL,				/* accept_focus */
-		XtVersion,			/* version */
-		NULL,				/* callback_private */
-		XtInheritTranslations,		/* tm_table */
-		XtInheritQueryGeometry,		/* query_geometry */
-		XtInheritDisplayAccelerator,	/* display_accelerator */
-		NULL,				/* extension */
+	.core_class = {
+		.superclass			= (WidgetClass)&widgetClassRec,
+		.class_name			= "Sgraph",
+		.widget_size			= sizeof(SgraphRec),
+		.class_initialize		= NULL,
+		.class_part_initialize		= NULL,
+		.class_inited			= False,
+		.initialize			= Initialize,
+		.initialize_hook		= NULL,
+		.realize			= Realize,
+		.actions			= NULL,
+		.num_actions			= 0,
+		.resources			= resources,
+		.num_resources			= XtNumber(resources),
+		.xrm_class			= NULLQUARK,
+		.compress_motion		= True,
+		.compress_exposure		= True,
+		.compress_enterleave		= True,
+		.visible_interest		= False,
+		.destroy			= NULL,
+		.resize				= Resize,
+		.expose				= Redisplay,
+		.set_values			= NULL,
+		.set_values_hook		= NULL,
+		.set_values_almost		= XtInheritSetValuesAlmost,
+		.get_values_hook		= NULL,
+		.accept_focus			= NULL,
+		.version			= XtVersion,
+		.callback_private		= NULL,
+		.tm_table			= XtInheritTranslations,
+		.query_geometry			= XtInheritQueryGeometry,
+		.display_accelerator		= XtInheritDisplayAccelerator,
+		.extension			= NULL,
 	},
-	/* sgraph */
-	{
-		NULL,				/* extension */
+	.sgraph_class = {
+		.extension			= NULL,
 	}
 };
 WidgetClass sgraphWidgetClass = (WidgetClass)&sgraphClassRec;
-
-/* Implementation */
 
 static void
 GetGC(Widget w)
