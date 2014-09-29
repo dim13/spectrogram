@@ -129,7 +129,7 @@ static void
 Resize(Widget w)
 {
 	DisplayWidget dw = (DisplayWidget)w;
-	Dimension width, height, border;
+	Dimension x, y, width, height, border;
 	Widget child;
 	int n = dw->composite.num_children;
 	int i;
@@ -142,7 +142,10 @@ Resize(Widget w)
 		child = dw->composite.children[i];
 		if (XtIsManaged(child)) {
 			border = child->core.border_width;
-			XtResizeWidget(child, width - 2 * border,
+			x = dw->display.space;
+			x += i * (width + 2 * border);
+			y = dw->display.space;
+			XtConfigureWidget(child, x, y, width - 2 * border,
 				height - 2 * border, border);
 		}
 	}
