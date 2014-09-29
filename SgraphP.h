@@ -21,7 +21,6 @@
 #include "Sgraph.h"
 
 typedef struct {
-	Pixel		background;
 	Pixel		foreground;
 	Boolean		mirror;
 	int		*data;

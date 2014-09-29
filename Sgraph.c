@@ -41,8 +41,6 @@ static void mirror(Widget, XEvent *, String *, Cardinal *);
 static XtResource resources[] = {
 	{ XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
 		Offset(foreground), XtRString, XtDefaultForeground },
-	{ XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
-		Offset(background), XtRString, XtDefaultBackground },
 	{ XtNmirror, XtCBoolean, XtRBoolean, sizeof(Boolean),
 		Offset(mirror), XtRBoolean, False },
 	{ XtNdata, XtCData, XtRPointer, sizeof(int *),
@@ -113,9 +111,9 @@ GetGC(Widget w)
 	Trace(w);
 
 	xgcv.plane_mask = AllPlanes;
-	xgcv.background = sw->sgraph.background;
+	xgcv.background = sw->core.background_pixel;
 
-	xgcv.foreground = sw->sgraph.background;
+	xgcv.foreground = sw->core.background_pixel;
 	sw->sgraph.backGC = XtGetGC(w, gc_mask, &xgcv);
 
 	xgcv.foreground = sw->sgraph.foreground;
