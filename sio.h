@@ -20,7 +20,7 @@
 
 __BEGIN_DECLS
 int init_sio(void);
-size_t read_sio(double *, double *, size_t);
+size_t read_sio(int *, int *, size_t);
 void free_sio(void);
 __END_DECLS
 

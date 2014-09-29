@@ -41,12 +41,13 @@ typedef struct {
 	Pixel	background;
 	Pixel	foreground;
 	Boolean	mirror;
-	double *leftData;
-	double *rightData;
-	int	size;
-	int	samples;
+	int	*data;
+	size_t	size;
+	size_t	samples;
+	/*
 	XtCallbackProc	data;
 	XtCallbackProc	fft;
+	 */
 
 	XdbeBackBuffer backBuf;
 	GC	foreGC;

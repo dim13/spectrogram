@@ -31,7 +31,6 @@
 
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
 static void Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr);
-static void Action(Widget w, XEvent *event, String *params, Cardinal *num_params);
 static void Resize(Widget w);
 static void Redisplay(Widget w, XEvent *event, Region r);
 static Boolean SetValues(Widget old, Widget reference, Widget new, ArgList args, Cardinal *num_args);
@@ -50,27 +49,25 @@ static XtResource resources[] = {
 		offset(background), XtRString, XtDefaultBackground },
 	{ XtNmirror, XtCBoolean, XtRBoolean, sizeof(Boolean),
 		offset(mirror), XtRBoolean, False },
-	{ XtNleftData, XtCParameter, XtRPointer, sizeof(XtPointer),
-		offset(leftData), XtRPointer, NULL },
+	{ XtNdata, XtCData, XtRPointer, sizeof(int *),
+		offset(data), XtRPointer, NULL },
+	/*
 	{ XtNrightData, XtCParameter, XtRPointer, sizeof(XtPointer),
 		offset(rightData), XtRPointer, NULL },
+	 */
 	{ XtNsize, XtCsize, XtRInt, sizeof(int),
 		offset(size), XtRImmediate, (XtPointer)2048 },
 	{ XtNsamples, XtCsamples, XtRInt, sizeof(int),
 		offset(samples), XtRImmediate, (XtPointer)0 },
+	/*
 	{ XtNdataCallback, XtCCallback, XtRCallback, sizeof(XtCallbackProc),
 		offset(data), XtRCallback, NULL },
 	{ XtNfftCallback, XtCCallback, XtRCallback, sizeof(XtCallbackProc),
 		offset(fft), XtRCallback, NULL },
+	 */
 };
 #undef goffset
 #undef offset
-
-static XtActionsRec actions[] = {
-	{ "sgraph", Action },
-};
-
-static char translations[] = "<Key>:" "sgraph()\n";
 
 SgraphClassRec sgraphClassRec = {
 	/* core */
@@ -84,8 +81,8 @@ SgraphClassRec sgraphClassRec = {
 		Initialize,			/* initialize */
 		NULL,				/* initialize_hook */
 		Realize,			/* realize */
-		actions,			/* actions */
-		XtNumber(actions),		/* num_actions */
+		NULL,				/* actions */
+		0,				/* num_actions */
 		resources,			/* resources */
 		XtNumber(resources),		/* num_resources */
 		NULLQUARK,			/* xrm_class */
@@ -103,7 +100,7 @@ SgraphClassRec sgraphClassRec = {
 		NULL,				/* accept_focus */
 		XtVersion,			/* version */
 		NULL,				/* callback_private */
-		translations,			/* tm_table */
+		XtInheritTranslations,		/* tm_table */
 		XtInheritQueryGeometry,		/* query_geometry */
 		XtInheritDisplayAccelerator,	/* display_accelerator */
 		NULL,				/* extension */
@@ -160,8 +157,7 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 		errx(1, "XRender %d.%d error %d", major, minor, ret);
 	 */
 
-	sw->sgraph.leftData = (double *)XtCalloc(sw->sgraph.size, sizeof(double));
-	sw->sgraph.rightData = (double *)XtCalloc(sw->sgraph.size, sizeof(double));
+	sw->sgraph.data = (int *)XtCalloc(sw->sgraph.size, sizeof(int));
 	
 	Printd(w, "Initialize");
 	GetGC(w);
@@ -212,29 +208,22 @@ static void
 Redisplay(Widget w, XEvent *event, Region r)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
-	Dimension	width = w->core.width / 2;
-	Dimension	height = w->core.height / 4;
-	Dimension	x, yl, yr;
+	Dimension	x, y;
 	Dimension	bottom;
 	XdbeSwapInfo	swap;
 
 	if (!XtIsRealized(w))
 		return;
 
-	bottom = sw->core.height - 10;
+	bottom = sw->core.height - 1;
 
-	for (x = 0; x < sw->sgraph.size / 2 - 1; x++) {
-		yl = sw->sgraph.leftData[x];
-		yr = sw->sgraph.rightData[x];
+	for (x = 0; x < sw->sgraph.size - 1; x++) {
+		y = sw->sgraph.data[x];
 
 		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC,
-			width - x - 2, bottom,
-			width - x - 2, bottom - yl);
-		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
-			sw->sgraph.foreGC,
-			width + x + 1, bottom,
-			width + x + 1, bottom - yr);
+			x, bottom,
+			x, bottom - y);
 	}
 
 	swap.swap_window = XtWindow(sw);
@@ -258,9 +247,4 @@ SetValues(Widget old, Widget reference, Widget new, ArgList args, Cardinal *num_
 	Redisplay(new, (XEvent *)&xeev, NULL);
 
 	return False;
-}
-
-static void
-Action(Widget w, XEvent *event, String *params, Cardinal *num_params)
-{
 }

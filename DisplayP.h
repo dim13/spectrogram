@@ -7,6 +7,7 @@
 
 typedef struct {
 	Dimension		space;
+	int			**data;
 } DisplayPart;
 
 typedef struct _DisplayRec {

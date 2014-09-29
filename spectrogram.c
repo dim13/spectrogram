@@ -71,26 +71,26 @@ static XtActionsRec actionsList[] = {
 };
 
 static Boolean
-worker(XtPointer data)
+worker(XtPointer p)
 {
 	Arg	arg[10];
 	int	n, size, samples;
 	double	*left, *right;
+	int	**data;
 
 	n = 0;
 	XtSetArg(arg[n], XtNwidth, &size);	n++;
 	XtSetArg(arg[n], XtNsamples, &samples);	n++;
-	XtSetArg(arg[n], XtNleftData, &left);	n++;
-	XtSetArg(arg[n], XtNrightData, &right);	n++;
-	XtGetValues(data, arg, n);
+	XtSetArg(arg[n], XtNdata, &data);	n++;
+	XtGetValues(p, arg, n);
 
-	size = read_sio(left, right, size);
-	exec_fft(left, size);
-	exec_fft(right, size);
+	size = read_sio(data[0], data[1], size);
+	exec_fft(data[0], size);
+	exec_fft(data[1], size);
 
 	n = 0;
 	XtSetArg(arg[n], XtNsize, size);	n++;
-	XtSetValues(data, arg, n);	/* trigger expose */
+	XtSetValues(p, arg, n);	/* trigger expose */
 
 	return False; 	/* don't remove the work procedure from the list */
 }
@@ -107,7 +107,7 @@ int
 main(int argc, char **argv)
 {
 	XtAppContext	app;
-	Widget	toplevel, display, sgraph;
+	Widget	toplevel, display;
 	int	n, samples;
 	Arg	args[10];
 
@@ -130,14 +130,14 @@ main(int argc, char **argv)
 
 	n = 0;
 	XtSetArg(args[n], XtNsamples, samples);		n++;
-	sgraph = XtCreateManagedWidget("SGraph", sgraphWidgetClass,
+	XtCreateManagedWidget("SGraph", sgraphWidgetClass,
 		display, args, n);
-	sgraph = XtCreateManagedWidget("SGraph", sgraphWidgetClass,
+	XtCreateManagedWidget("SGraph", sgraphWidgetClass,
 		display, args, n);
 
-	XtOverrideTranslations(sgraph,
+	XtOverrideTranslations(display,
 		XtParseTranslationTable("<Key>q: quit()"));
-	XtAppAddWorkProc(app, worker, sgraph);
+	XtAppAddWorkProc(app, worker, display);
 
 	XtRealizeWidget(toplevel);
 	XtAppMainLoop(app);

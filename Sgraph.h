@@ -47,8 +47,8 @@
 /* define any special resource names here that are not in <X11/StringDefs.h> */
 #define XtNmirror	"mirror"
 
-#define XtNleftData	"leftData"
-#define XtNrightData	"rightData"
+#define XtNdata		"data"
+#define XtCData		"Data"
 
 #define XtNsamples	"samples"
 #define XtCsamples	"Samples"

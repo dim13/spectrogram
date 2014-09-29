@@ -20,7 +20,7 @@
 
 __BEGIN_DECLS
 void init_fft(size_t);
-void exec_fft(double *, size_t);
+void exec_fft(int *, size_t);
 void free_fft(void);
 __END_DECLS
 

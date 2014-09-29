@@ -78,7 +78,7 @@ init_sio(void)
 }
 
 size_t
-read_sio(double *left, double *right, size_t n)
+read_sio(int *left, int *right, size_t n)
 {
 	int done, i;
 	char *p = (char *)buffer;
@@ -105,8 +105,8 @@ read_sio(double *left, double *right, size_t n)
 
 	/* split and normalize */
 	for (i = 0; i < n; i++) {
-		left[i] = data[i].left / (double)INT16_MAX;
-		right[i] = data[i].right / (double)INT16_MAX;
+		left[i] = data[i].left;
+		right[i] = data[i].right;
 	}
 
 	return n;

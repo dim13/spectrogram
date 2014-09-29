@@ -43,8 +43,10 @@ hamming(size_t n)
 	p = calloc(n, sizeof(double));
 	assert(p);
 
-	for (i = 0; i < n; i++)
+	for (i = 0; i < n; i++) {
 		p[i] = alpha - beta * cos(2 * M_PI * i / (n - 1));
+		p[i] /= (double)INT16_MAX;
+	}
 
 	return p;
 }
@@ -92,7 +94,7 @@ init_fft(size_t n)
 }
 
 void
-exec_fft(double *io, size_t n)
+exec_fft(int *io, size_t n)
 {
 	int	i;
 	
