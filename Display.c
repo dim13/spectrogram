@@ -135,7 +135,7 @@ Resize(Widget w)
 	int i;
 
 	width = (w->core.width - 2 * dw->display.space) / n;
-	height = (w->core.height - 2 * dw->display.space) / n;
+	height = w->core.height - 2 * dw->display.space;
 	Printd(w, "Resize");
 
 	for (i = 0; i < dw->composite.num_children; i++) {
