@@ -209,21 +209,18 @@ Redisplay(Widget w, XEvent *event, Region r)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 	Dimension	x, y;
-	Dimension	bottom;
 	XdbeSwapInfo	swap;
 
 	if (!XtIsRealized(w))
 		return;
-
-	bottom = sw->core.height - 1;
 
 	for (x = 0; x < sw->sgraph.size - 1; x++) {
 		y = sw->sgraph.data[x];
 
 		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC,
-			x, bottom,
-			x, bottom - y);
+			x, sw->core.height,
+			x, sw->core.height - y);
 	}
 
 	swap.swap_window = XtWindow(sw);
