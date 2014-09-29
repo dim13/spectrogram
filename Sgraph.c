@@ -36,38 +36,22 @@ static void Redisplay(Widget w, XEvent *event, Region r);
 static Boolean SetValues(Widget old, Widget reference, Widget new, ArgList args, Cardinal *num_args);
 
 /* Initialization */
-#define offset(field) XtOffsetOf(SgraphRec, sgraph.field)
-#define goffset(field) XtOffsetOf(CoreRec, core.field)
+#define Offset(field) XtOffsetOf(SgraphRec, sgraph.field)
 static XtResource resources[] = {
-	{ XtNwidth, XtCWidth, XtRDimension, sizeof(Dimension),
-		goffset(width), XtRImmediate, (XtPointer) 320 },
-	{ XtNheight, XtCHeight, XtRDimension, sizeof(Dimension),
-		goffset(height), XtRImmediate, (XtPointer) 200 },
 	{ XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
-		offset(foreground), XtRString, XtDefaultForeground },
+		Offset(foreground), XtRString, XtDefaultForeground },
 	{ XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
-		offset(background), XtRString, XtDefaultBackground },
+		Offset(background), XtRString, XtDefaultBackground },
 	{ XtNmirror, XtCBoolean, XtRBoolean, sizeof(Boolean),
-		offset(mirror), XtRBoolean, False },
+		Offset(mirror), XtRBoolean, False },
 	{ XtNdata, XtCData, XtRPointer, sizeof(int *),
-		offset(data), XtRPointer, NULL },
-	/*
-	{ XtNrightData, XtCParameter, XtRPointer, sizeof(XtPointer),
-		offset(rightData), XtRPointer, NULL },
-	 */
+		Offset(data), XtRPointer, NULL },
 	{ XtNsize, XtCsize, XtRInt, sizeof(int),
-		offset(size), XtRImmediate, (XtPointer)2048 },
+		Offset(size), XtRImmediate, (XtPointer)2048 },
 	{ XtNsamples, XtCsamples, XtRInt, sizeof(int),
-		offset(samples), XtRImmediate, (XtPointer)0 },
-	/*
-	{ XtNdataCallback, XtCCallback, XtRCallback, sizeof(XtCallbackProc),
-		offset(data), XtRCallback, NULL },
-	{ XtNfftCallback, XtCCallback, XtRCallback, sizeof(XtCallbackProc),
-		offset(fft), XtRCallback, NULL },
-	 */
+		Offset(samples), XtRImmediate, (XtPointer)0 },
 };
-#undef goffset
-#undef offset
+#undef Offset
 
 SgraphClassRec sgraphClassRec = {
 	.core_class = {
@@ -157,6 +141,8 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 		errx(1, "XRender %d.%d error %d", major, minor, ret);
 	 */
 
+	sw->core.width = 320;
+	sw->core.height = 200;
 	sw->sgraph.data = (int *)XtCalloc(sw->sgraph.size, sizeof(int));
 	
 	GetGC(w);
