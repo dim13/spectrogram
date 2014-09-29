@@ -93,7 +93,7 @@ SgraphClassRec sgraphClassRec = {
 		NULL,				/* destroy */
 		Resize,				/* resize */
 		Redisplay,			/* expose */
-		SetValues,			/* set_values */
+		NULL,				/* set_values */
 		NULL,				/* set_values_hook */
 		XtInheritSetValuesAlmost,	/* set_values_almost */
 		NULL,				/* get_values_hook */
@@ -171,10 +171,9 @@ Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr)
 	if (XtIsRealized(w))
 		return;
 
-	XtCreateWindow(w, InputOutput, CopyFromParent, *mask, attr);
+	XtSuperclass(w)->core_class.realize(w, mask, attr);
 	sw->sgraph.backBuf = XdbeAllocateBackBufferName(XtDisplay(w),
 		XtWindow(w), XdbeBackground);
-	Resize(w);
 }
 
 static void
@@ -227,21 +226,4 @@ Redisplay(Widget w, XEvent *event, Region r)
 	swap.swap_action = XdbeBackground;
 
 	XdbeSwapBuffers(XtDisplay(sw), &swap, 1);
-}
-
-static Boolean
-SetValues(Widget old, Widget reference, Widget new, ArgList args, Cardinal *num_args)
-{
-	XExposeEvent xeev;
-
-	xeev.type = Expose;
-	xeev.display = XtDisplay(new);
-	xeev.window = XtWindow(new);
-	xeev.x = 0;
-	xeev.y = 0;
-	xeev.width = new->core.width;
-	xeev.height = new->core.height;
-	Redisplay(new, (XEvent *)&xeev, NULL);
-
-	return False;
 }

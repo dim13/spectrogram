@@ -57,7 +57,6 @@ DisplayClassRec displayClassRec = {
 		.visible_interest	= False,
 		.destroy		= NULL,
 		.resize			= Resize,
-		//.expose			= XtInheritExpose,
 		.expose			= Redisplay,
 		.set_values		= SetValues,
 		.set_values_hook	= NULL,
@@ -72,7 +71,7 @@ DisplayClassRec displayClassRec = {
 		.extension		= NULL,
 	},
 	.composite_class = {
-		.geometry_manager	= GeometryManager,
+		.geometry_manager	= XtInheritGeometryManager,
 		.change_managed		= ChangeManaged,
 		.insert_child		= XtInheritInsertChild,
 		.delete_child		= XtInheritDeleteChild,
@@ -180,5 +179,17 @@ Redisplay(Widget w, XEvent *event, Region region)
 static Boolean
 SetValues(Widget old, Widget req, Widget new, ArgList args, Cardinal *n)
 {
-	return True;
+	XExposeEvent xeev;
+
+	xeev.type = Expose;
+	xeev.display = XtDisplay(new);
+	xeev.window = XtWindow(new);
+	xeev.x = 0;
+	xeev.y = 0;
+	xeev.width = new->core.width;
+	xeev.height = new->core.height;
+
+	XtClass(new)->core_class.expose(new, (XEvent *)&xeev, NULL);
+
+	return False;
 }
