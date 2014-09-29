@@ -143,7 +143,7 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 		errx(1, "Xdbe %d.%d error %d", major, minor, ret);
 
 	sw->core.width = 320;
-	sw->core.height = 200;
+	sw->core.height = 120;
 	sw->sgraph.data = (int *)XtCalloc(sw->sgraph.size, sizeof(int));
 	
 	GetGC(w);
