@@ -25,8 +25,8 @@
 #include <err.h>
 #include <stdint.h>
 
-#define Printd(w, s) do {						\
-	warnx("Class %s: %s", XtClass(w)->core_class.class_name, s);	\
+#define Trace(w) do {							\
+	warnx("%s.%s", XtClass(w)->core_class.class_name, __func__);	\
 } while (0)
 
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
@@ -121,6 +121,8 @@ GetGC(Widget w)
 	XGCValues	xgcv;
 	XtGCMask	gc_mask = GCForeground|GCBackground|GCPlaneMask;
 
+	Trace(w);
+
 	xgcv.plane_mask = AllPlanes;
 	xgcv.background = sw->sgraph.background;
 
@@ -148,6 +150,8 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 	int major, minor;
 	Status ret;
 
+	Trace(w);
+
 	ret = XdbeQueryExtension(XtDisplay(w), &major, &minor);
 	if (!ret)
 		errx(1, "Xdbe %d.%d error %d", major, minor, ret);
@@ -159,7 +163,6 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 
 	sw->sgraph.data = (int *)XtCalloc(sw->sgraph.size, sizeof(int));
 	
-	Printd(w, "Initialize");
 	GetGC(w);
 }
 
@@ -167,6 +170,8 @@ static void
 Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
+
+	Trace(w);
 
 	if (XtIsRealized(w))
 		return;
@@ -181,10 +186,10 @@ Resize(Widget w)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 
+	Trace(w);
+
 	if (!XtIsRealized(w))
 		return;
-
-	Printd(w, "Resize");
 
 	sw->sgraph.size = w->core.width;
 	warnx("win: %dx%d", w->core.width, w->core.height);
@@ -209,6 +214,8 @@ Redisplay(Widget w, XEvent *event, Region r)
 	SgraphWidget	sw = (SgraphWidget)w;
 	Dimension	x, y;
 	XdbeSwapInfo	swap;
+
+	//Trace(w);
 
 	if (!XtIsRealized(w))
 		return;

@@ -5,8 +5,8 @@
 #include <X11/StringDefs.h>
 #include "DisplayP.h"
 
-#define Printd(w, s) do {						\
-	warnx("Class %s: %s", XtClass(w)->core_class.class_name, s);	\
+#define Trace(w) do {							\
+	warnx("%s.%s", XtClass(w)->core_class.class_name, __func__);	\
 } while (0)
 
 static void Initialize(Widget, Widget, ArgList, Cardinal *);
@@ -87,7 +87,7 @@ WidgetClass displayWidgetClass = (WidgetClass) & displayClassRec;
 static void
 Initialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 {
-	warnx("Display initialize");
+	Trace(new);
 	new->core.width = 800;
 	new->core.height = 600;
 }
@@ -95,7 +95,7 @@ Initialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 static XtGeometryResult
 GeometryManager(Widget w, XtWidgetGeometry *request, XtWidgetGeometry *reply)
 {
-	warnx("Geometry Manager");
+	Trace(w);
 	return XtGeometryYes;
 }
 
@@ -109,7 +109,7 @@ ChangeManaged(Widget w)
 	int i;
 	Arg	arg;
 
-	warnx("Change Managed %s", XtClass(w)->core_class.class_name);
+	Trace(w);
 
 	width = w->core.width;
 	height = w->core.height;
@@ -140,24 +140,27 @@ static void
 Resize(Widget w)
 {
 	DisplayWidget dw = (DisplayWidget)w;
-	Dimension x, y, width, height, border;
+	Dimension x, y, width, height;
 	Widget child;
 	int n = dw->composite.num_children;
 	int i;
 
-	width = w->core.width / n - (n + 1) * dw->display.space;
+	Trace(w);
+
+	width = w->core.width / n - 2 * dw->display.space;
 	height = w->core.height - 2 * dw->display.space;
-	Printd(w, "Resize");
 
 	for (i = 0; i < dw->composite.num_children; i++) {
 		child = dw->composite.children[i];
 		if (XtIsManaged(child)) {
-			border = child->core.border_width;
-			x = dw->display.space;
-			x += i * (width + 2 * border);
+			x =  i * (width + dw->display.space
+				+ child->core.border_width)
+				+ dw->display.space;
 			y = dw->display.space;
-			XtConfigureWidget(child, x, y, width - 2 * border,
-				height - 2 * border, border);
+			XtConfigureWidget(child, x, y,
+				width - 2 * child->core.border_width,
+				height - 2 * child->core.border_width,
+				child->core.border_width);
 		}
 	}
 }
@@ -168,6 +171,8 @@ Redisplay(Widget w, XEvent *event, Region region)
 	DisplayWidget dw = (DisplayWidget)w;
 	Widget child;
 	int i;
+
+	//Trace(w);
 
 	for (i = 0; i < dw->composite.num_children; i++) {
 		child = dw->composite.children[i];
@@ -180,6 +185,8 @@ static Boolean
 SetValues(Widget old, Widget req, Widget new, ArgList args, Cardinal *n)
 {
 	XExposeEvent xeev;
+
+	//Trace(new);
 
 	xeev.type = Expose;
 	xeev.display = XtDisplay(new);
