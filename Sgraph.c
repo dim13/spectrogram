@@ -19,7 +19,7 @@
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
 #include <X11/extensions/Xdbe.h>
-#include <X11/extensions/Xrender.h>
+//#include <X11/extensions/Xrender.h>
 #include "SgraphP.h"
 
 #include <err.h>

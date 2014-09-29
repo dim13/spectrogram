@@ -20,23 +20,6 @@
 
 #include "Sgraph.h"
 
-/* include superclass private header file */
-#include <X11/CoreP.h>
-
-/* define unique representation types not found in <X11/StringDefs.h> */
-#define XtRSgraphResource "SgraphResource"
-
-typedef struct {
-	XtPointer	extension;
-} SgraphClassPart;
-
-typedef struct _SgraphClassRec {
-	CoreClassPart	core_class;
-	SgraphClassPart	sgraph_class;
-} SgraphClassRec;
-
-extern SgraphClassRec sgraphClassRec;
-
 typedef struct {
 	Pixel		background;
 	Pixel		foreground;
@@ -63,5 +46,16 @@ typedef struct _SgraphRec {
 	CorePart	core;
 	SgraphPart	sgraph;
 } SgraphRec;
+
+typedef struct {
+	XtPointer	extension;
+} SgraphClassPart;
+
+typedef struct _SgraphClassRec {
+	CoreClassPart	core_class;
+	SgraphClassPart	sgraph_class;
+} SgraphClassRec;
+
+extern SgraphClassRec sgraphClassRec;
 
 #endif
