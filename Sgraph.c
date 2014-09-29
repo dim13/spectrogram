@@ -19,7 +19,6 @@
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
 #include <X11/extensions/Xdbe.h>
-//#include <X11/extensions/Xrender.h>
 #include "SgraphP.h"
 
 #include <err.h>
@@ -142,11 +141,6 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 	ret = XdbeQueryExtension(XtDisplay(w), &major, &minor);
 	if (!ret)
 		errx(1, "Xdbe %d.%d error %d", major, minor, ret);
-	/*
-	ret = XRenderQueryVersion(XtDisplay(w), &major, &minor);
-	if (!ret)
-		errx(1, "XRender %d.%d error %d", major, minor, ret);
-	 */
 
 	sw->core.width = 320;
 	sw->core.height = 200;
