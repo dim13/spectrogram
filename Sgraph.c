@@ -203,7 +203,7 @@ Redisplay(Widget w, XEvent *event, Region r)
 	if (!XtIsRealized(w))
 		return;
 
-	for (i = 0; i < sw->sgraph.size - 1; i++) {
+	for (i = 0; i < sw->core.width - 1; i++) {
 		y = sw->sgraph.data[i];
 		if (sw->sgraph.mirror)
 			x = sw->core.width - i;
