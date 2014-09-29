@@ -43,7 +43,7 @@ DisplayClassRec displayClassRec = {
 		.class_initialize	= NULL,
 		.class_part_initialize	= NULL,
 		.class_inited		= False,
-		.initialize		= NULL,
+		.initialize		= Initialize,
 		.initialize_hook	= NULL,
 		.realize		= XtInheritRealize,
 		.actions		= NULL,
@@ -88,8 +88,6 @@ static void
 Initialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 {
 	Trace(new);
-	new->core.width = 800;
-	new->core.height = 600;
 }
 
 static XtGeometryResult

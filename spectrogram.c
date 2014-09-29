@@ -75,7 +75,6 @@ worker(XtPointer p)
 {
 	Arg	arg[10];
 	int	n, size, samples;
-	double	*left, *right;
 	int	**data;
 
 	n = 0;

@@ -176,8 +176,8 @@ Resize(Widget w)
 
 	sw->sgraph.size = w->core.width;
 	warnx("win: %dx%d", w->core.width, w->core.height);
-	warnx("size: %d", sw->sgraph.size);
-	warnx("samples: %d", sw->sgraph.samples);
+	warnx("size: %zu", sw->sgraph.size);
+	warnx("samples: %zu", sw->sgraph.samples);
 
 	if (sw->sgraph.bg != None)
 		XFreePixmap(XtDisplay(sw), sw->sgraph.bg);
