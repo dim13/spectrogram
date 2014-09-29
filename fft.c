@@ -45,7 +45,7 @@ hamming(size_t n)
 
 	for (i = 0; i < n; i++) {
 		p[i] = alpha - beta * cos(2 * M_PI * i / (n - 1));
-		p[i] /= (double)INT16_MAX;
+		p[i] /= INT16_MAX * 0.707;
 	}
 
 	return p;
