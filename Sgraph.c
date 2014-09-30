@@ -45,7 +45,7 @@ static XtResource resources[] = {
 	{ XtNdata, XtCData, XtRPointer, sizeof(int *),
 		Offset(data), XtRPointer, NULL },
 	{ XtNsize, XtCsize, XtRInt, sizeof(int),
-		Offset(size), XtRImmediate, (XtPointer)2048 },
+		Offset(size), XtRImmediate, (XtPointer)1960 },
 	{ XtNsamples, XtCsamples, XtRInt, sizeof(int),
 		Offset(samples), XtRImmediate, (XtPointer)0 },
 };
@@ -144,7 +144,7 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 
 	sw->core.width = 320;
 	sw->core.height = 120;
-	sw->sgraph.data = (int *)XtCalloc(sw->sgraph.size, sizeof(int));
+	sw->sgraph.data = (int *)XtCalloc(sw->sgraph.samples, sizeof(int));
 	
 	GetGC(w);
 }
@@ -174,7 +174,9 @@ Resize(Widget w)
 	if (!XtIsRealized(w))
 		return;
 
-	sw->sgraph.size = w->core.width;
+	sw->sgraph.size = 2 * w->core.width;
+	if (sw->sgraph.size > sw->sgraph.samples)
+		sw->sgraph.size = sw->sgraph.samples;
 	warnx("win: %dx%d", w->core.width, w->core.height);
 	warnx("size: %zu", sw->sgraph.size);
 	warnx("samples: %zu", sw->sgraph.samples);
@@ -195,7 +197,7 @@ static void
 Redisplay(Widget w, XEvent *event, Region r)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
-	Dimension	i, x, y;
+	Dimension	i, x, y, visible;
 	XdbeSwapInfo	swap;
 
 	//Trace(w);
@@ -203,7 +205,8 @@ Redisplay(Widget w, XEvent *event, Region r)
 	if (!XtIsRealized(w))
 		return;
 
-	for (i = 0; i < sw->core.width - 1; i++) {
+	visible = sw->sgraph.size / 2;
+	for (i = 0; i < visible - 1; i++) {
 		y = sw->sgraph.data[i];
 		if (sw->sgraph.mirror)
 			x = sw->core.width - i;

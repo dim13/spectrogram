@@ -177,6 +177,9 @@ static Boolean
 SetValues(Widget old, Widget req, Widget new, ArgList args, Cardinal *n)
 {
 	XExposeEvent xeev;
+	DisplayWidget dw = (DisplayWidget)new;
+	Widget child;
+	int i;
 
 	//Trace(new);
 
@@ -187,6 +190,12 @@ SetValues(Widget old, Widget req, Widget new, ArgList args, Cardinal *n)
 	xeev.y = 0;
 	xeev.width = new->core.width;
 	xeev.height = new->core.height;
+
+	for (i = 0; i < dw->composite.num_children; i++) {
+		child = dw->composite.children[i];
+		if (XtIsManaged(child))
+			XtSetValues(child, args, *n);
+	}
 
 	XtClass(new)->core_class.expose(new, (XEvent *)&xeev, NULL);
 
