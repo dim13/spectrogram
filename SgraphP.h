@@ -18,18 +18,15 @@
 #ifndef _SgraphP_h
 #define _SgraphP_h
 
+#include <X11/extensions/Xdbe.h>
 #include "Sgraph.h"
 
 typedef struct {
 	Pixel		foreground;
 	Boolean		mirror;
-	int		*data;
+	int		*values;
 	size_t		size;
 	size_t		samples;
-	/*
-	XtCallbackProc	data;
-	XtCallbackProc	fft;
-	 */
 
 	XdbeBackBuffer backBuf;
 	GC		foreGC;

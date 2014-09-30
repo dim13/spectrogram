@@ -18,7 +18,6 @@
 
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
-#include <X11/extensions/Xdbe.h>
 #include "SgraphP.h"
 
 #include <err.h>
@@ -42,8 +41,8 @@ static XtResource resources[] = {
 		Offset(foreground), XtRString, XtDefaultForeground },
 	{ XtNmirror, XtCBoolean, XtRBoolean, sizeof(Boolean),
 		Offset(mirror), XtRBoolean, False },
-	{ XtNdata, XtCData, XtRPointer, sizeof(int *),
-		Offset(data), XtRPointer, NULL },
+	{ XtNvalues, XtCValues, XtRPointer, sizeof(int *),
+		Offset(values), XtRPointer, NULL },
 	{ XtNsize, XtCsize, XtRInt, sizeof(int),
 		Offset(size), XtRImmediate, (XtPointer)0 },
 	{ XtNsamples, XtCsamples, XtRInt, sizeof(int),
@@ -145,7 +144,7 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 	sw->core.width = 320;
 	sw->core.height = 120;
 	sw->sgraph.size = 2 * sw->core.width;
-	sw->sgraph.data = (int *)XtCalloc(sw->sgraph.samples, sizeof(int));
+	sw->sgraph.values = (int *)XtCalloc(sw->sgraph.samples, sizeof(int));
 	
 	GetGC(w);
 }
@@ -208,7 +207,7 @@ Redisplay(Widget w, XEvent *event, Region r)
 
 	visible = sw->sgraph.size / 2;
 	for (i = 0; i < visible - 1; i++) {
-		y = sw->sgraph.data[i];
+		y = sw->sgraph.values[i];
 		if (sw->sgraph.mirror)
 			x = sw->core.width - i;
 		else

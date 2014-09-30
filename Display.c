@@ -4,6 +4,7 @@
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
 #include "DisplayP.h"
+#include "SgraphP.h"
 
 #define Trace(w) do {							\
 	warnx("%s.%s", XtClass(w)->core_class.class_name, __func__);	\
@@ -116,7 +117,7 @@ ChangeManaged(Widget w)
 	for (i = 0; i < dw->composite.num_children; i++) {
 		child = dw->composite.children[i];
 		if (XtIsManaged(child)) {
-			XtSetArg(arg, XtNdata, &dw->display.data[i]);
+			XtSetArg(arg, XtNvalues, &dw->display.data[i]);
 			XtGetValues(child, &arg, 1);
 			XtMoveWidget(child,
 				width, 0);

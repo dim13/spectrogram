@@ -47,8 +47,8 @@
 /* define any special resource names here that are not in <X11/StringDefs.h> */
 #define XtNmirror	"mirror"
 
-#define XtNdata		"data"
-#define XtCData		"Data"
+#define XtNvalues	"values"
+#define XtCValues	"Values"
 
 #define XtNsamples	"samples"
 #define XtCsamples	"Samples"
@@ -56,10 +56,7 @@
 #define XtNsize		"size"
 #define XtCsize		"Size"
 
-#define XtNdataCallback	"dataCallback"
-#define XtNfftCallback	"fftCallback"
-
-/* declare specific SgraphWidget class and instance datatypes */
+/* declare specific SgraphWidget class and instance valuestypes */
 typedef struct _SgraphClassRec *SgraphWidgetClass;
 typedef struct _SgraphRec *SgraphWidget;
 
