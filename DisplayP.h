@@ -6,7 +6,6 @@
 #include "Display.h"
 
 typedef struct {
-	Dimension		space;
 	int			**data;
 } DisplayPart;
 

@@ -18,8 +18,6 @@ static Boolean SetValues(Widget, Widget, Widget, ArgList, Cardinal *);
 
 #define Offset(field) XtOffsetOf(DisplayRec, display.field)
 static XtResource resources[] = {
-	{ XtNspace, XtCSpace, XtRDimension, sizeof(Dimension),
-		Offset(space), XtRImmediate, (XtPointer)2 },
 	{ XtNdata, XtCData, XtRPointer, sizeof(int **),
 		Offset(data), XtRPointer, NULL },
 };
@@ -121,13 +119,11 @@ ChangeManaged(Widget w)
 			XtSetArg(arg, XtNdata, &dw->display.data[i]);
 			XtGetValues(child, &arg, 1);
 			XtMoveWidget(child,
-				width + dw->display.space, dw->display.space);
+				width, 0);
 			width += child->core.width
-				+ 2 * child->core.border_width
-				+ 2 * dw->display.space;
+				+ 2 * child->core.border_width;
 			height = child->core.height
-				+ 2 * child->core.border_width
-				+ 2 * dw->display.space;
+				+ 2 * child->core.border_width;
 		}
 	}
 	w->core.width = width;
@@ -145,16 +141,14 @@ Resize(Widget w)
 
 	Trace(w);
 
-	width = w->core.width / n - 2 * dw->display.space;
-	height = w->core.height - 2 * dw->display.space;
+	width = w->core.width / n;
+	height = w->core.height;
 
 	for (i = 0; i < dw->composite.num_children; i++) {
 		child = dw->composite.children[i];
 		if (XtIsManaged(child)) {
-			x =  i * (width + dw->display.space
-				+ child->core.border_width)
-				+ dw->display.space;
-			y = dw->display.space;
+			x = i * (width + child->core.border_width);
+			y = 0;
 			XtConfigureWidget(child, x, y,
 				width - 2 * child->core.border_width,
 				height - 2 * child->core.border_width,
