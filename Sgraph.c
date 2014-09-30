@@ -45,7 +45,7 @@ static XtResource resources[] = {
 	{ XtNdata, XtCData, XtRPointer, sizeof(int *),
 		Offset(data), XtRPointer, NULL },
 	{ XtNsize, XtCsize, XtRInt, sizeof(int),
-		Offset(size), XtRImmediate, (XtPointer)1960 },
+		Offset(size), XtRImmediate, (XtPointer)0 },
 	{ XtNsamples, XtCsamples, XtRInt, sizeof(int),
 		Offset(samples), XtRImmediate, (XtPointer)0 },
 };
@@ -144,6 +144,7 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 
 	sw->core.width = 320;
 	sw->core.height = 120;
+	sw->sgraph.size = 2 * sw->core.width;
 	sw->sgraph.data = (int *)XtCalloc(sw->sgraph.samples, sizeof(int));
 	
 	GetGC(w);
