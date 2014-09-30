@@ -70,7 +70,8 @@ init_sio(void)
 	samples -= samples % round;
 	if (samples < rate / FPS)
 		samples += round;
-	warnx("alsa round/rate/samples: %d/%d/%d", round, rate, samples);
+	warnx("%s round/rate/samples: %d/%d/%d", __func__,
+		round, rate, samples);
 	buffer = calloc(samples * STEREO, sizeof(int16_t));
 	assert(buffer);
 

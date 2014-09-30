@@ -120,7 +120,7 @@ main(int argc, char **argv)
 
 	samples = init_sio();
 	init_fft(samples);
-	warnx("samples: %d", samples);
+	warnx("%s samples: %d", __func__, samples);
 
 	XtAppAddActions(app, actionsList, XtNumber(actionsList));
 	acs = XtParseAcceleratorTable("<Key>q: quit()");
