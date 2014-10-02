@@ -79,10 +79,10 @@ init_sio(void)
 }
 
 size_t
-read_sio(int *left, int *right, size_t n)
+read_sio(int **out, size_t n)
 {
 	snd_pcm_sframes_t rc;
-	struct data *data;
+	int16_t *tmp;
 	int i;
 
 	if (n > samples)
@@ -95,13 +95,11 @@ read_sio(int *left, int *right, size_t n)
 			snd_pcm_prepare(hdl);
 	}
 
-	data = (struct data *)&buffer[samples - n];
+	tmp = buffer[samples - n];
 
-	/* split and normalize */
-	for (i = 0; i < n; i++) {
-		left[i] = data[i].left;
-		right[i] = data[i].right;
-	}
+	/* split */
+	for (i = 0; i < n * STEREO; i++)
+		out[i % STEREO][i / STEREO] = tmp[i];
 
 	return n;
 }

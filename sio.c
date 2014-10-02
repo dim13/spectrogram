@@ -33,11 +33,6 @@ static struct	sio_par par;
 static int16_t	*buffer;
 static unsigned int samples;
 
-struct data {
-	int16_t left;
-	int16_t right;
-};
-
 int
 init_sio(void)
 {
@@ -78,12 +73,12 @@ init_sio(void)
 }
 
 size_t
-read_sio(int *left, int *right, size_t n)
+read_sio(int **out, size_t n)
 {
 	int done, i;
 	char *p = (char *)buffer;
 	size_t bufsz, rndsz;
-	struct data *data;
+	int16_t *tmp;
 
 	if (n > samples)
 		n = samples;
@@ -101,13 +96,11 @@ read_sio(int *left, int *right, size_t n)
 	 * return a pointer to the latest ROUND samples (the most recent
 	 * ones) to minimize latency between picture and sound
 	 */
-	data = (struct data *)(p - rndsz);
+	tmp = (int16_t *)(p - rndsz);
 
-	/* split and normalize */
-	for (i = 0; i < n; i++) {
-		left[i] = data[i].left;
-		right[i] = data[i].right;
-	}
+	/* split */
+	for (i = 0; i < n * par.rchan; i++)
+		out[i % par.rchan][i / par.rchan] = tmp[i];
 
 	return n;
 }
@@ -119,3 +112,10 @@ free_sio(void)
 	sio_close(hdl);
 	free(buffer);
 }
+
+sio_input sndio = {
+	.name		= "sndio",
+	.initialize	= init_sio,
+	.read		= NULL,
+	.destroy	= free_sio,
+};

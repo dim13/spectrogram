@@ -31,7 +31,6 @@ static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
 static void Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr);
 static void Resize(Widget w);
 static void Redisplay(Widget w, XEvent *event, Region r);
-static Boolean SetValues(Widget old, Widget reference, Widget new, ArgList args, Cardinal *num_args);
 static void mirror(Widget, XEvent *, String *, Cardinal *);
 
 /* Initialization */

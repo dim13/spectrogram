@@ -11,7 +11,6 @@
 } while (0)
 
 static void Initialize(Widget, Widget, ArgList, Cardinal *);
-static XtGeometryResult GeometryManager(Widget, XtWidgetGeometry *, XtWidgetGeometry *);
 static void ChangeManaged(Widget);
 static void Resize(Widget);
 static void Redisplay(Widget, XEvent *, Region);
@@ -87,13 +86,6 @@ static void
 Initialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 {
 	Trace(new);
-}
-
-static XtGeometryResult
-GeometryManager(Widget w, XtWidgetGeometry *request, XtWidgetGeometry *reply)
-{
-	Trace(w);
-	return XtGeometryYes;
 }
 
 static void

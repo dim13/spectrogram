@@ -18,9 +18,16 @@
 #ifndef __SIO_H
 #define __SIO_H
 
+typedef struct {
+	char	*name;
+	int	(*initialize)(void);
+	size_t	(*read)(int **, size_t);
+	void	(*destroy)(void);
+} sio_input;
+
 __BEGIN_DECLS
 int init_sio(void);
-size_t read_sio(int *, int *, size_t);
+size_t read_sio(int **, size_t);
 void free_sio(void);
 __END_DECLS
 

@@ -83,7 +83,7 @@ worker(XtPointer p)
 	XtSetArg(arg[n], XtNdata, &data);	n++;
 	XtGetValues(p, arg, n);
 
-	size = read_sio(data[0], data[1], size);
+	size = read_sio(data, size);
 	exec_fft(data[0], size);
 	exec_fft(data[1], size);
 
