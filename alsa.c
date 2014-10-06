@@ -95,7 +95,7 @@ read_sio(int **out, size_t n)
 			snd_pcm_prepare(hdl);
 	}
 
-	tmp = buffer[samples - n];
+	tmp = &buffer[samples - n];
 
 	/* split */
 	for (i = 0; i < n * STEREO; i++)
