@@ -9,11 +9,8 @@
 #define XtNnumChannel	"numChannel"
 #define XtCNumChannel	"NumChannel"
 
-#define XtNround	"round"
-#define XtCRound	"Round"
-
-#define XtNmaxRound	"maxRound"
-#define XtCMaxRound	"MaxRound"
+#define XtNnumSamples	"numSamples"
+#define XtCNumSamples	"NumSamples"
 
 typedef struct _DisplayClassRec *DisplayWidgetClass;
 typedef struct _DisplayRec *DisplayWidget;

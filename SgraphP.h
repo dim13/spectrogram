@@ -26,7 +26,6 @@ typedef struct {
 	Boolean		mirror;
 	int		*values;
 	size_t		size;
-	size_t		samples;
 
 	XdbeBackBuffer	backBuf;
 	GC		foreGC;

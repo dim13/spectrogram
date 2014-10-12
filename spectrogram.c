@@ -20,7 +20,7 @@
 
 #include <X11/Intrinsic.h>
 #include "Display.h"
-#include "Sgraph.h"
+//#include "Sgraph.h"
 
 #include <err.h>
 #include <signal.h>
@@ -74,21 +74,20 @@ static Boolean
 worker(XtPointer p)
 {
 	Arg	arg[10];
-	int	n, size, samples;
+	int	n, samples;
 	int	**data;
 
 	n = 0;
-	XtSetArg(arg[n], XtNwidth, &size);	n++;
-	XtSetArg(arg[n], XtNsamples, &samples);	n++;
-	XtSetArg(arg[n], XtNdata, &data);	n++;
+	XtSetArg(arg[n], XtNnumSamples, &samples);	n++;
+	XtSetArg(arg[n], XtNdata, &data);		n++;
 	XtGetValues(p, arg, n);
 
-	size = read_sio(data, size);
-	exec_fft(data[0], size);
-	exec_fft(data[1], size);
+	samples = read_sio(data, samples);
+	exec_fft(data[0], samples);
+	exec_fft(data[1], samples);
 
 	n = 0;
-	XtSetArg(arg[n], XtNsize, size);	n++;
+	XtSetArg(arg[n], XtNnumSamples, samples);	n++;
 	XtSetValues(p, arg, n);	/* trigger expose */
 
 	return False; 	/* don't remove the work procedure from the list */
@@ -106,7 +105,7 @@ int
 main(int argc, char **argv)
 {
 	XtAppContext	app;
-	Widget	toplevel, display, sgraph;
+	Widget	toplevel, display;
 	int	n, samples;
 	Arg	args[10];
 	XtAccelerators acs;
@@ -126,25 +125,11 @@ main(int argc, char **argv)
 	acs = XtParseAcceleratorTable("<Key>q: quit()");
 
 	n = 0;
-	XtSetArg(args[n], XtNorientation, "horizontal");	n++;
-	XtSetArg(args[n], XtNaccelerators, acs);		n++;
+	//XtSetArg(args[n], XtNaccelerators, acs);		n++;
 	XtSetArg(args[n], XtNnumChannel, 2);			n++;
+	XtSetArg(args[n], XtNnumSamples, samples);		n++;
 	display = XtCreateManagedWidget("Display", displayWidgetClass,
 		toplevel, args, n);
-
-	n = 0;
-	XtSetArg(args[n], XtNsamples, samples);		n++;
-	XtSetArg(args[n], XtNmirror, True);		n++;
-	sgraph = XtCreateManagedWidget("SGraph", sgraphWidgetClass,
-		display, args, n);
-	XtInstallAccelerators(sgraph, display);
-
-	n = 0;
-	XtSetArg(args[n], XtNsamples, samples);		n++;
-	XtSetArg(args[n], XtNmirror, False);		n++;
-	sgraph = XtCreateManagedWidget("SGraph", sgraphWidgetClass,
-		display, args, n);
-	XtInstallAccelerators(sgraph, display);
 
 	XtAppAddWorkProc(app, worker, display);
 

@@ -7,6 +7,7 @@
 
 typedef struct {
 	int			num_channel;
+	int			num_samples;
 	int			**data;
 } DisplayPart;
 

@@ -19,7 +19,9 @@ static Boolean SetValues(Widget, Widget, Widget, ArgList, Cardinal *);
 #define Offset(field) XtOffsetOf(DisplayRec, display.field)
 static XtResource resources[] = {
 	{ XtNnumChannel, XtCNumChannel, XtRInt, sizeof(int),
-		Offset(num_channel), XtRInt, 2 },
+		Offset(num_channel), XtRImmediate, (XtPointer)2 },
+	{ XtNnumSamples, XtCNumSamples, XtRInt, sizeof(int),
+		Offset(num_samples), XtRImmediate, (XtPointer)0 },
 	{ XtNdata, XtCData, XtRPointer, sizeof(int **),
 		Offset(data), XtRPointer, NULL },
 };
@@ -88,8 +90,22 @@ static void
 Initialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 {
 	DisplayWidget dw = (DisplayWidget)new;
+	Arg arg[10];
+	int n, i;
+
 	Trace(new);
-	dw->display.data = (int **)XtMalloc(dw->display.num_channel * sizeof(int *));
+
+	dw->display.data = (int **)XtCalloc(dw->display.num_channel, sizeof(int *));
+
+	for (i = 0; i < dw->display.num_channel; i++) {
+		dw->display.data[i] = (int *)XtCalloc(dw->display.num_samples,
+			sizeof(int));
+		n = 0;
+		XtSetArg(arg[n], XtNvalues, dw->display.data[i]);	n++;
+		XtSetArg(arg[n], XtNsize, dw->display.num_samples);	n++;
+		XtSetArg(arg[n], XtNmirror, i % 2 ? False : True);	n++;
+		XtCreateManagedWidget("SGraph", sgraphWidgetClass, new, arg, n);
+	}
 }
 
 static void
@@ -99,7 +115,6 @@ ChangeManaged(Widget w)
 	Dimension width, height;
 	Widget child;
 	int i;
-	Arg	arg;
 
 	Trace(w);
 
@@ -109,8 +124,6 @@ ChangeManaged(Widget w)
 	for (i = 0; i < dw->composite.num_children; i++) {
 		child = dw->composite.children[i];
 		if (XtIsManaged(child)) {
-			XtSetArg(arg, XtNvalues, &dw->display.data[i]);
-			XtGetValues(child, &arg, 1);
 			XtMoveWidget(child,
 				width, 0);
 			width += child->core.width
@@ -121,6 +134,9 @@ ChangeManaged(Widget w)
 	}
 	w->core.width = width;
 	w->core.height = height;
+
+	/* XXX */
+	dw->display.num_samples = dw->composite.children[0]->core.width * 2;
 }
 
 static void
@@ -148,6 +164,9 @@ Resize(Widget w)
 				child->core.border_width);
 		}
 	}
+
+	/* XXX */
+	dw->display.num_samples = dw->composite.children[0]->core.width * 2;
 }
 
 static void
