@@ -6,6 +6,9 @@
 #define XtNdata		"data"
 #define XtCData		"Data"
 
+#define XtNnumChannel	"numChannel"
+#define XtCNumChannel	"NumChannel"
+
 #define XtNround	"round"
 #define XtCRound	"Round"
 

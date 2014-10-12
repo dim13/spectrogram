@@ -6,6 +6,7 @@
 #include "Display.h"
 
 typedef struct {
+	int			num_channel;
 	int			**data;
 } DisplayPart;
 

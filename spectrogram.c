@@ -128,6 +128,7 @@ main(int argc, char **argv)
 	n = 0;
 	XtSetArg(args[n], XtNorientation, "horizontal");	n++;
 	XtSetArg(args[n], XtNaccelerators, acs);		n++;
+	XtSetArg(args[n], XtNnumChannel, 2);			n++;
 	display = XtCreateManagedWidget("Display", displayWidgetClass,
 		toplevel, args, n);
 
