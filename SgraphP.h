@@ -28,7 +28,7 @@ typedef struct {
 	size_t		size;
 	size_t		samples;
 
-	XdbeBackBuffer backBuf;
+	XdbeBackBuffer	backBuf;
 	GC		foreGC;
 	GC		backGC;
 	GC		maskGC;
