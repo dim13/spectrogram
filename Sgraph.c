@@ -199,18 +199,15 @@ Redisplay(Widget w, XEvent *event, Region r)
 	Dimension	i, x, y, visible;
 	XdbeSwapInfo	swap;
 
-	//Trace(w);
-
-	if (!XtIsRealized(w))
+	if (!XtIsRealized(w)) {
+		Trace(w);
 		return;
+	}
 
 	visible = sw->sgraph.size / 2;
 	for (i = 0; i < visible - 1; i++) {
 		y = sw->sgraph.values[i];
-		if (sw->sgraph.mirror)
-			x = sw->core.width - i;
-		else
-			x = i;
+		x = sw->sgraph.mirror ? sw->core.width - i : i;
 
 		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC,
