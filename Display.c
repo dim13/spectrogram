@@ -89,7 +89,7 @@ Initialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 {
 	DisplayWidget dw = (DisplayWidget)new;
 	Trace(new);
-	dw->display.data = (int **)XtMalloc(dw->display.num_channel * sizeof(int));
+	dw->display.data = (int **)XtMalloc(dw->display.num_channel * sizeof(int *));
 }
 
 static void
@@ -98,7 +98,6 @@ ChangeManaged(Widget w)
 	DisplayWidget dw = (DisplayWidget)w;
 	Dimension width, height;
 	Widget child;
-	int **data;
 	int i;
 	Arg	arg;
 
@@ -106,9 +105,6 @@ ChangeManaged(Widget w)
 
 	width = w->core.width;
 	height = w->core.height;
-
-	//data = (int **)XtRealloc((char *)dw->display.data, dw->composite.num_children * sizeof(int *));
-	//dw->display.data = data;
 
 	for (i = 0; i < dw->composite.num_children; i++) {
 		child = dw->composite.children[i];
