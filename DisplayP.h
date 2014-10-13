@@ -14,6 +14,7 @@ typedef struct {
 typedef struct _DisplayRec {
 	CorePart		core;
 	CompositePart		composite;
+	ConstraintPart		constraint;
 	DisplayPart		display;
 } DisplayRec;
 
@@ -24,8 +25,17 @@ typedef struct {
 typedef struct _DisplayClassRec {
 	CoreClassPart		core_class;
 	CompositeClassPart	composite_class;
+	ConstraintClassPart	constraint_class;
 	DisplayClassPart	display_class;
 } DisplayClassRec;
+
+typedef struct {
+	XtPointer		extension;
+} DisplayConstraintPart;
+
+typedef struct _DisplayConstraintRec {
+	DisplayConstraintPart	display;
+} DisplayConstraintRec, *DisplayConstraints;
 
 extern DisplayClassRec displayClassRec;
 

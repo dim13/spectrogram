@@ -37,7 +37,7 @@ static CompositeClassExtensionRec	compositeExtension = {
 
 DisplayClassRec displayClassRec = {
 	.core_class = {
-		.superclass		= (WidgetClass)&compositeClassRec,
+		.superclass		= (WidgetClass)&constraintClassRec,
 		.class_name		= "Display",
 		.widget_size		= sizeof(DisplayRec),
 		.class_initialize	= NULL,
@@ -76,6 +76,15 @@ DisplayClassRec displayClassRec = {
 		.insert_child		= XtInheritInsertChild,
 		.delete_child		= XtInheritDeleteChild,
 		.extension		= &compositeExtension,
+	},
+	.constraint_class = {
+		.resources		= NULL,
+		.num_resources		= 0,
+		.constraint_size	= sizeof(DisplayConstraintRec),
+		.initialize		= NULL,
+		.destroy		= NULL,
+		.set_values		= NULL,
+		.extension		= NULL,
 	},
 	.display_class = {
 		.extension		= NULL,
