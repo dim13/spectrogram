@@ -6,9 +6,7 @@
 #include "DisplayP.h"
 #include "SgraphP.h"
 
-#define Trace(w) do {							\
-	warnx("%s.%s", XtClass(w)->core_class.class_name, __func__);	\
-} while (0)
+#define Trace(w) warnx("%s.%s", XtClass(w)->core_class.class_name, __func__)
 
 static void Initialize(Widget, Widget, ArgList, Cardinal *);
 static void ChangeManaged(Widget);
