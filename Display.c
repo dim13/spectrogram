@@ -23,8 +23,10 @@ static XtResource resources[] = {
 	{ XtNdata, XtCData, XtRPointer, sizeof(int **),
 		Offset(data), XtRPointer, NULL },
 };
-
 #undef Offset
+
+static XtResource constraint_resources[] = {
+};
 
 static CompositeClassExtensionRec	compositeExtension = {
 	.next_extension			= NULL,
@@ -78,8 +80,8 @@ DisplayClassRec displayClassRec = {
 		.extension		= &compositeExtension,
 	},
 	.constraint_class = {
-		.resources		= NULL,
-		.num_resources		= 0,
+		.resources		= constraint_resources,
+		.num_resources		= XtNumber(constraint_resources),
 		.constraint_size	= sizeof(DisplayConstraintRec),
 		.initialize		= NULL,
 		.destroy		= NULL,
@@ -143,7 +145,7 @@ ChangeManaged(Widget w)
 	w->core.height = height;
 
 	/* XXX */
-	dw->display.num_samples = dw->composite.children[0]->core.width * 2;
+	dw->display.num_samples = dw->composite.children[0]->core.width * 3;
 }
 
 static void
@@ -173,7 +175,7 @@ Resize(Widget w)
 	}
 
 	/* XXX */
-	dw->display.num_samples = dw->composite.children[0]->core.width * 2;
+	dw->display.num_samples = dw->composite.children[0]->core.width * 3;
 }
 
 static void
