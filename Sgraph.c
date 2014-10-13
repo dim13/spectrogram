@@ -23,9 +23,7 @@
 #include <err.h>
 #include <stdint.h>
 
-#define Trace(w) do {							\
-	warnx("%s.%s", XtClass(w)->core_class.class_name, __func__);	\
-} while (0)
+#define Trace(w) warnx("%s.%s", XtClass(w)->core_class.class_name, __func__)
 
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
 static void Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr);
@@ -94,6 +92,7 @@ SgraphClassRec sgraphClassRec = {
 		.extension			= NULL,
 	}
 };
+
 WidgetClass sgraphWidgetClass = (WidgetClass)&sgraphClassRec;
 
 static void
@@ -149,10 +148,10 @@ Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 
-	Trace(w);
-
 	if (XtIsRealized(w))
 		return;
+
+	Trace(w);
 
 	XtSuperclass(w)->core_class.realize(w, mask, attr);
 	sw->sgraph.backBuf = XdbeAllocateBackBufferName(XtDisplay(w),
@@ -164,19 +163,21 @@ Resize(Widget w)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 
-	Trace(w);
-
 	if (!XtIsRealized(w))
 		return;
 
+	Trace(w);
+
 	if (sw->sgraph.bg != None)
 		XFreePixmap(XtDisplay(sw), sw->sgraph.bg);
+
 	sw->sgraph.bg = XCreatePixmap(XtDisplay(sw), XtWindow(sw),
 		w->core.width, w->core.height,
 		DefaultDepthOfScreen(XtScreen(sw)));
 
 	if (sw->sgraph.mask != None)
 		XFreePixmap(XtDisplay(sw), sw->sgraph.mask);
+
 	sw->sgraph.mask = XCreatePixmap(XtDisplay(sw), XtWindow(sw),
 		w->core.width, w->core.height, 1);
 }
@@ -188,10 +189,12 @@ Redisplay(Widget w, XEvent *event, Region r)
 	Dimension	i, x, y;
 	XdbeSwapInfo	swap;
 
-	if (!XtIsRealized(w)) {
-		Trace(w);
+	if (!XtIsRealized(w))
 		return;
-	}
+
+#if 0
+	Trace(w);
+#endif
 
 	for (i = 0; i < sw->core.width - 1; i++) {
 		y = sw->sgraph.values[i];
@@ -213,5 +216,8 @@ static void
 mirror(Widget w, XEvent *event, String *param, Cardinal *n)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
+
+	Trace(w);
+
 	sw->sgraph.mirror ^= 1;
 }
