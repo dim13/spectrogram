@@ -7,6 +7,7 @@
 #include "SgraphP.h"
 
 #define Trace(w) warnx("%s.%s", XtClass(w)->core_class.class_name, __func__)
+#define SCALE 3
 
 static void Initialize(Widget, Widget, ArgList, Cardinal *);
 static void ChangeManaged(Widget);
@@ -111,7 +112,7 @@ Initialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 			sizeof(int));
 		n = 0;
 		XtSetArg(arg[n], XtNvalues, dw->display.data[i]);	n++;
-		XtSetArg(arg[n], XtNsize, dw->display.num_samples);	n++;
+		XtSetArg(arg[n], XtNsize, dw->display.num_samples / SCALE);	n++;
 		XtSetArg(arg[n], XtNmirror, i % 2 ? False : True);	n++;
 		XtCreateManagedWidget("SGraph", sgraphWidgetClass, new, arg, n);
 	}
@@ -145,7 +146,7 @@ ChangeManaged(Widget w)
 	w->core.height = height;
 
 	/* XXX */
-	dw->display.num_samples = dw->composite.children[0]->core.width * 3;
+	dw->display.num_samples = dw->composite.children[0]->core.width * SCALE;
 }
 
 static void
@@ -175,7 +176,7 @@ Resize(Widget w)
 	}
 
 	/* XXX */
-	dw->display.num_samples = dw->composite.children[0]->core.width * 3;
+	dw->display.num_samples = dw->composite.children[0]->core.width * SCALE;
 }
 
 static void

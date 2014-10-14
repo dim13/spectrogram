@@ -186,7 +186,7 @@ static void
 Redisplay(Widget w, XEvent *event, Region r)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
-	Dimension	i, x, y;
+	Dimension	i, x, y, width;
 	XdbeSwapInfo	swap;
 
 	if (!XtIsRealized(w))
@@ -196,7 +196,11 @@ Redisplay(Widget w, XEvent *event, Region r)
 	Trace(w);
 #endif
 
-	for (i = 0; i < sw->core.width - 1; i++) {
+	width = sw->core.width;
+	if (width > sw->sgraph.size)
+		width = sw->sgraph.size;
+
+	for (i = 0; i < width - 1; i++) {
 		y = sw->sgraph.values[i];
 		x = sw->sgraph.mirror ? sw->core.width - i : i;
 
