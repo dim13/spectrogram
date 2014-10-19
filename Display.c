@@ -7,6 +7,13 @@
 #include "SgraphP.h"
 
 #define Trace(w) warnx("%s.%s", XtClass(w)->core_class.class_name, __func__)
+#define TraceOnce(w) do {						\
+	static int once = 1;						\
+	if (once) {							\
+		Trace(w);						\
+		once = 0;						\
+	}								\
+} while (0)
 #define SCALE 3
 
 static void Initialize(Widget, Widget, ArgList, Cardinal *);
@@ -205,12 +212,8 @@ SetValues(Widget old, Widget req, Widget new, ArgList args, Cardinal *n)
 	DisplayWidget dw = (DisplayWidget)new;
 	Widget child;
 	int i;
-	static int once = 1;
 
-	if (once) {
-		Trace(new);
-		once = 0;
-	}
+	TraceOnce(new);
 
 	xeev.type = Expose;
 	xeev.display = XtDisplay(new);
@@ -240,12 +243,7 @@ ConstraintInitialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 static Boolean
 ConstraintSetValues(Widget old, Widget req, Widget new, ArgList args, Cardinal *n)
 {
-	static int once = 1;
-
-	if (once) {
-		Trace(new);
-		once = 0;
-	}
+	TraceOnce(new);
 
 	return False;
 }
