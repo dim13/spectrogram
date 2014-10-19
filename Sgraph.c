@@ -163,6 +163,7 @@ Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr)
 	XtSuperclass(w)->core_class.realize(w, mask, attr);
 	sw->sgraph.backBuf = XdbeAllocateBackBufferName(XtDisplay(w),
 		XtWindow(w), XdbeBackground);
+	Resize(w);
 }
 
 static void
@@ -207,18 +208,38 @@ Redisplay(Widget w, XEvent *event, Region r)
 
 	for (i = 0; i < width - 1; i++) {
 		y = sw->sgraph.values[i];
+		if (y > sw->core.height)
+			y = sw->core.height - 1;
 		x = sw->sgraph.mirror ? sw->core.width - i : i;
 
+#if 0
 		XDrawLine(XtDisplay(sw), sw->sgraph.backBuf,
 			sw->sgraph.foreGC,
 			x, sw->core.height,
 			x, sw->core.height - y);
+#else
+		XDrawLine(XtDisplay(sw), sw->sgraph.bg,
+			sw->sgraph.foreGC,
+			x, sw->core.height,
+			x, sw->core.height - y);
+#endif
 	}
 
+#if 0
 	swap.swap_window = XtWindow(sw);
 	swap.swap_action = XdbeBackground;
 
 	XdbeSwapBuffers(XtDisplay(sw), &swap, 1);
+#else
+
+	XCopyArea(XtDisplay(sw), sw->sgraph.bg, XtWindow(sw),
+		sw->sgraph.foreGC, 0, 0,
+		sw->core.width, sw->core.height,
+		0, 0);
+	XFillRectangle(XtDisplay(sw), sw->sgraph.bg,
+		sw->sgraph.backGC,
+		0, 0, sw->core.width, sw->core.height);
+#endif
 }
 
 static void
