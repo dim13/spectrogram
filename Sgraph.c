@@ -120,13 +120,13 @@ GetGC(Widget w)
 	xgcv.foreground = sw->sgraph.foreground;
 	sw->sgraph.foreGC = XtGetGC(w, gc_mask, &xgcv);
 
-	/*
+#if 1
 	gc_mask |= GCClipMask;
 	xgcv.clip_mask = sw->sgraph.mask;
 	sw->sgraph.clipGC = XtGetGC(w, gc_mask, &xgcv);
 
-	gc_mask ^= ~GCClipMask;
-	 */
+	gc_mask &= ~GCClipMask;
+#endif
 	xgcv.plane_mask = 1;
 	sw->sgraph.maskGC = XtGetGC(w, gc_mask, &xgcv);
 }
@@ -146,8 +146,6 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 
 	sw->core.width = 320;
 	sw->core.height = 120;
-	
-	GetGC(w);
 }
 
 static void
@@ -188,6 +186,8 @@ Resize(Widget w)
 
 	sw->sgraph.mask = XCreatePixmap(XtDisplay(sw), XtWindow(sw),
 		w->core.width, w->core.height, 1);
+
+	GetGC(w);
 }
 
 static void
