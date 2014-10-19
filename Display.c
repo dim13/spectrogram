@@ -15,6 +15,9 @@ static void Resize(Widget);
 static void Redisplay(Widget, XEvent *, Region);
 static Boolean SetValues(Widget, Widget, Widget, ArgList, Cardinal *);
 
+static void ConstraintInitialize(Widget, Widget, ArgList, Cardinal *);
+static Boolean ConstraintSetValues(Widget, Widget, Widget, ArgList, Cardinal *);
+
 #define Offset(field) XtOffsetOf(DisplayRec, display.field)
 static XtResource resources[] = {
 	{ XtNnumChannel, XtCNumChannel, XtRInt, sizeof(int),
@@ -84,9 +87,9 @@ DisplayClassRec displayClassRec = {
 		.resources		= constraint_resources,
 		.num_resources		= XtNumber(constraint_resources),
 		.constraint_size	= sizeof(DisplayConstraintRec),
-		.initialize		= NULL,
+		.initialize		= ConstraintInitialize,
 		.destroy		= NULL,
-		.set_values		= NULL,
+		.set_values		= ConstraintSetValues,
 		.extension		= NULL,
 	},
 	.display_class = {
@@ -202,8 +205,12 @@ SetValues(Widget old, Widget req, Widget new, ArgList args, Cardinal *n)
 	DisplayWidget dw = (DisplayWidget)new;
 	Widget child;
 	int i;
+	static int once = 1;
 
-	//Trace(new);
+	if (once) {
+		Trace(new);
+		once = 0;
+	}
 
 	xeev.type = Expose;
 	xeev.display = XtDisplay(new);
@@ -220,6 +227,25 @@ SetValues(Widget old, Widget req, Widget new, ArgList args, Cardinal *n)
 	}
 
 	XtClass(new)->core_class.expose(new, (XEvent *)&xeev, NULL);
+
+	return False;
+}
+
+static void
+ConstraintInitialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
+{
+	Trace(new);
+}
+
+static Boolean
+ConstraintSetValues(Widget old, Widget req, Widget new, ArgList args, Cardinal *n)
+{
+	static int once = 1;
+
+	if (once) {
+		Trace(new);
+		once = 0;
+	}
 
 	return False;
 }
