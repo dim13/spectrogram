@@ -24,6 +24,13 @@
 #include <stdint.h>
 
 #define Trace(w) warnx("%s.%s", XtClass(w)->core_class.class_name, __func__)
+#define TraceOnce(w) do {						\
+	static int once = 1;						\
+	if (once) {							\
+		Trace(w);						\
+		once = 0;						\
+	}								\
+} while (0)
 
 static void Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs);
 static void Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr);
@@ -192,9 +199,7 @@ Redisplay(Widget w, XEvent *event, Region r)
 	if (!XtIsRealized(w))
 		return;
 
-#if 0
-	Trace(w);
-#endif
+	TraceOnce(w);
 
 	width = sw->core.width;
 	if (width > sw->sgraph.size)
