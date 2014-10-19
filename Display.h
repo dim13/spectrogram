@@ -12,6 +12,9 @@
 #define XtNnumSamples	"numSamples"
 #define XtCNumSamples	"NumSamples"
 
+#define XtNmaxWidth	"maxWidth"
+#define XtCMaxWidth	"MaxWidth"
+
 typedef struct _DisplayClassRec *DisplayWidgetClass;
 typedef struct _DisplayRec *DisplayWidget;
 

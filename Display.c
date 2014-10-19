@@ -36,8 +36,12 @@ static XtResource resources[] = {
 };
 #undef Offset
 
+#define Offset(field) XtOffsetOf(DisplayConstraintRec, display.field)
 static XtResource constraint_resources[] = {
+	{ XtNmaxWidth, XtCMaxWidth, XtRDimension, sizeof(Dimension),
+		Offset(maxWidth), XtRImmediate, (XtPointer)0 },
 };
+#undef Offset
 
 static CompositeClassExtensionRec	compositeExtension = {
 	.next_extension			= NULL,

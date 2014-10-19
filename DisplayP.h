@@ -30,6 +30,7 @@ typedef struct _DisplayClassRec {
 } DisplayClassRec;
 
 typedef struct {
+	Dimension		maxWidth;
 	XtPointer		extension;
 } DisplayConstraintPart;
 
