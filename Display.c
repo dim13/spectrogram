@@ -114,6 +114,7 @@ static void
 Initialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 {
 	DisplayWidget dw = (DisplayWidget)new;
+	Dimension maxWidth = dw->display.num_samples / SCALE;
 	Arg arg[10];
 	int n, i;
 
@@ -124,10 +125,12 @@ Initialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 	for (i = 0; i < dw->display.num_channel; i++) {
 		dw->display.data[i] = (int *)XtCalloc(dw->display.num_samples,
 			sizeof(int));
+
 		n = 0;
 		XtSetArg(arg[n], XtNvalues, dw->display.data[i]);	n++;
-		XtSetArg(arg[n], XtNsize, dw->display.num_samples / SCALE);	n++;
+		XtSetArg(arg[n], XtNsize, maxWidth);			n++;
 		XtSetArg(arg[n], XtNmirror, i % 2 ? False : True);	n++;
+		XtSetArg(arg[n], XtNmaxWidth, maxWidth);		n++;
 		XtCreateManagedWidget("SGraph", sgraphWidgetClass, new, arg, n);
 	}
 }
@@ -241,7 +244,9 @@ SetValues(Widget old, Widget req, Widget new, ArgList args, Cardinal *n)
 static void
 ConstraintInitialize(Widget req, Widget new, ArgList args, Cardinal *num_args)
 {
+	DisplayConstraints dc = (DisplayConstraints)new->core.constraints;
 	Trace(new);
+	warnx("maxWidth: %d", dc->display.maxWidth);
 }
 
 static Boolean
