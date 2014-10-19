@@ -196,7 +196,7 @@ Redisplay(Widget w, XEvent *event, Region region)
 	Widget child;
 	int i;
 
-	//Trace(w);
+	TraceOnce(w);
 
 	for (i = 0; i < dw->composite.num_children; i++) {
 		child = dw->composite.children[i];
