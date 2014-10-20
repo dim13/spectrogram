@@ -112,9 +112,8 @@ GetGC(Widget w)
 	Trace(w);
 
 	xgcv.plane_mask = AllPlanes;
-	xgcv.background = sw->core.background_pixel;
-
 	xgcv.foreground = sw->core.background_pixel;
+	xgcv.background = sw->core.background_pixel;
 	sw->sgraph.backGC = XtGetGC(w, gc_mask, &xgcv);
 
 	xgcv.foreground = sw->sgraph.foreground;
@@ -124,10 +123,12 @@ GetGC(Widget w)
 	gc_mask |= GCClipMask;
 	xgcv.clip_mask = sw->sgraph.mask;
 	sw->sgraph.clipGC = XtGetGC(w, gc_mask, &xgcv);
-
 	gc_mask &= ~GCClipMask;
 #endif
+
 	xgcv.plane_mask = 1;
+	xgcv.foreground = 1;
+	xgcv.background = 0;
 	sw->sgraph.maskGC = XtGetGC(w, gc_mask, &xgcv);
 }
 
@@ -146,6 +147,9 @@ Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 
 	sw->core.width = 320;
 	sw->core.height = 120;
+
+	sw->sgraph.bg = None;
+	sw->sgraph.mask = None;
 }
 
 static void
@@ -161,6 +165,7 @@ Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr)
 	XtSuperclass(w)->core_class.realize(w, mask, attr);
 	sw->sgraph.backBuf = XdbeAllocateBackBufferName(XtDisplay(w),
 		XtWindow(w), XdbeBackground);
+
 	Resize(w);
 }
 
