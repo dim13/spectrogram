@@ -107,28 +107,27 @@ GetGC(Widget w)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 	XGCValues	xgcv;
-	XtGCMask	gc_mask = GCForeground|GCBackground|GCPlaneMask;
+	XtGCMask	gc_mask = GCForeground;
 
 	Trace(w);
 
-	xgcv.plane_mask = AllPlanes;
+	gc_mask = GCForeground;
 	xgcv.foreground = sw->core.background_pixel;
-	xgcv.background = sw->core.background_pixel;
 	sw->sgraph.backGC = XtGetGC(w, gc_mask, &xgcv);
 
+	gc_mask = GCForeground;
 	xgcv.foreground = sw->sgraph.foreground;
 	sw->sgraph.foreGC = XtGetGC(w, gc_mask, &xgcv);
 
 #if 1
-	gc_mask |= GCClipMask;
+	gc_mask = GCForeground|GCClipMask;
 	xgcv.clip_mask = sw->sgraph.mask;
 	sw->sgraph.clipGC = XtGetGC(w, gc_mask, &xgcv);
-	gc_mask &= ~GCClipMask;
 #endif
 
+	gc_mask = GCForeground|GCPlaneMask;
 	xgcv.plane_mask = 1;
 	xgcv.foreground = 1;
-	xgcv.background = 0;
 	sw->sgraph.maskGC = XtGetGC(w, gc_mask, &xgcv);
 }
 
