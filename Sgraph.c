@@ -103,35 +103,6 @@ SgraphClassRec sgraphClassRec = {
 WidgetClass sgraphWidgetClass = (WidgetClass)&sgraphClassRec;
 
 static void
-GetGC(Widget w)
-{
-	SgraphWidget	sw = (SgraphWidget)w;
-	XGCValues	xgcv;
-	XtGCMask	gc_mask = GCForeground;
-
-	Trace(w);
-
-	gc_mask = GCForeground;
-	xgcv.foreground = sw->core.background_pixel;
-	sw->sgraph.backGC = XtGetGC(w, gc_mask, &xgcv);
-
-	gc_mask = GCForeground;
-	xgcv.foreground = sw->sgraph.foreground;
-	sw->sgraph.foreGC = XtGetGC(w, gc_mask, &xgcv);
-
-#if 1
-	gc_mask = GCForeground|GCClipMask;
-	xgcv.clip_mask = sw->sgraph.mask;
-	sw->sgraph.clipGC = XtGetGC(w, gc_mask, &xgcv);
-#endif
-
-	gc_mask = GCForeground|GCPlaneMask;
-	xgcv.plane_mask = 1;
-	xgcv.foreground = 1;
-	sw->sgraph.maskGC = XtGetGC(w, gc_mask, &xgcv);
-}
-
-static void
 Initialize(Widget request, Widget w, ArgList args, Cardinal *nargs)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
@@ -192,6 +163,35 @@ Resize(Widget w)
 		w->core.width, w->core.height, 1);
 
 	GetGC(w);
+}
+
+static void
+GetGC(Widget w)
+{
+	SgraphWidget	sw = (SgraphWidget)w;
+	XGCValues	xgcv;
+	XtGCMask	gc_mask = GCForeground;
+
+	Trace(w);
+
+	gc_mask = GCForeground;
+	xgcv.foreground = sw->core.background_pixel;
+	sw->sgraph.backGC = XtGetGC(w, gc_mask, &xgcv);
+
+	gc_mask = GCForeground;
+	xgcv.foreground = sw->sgraph.foreground;
+	sw->sgraph.foreGC = XtGetGC(w, gc_mask, &xgcv);
+
+#if 1
+	gc_mask = GCForeground|GCClipMask;
+	xgcv.clip_mask = sw->sgraph.mask;
+	sw->sgraph.clipGC = XtGetGC(w, gc_mask, &xgcv);
+#endif
+
+	gc_mask = GCForeground|GCPlaneMask;
+	xgcv.plane_mask = 1;
+	xgcv.foreground = 1;
+	sw->sgraph.maskGC = XtGetGC(w, gc_mask, &xgcv);
 }
 
 static void
