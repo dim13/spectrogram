@@ -37,6 +37,7 @@ static void Realize(Widget w, XtValueMask *mask, XSetWindowAttributes *attr);
 static void Resize(Widget w);
 static void Redisplay(Widget w, XEvent *event, Region r);
 static void mirror(Widget, XEvent *, String *, Cardinal *);
+static void GetGC(Widget);
 
 /* Initialization */
 #define Offset(field) XtOffsetOf(SgraphRec, sgraph.field)
@@ -170,7 +171,7 @@ GetGC(Widget w)
 {
 	SgraphWidget	sw = (SgraphWidget)w;
 	XGCValues	xgcv;
-	XtGCMask	gc_mask = GCForeground;
+	XtGCMask	gc_mask;
 
 	Trace(w);
 
