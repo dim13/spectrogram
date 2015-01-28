@@ -94,9 +94,9 @@ worker(XtPointer p)
 }
 
 String fallback[] = {
-	"*foreground:	#ff7f00",
-	"*background:	#1f0000",
-	"*borderColor:	#1f0000",
+	"*foreground:	#ff5f00",
+	"*background:	#222222",
+	"*borderColor:	#222222",
 	"*borderWidth:	2",
 	NULL,
 };
