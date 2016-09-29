@@ -12,6 +12,7 @@ UNAME!=	uname
 .ifdef ${UNAME} == Linux
 SRCS+=	alsa.c
 LIBS+=	alsa
+LDADD+= -lm
 .else
 SRCS+=	sio.c
 LDADD+=	-lsndio
