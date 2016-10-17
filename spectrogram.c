@@ -66,7 +66,6 @@ main(int argc, char **argv)
 	struct		panel *left, *right;
 	double		*ldata, *rdata;
 
-	int		dflag = 0;	/* daemonize */
 	int		fflag = 0;	/* fullscreen */
 	int		pflag = 1;	/* hide ptr */
 
@@ -79,9 +78,6 @@ main(int argc, char **argv)
 
 	while ((ch = getopt(argc, argv, "dfpr:h")) != -1)
 		switch (ch) {
-		case 'd':
-			dflag = 1;
-			break;
 		case 'f':
 			fflag = 1;
 			break;
@@ -100,9 +96,6 @@ main(int argc, char **argv)
 	argv += optind;
 
 	signal(SIGINT, catch);
-
-	if (dflag)
-		daemon(0, 0);
 
 	init_sio();
 	maxwidth = max_samples_sio();
