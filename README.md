@@ -1,8 +1,9 @@
 spectrogram
 ===========
 
-OpenBSD sndio Spectrogram
+Spectrogram and waterfall visualisation hack
+for OpenBSD (sndio) and Linux (alsa).
 
-Site: http://www.dim13.org/Tags/spectrogram
+Note: build with `pmake` on Linux.
 
 ![spectrogram](spectrogram.png)
