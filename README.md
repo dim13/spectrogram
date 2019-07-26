@@ -1,9 +1,11 @@
-spectrogram
-===========
+# Spectrogram
 
-Spectrogram and waterfall visualisation hack
-for OpenBSD (sndio) and Linux (alsa).
+Visualisation hack for OpenBSD (sndio) and Linux (alsa).
 
-Note: build with `pmake` on Linux.
+## Notes
+
+- OpenBSD: `sndiod` must be started in monitoring mode:
+  `sndiod -m play,mon,midi`
+- Linux: build with `pmake`
 
 ![spectrogram](spectrogram.png)
