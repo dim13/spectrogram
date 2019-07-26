@@ -1,6 +1,6 @@
 # Spectrogram
 
-Visualisation hack for OpenBSD (sndio) and Linux (alsa).
+Visualisation hack for OpenBSD (sndio) and Linux (alsa) playback.
 
 ## Notes
 
