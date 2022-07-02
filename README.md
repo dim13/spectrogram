@@ -12,7 +12,6 @@ Visualisation hack for OpenBSD (sndio) and Linux (alsa) playback.
 
 Packages required:
 
-- pkg-config
 - libfftw3-dev
 - libasound2-dev
 - libx11-dev
