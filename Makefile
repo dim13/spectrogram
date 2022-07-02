@@ -1,36 +1,8 @@
 # $Id$
 
-VERSION=3.0
-PROG=	spectrogram
+LDLIBS	= -lfftw3 -lX11 -lasound -lm
 
-SRCS=	spectrogram.c fft.c cms.c aux.c widget.c
-LIBS=	fftw3 x11
-BINDIR=	/usr/local/bin
+spectrogram: spectrogram.o fft.o cms.o aux.o widget.o alsa.o
 
-UNAME!=	uname
-.ifdef ${UNAME} == Linux
-SRCS+=	alsa.c
-LIBS+=	alsa
-LDADD+= -lm
-.else
-SRCS+=	sio.c
-LDADD+=	-lsndio
-.endif
-
-PCCF!=	pkg-config --cflags ${LIBS}
-CFLAGS+=${PCCF}
-
-PCLA!=	pkg-config --libs ${LIBS}
-LDADD+=	${PCLA}
-
-DEBUG+=	-Wall
-NOMAN=
-DIR=	${PROG}-${VERSION}
-
-package:
-	@mkdir ${DIR}
-	@cp Makefile ${SRCS} ${HEADERS} ${DIR}
-	@tar zcf ${DIR}.tar.gz ${DIR}
-	@rm -rf ${DIR}
-
-.include <bsd.prog.mk>
+clean:
+	rm -f spectrogram *.o
