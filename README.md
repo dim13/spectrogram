@@ -10,8 +10,6 @@ Visualisation hack for OpenBSD (sndio) and Linux (alsa) playback.
 
 ## Linux
 
-Packages required:
+Build packages: `sudo apt install libfftw3-dev libasound2-dev libx11-dev`
 
-- libfftw3-dev
-- libasound2-dev
-- libx11-dev
+Audo loopback device: `sudo modprobe snd-aloop`
