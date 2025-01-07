@@ -11,7 +11,7 @@ PCCF!=	pkg-config --cflags ${LIBS}
 CFLAGS+=${PCCF}
 
 PCLA!=	pkg-config --libs ${LIBS}
-LDADD+=	${PCLA} -lsndio
+LDADD+=	${PCLA} -lm -lsndio
 
 DEBUG+=	-Wall
 NOMAN=
